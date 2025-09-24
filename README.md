@@ -10,7 +10,7 @@ To add the repository in EDOPro, add the following code to your (edopro-sim)\con
 			"repo_name": "L4m6da YGO Customs",  
 			"repo_path": "./repositories/l4m6da-customs",  
 			"data_path": "expansions",
-			"script_path": "script",
+			"script_path": "scripts",
 			"should_update": true,  
 			"should_read": true  
 		}
