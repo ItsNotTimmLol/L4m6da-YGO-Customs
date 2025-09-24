@@ -3,18 +3,31 @@ local s,id=GetID()
 function s.initial_effect(c)
 	--fusion summon
 	c:EnableReviveLimit()
-	Fusion.AddProcMix(c,true,true,s.mfilter1,s.mfilter2)
-	Fusion.AddContactProc(c,s.contactfil,s.contactop,s.splimit)
-	--Cannot be used as Fusion Material
+	Fusion.AddProcMix(c,true,true,s.mfilter1,s.mfilter2,s.mfilter3)
+	--Fusion.AddContactProc(c,s.contactfil,s.contactop,s.splimit)
+	--Must be either Fusion Summoned or Special Summoned by alternate procedure
+	local e0=Effect.CreateEffect(c)
+	e0:SetType(EFFECT_TYPE_SINGLE)
+	e0:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_UNCOPYABLE)
+	e0:SetCode(EFFECT_SPSUMMON_CONDITION)
+	e0:SetValue(s.splimit)
+	c:RegisterEffect(e0)
+	--Alternate Summon
 	local e1=Effect.CreateEffect(c)
-	e1:SetType(EFFECT_TYPE_SINGLE)
+	e1:SetType(EFFECT_TYPE_FIELD)
 	e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_UNCOPYABLE)
-	e1:SetCode(EFFECT_CANNOT_BE_FUSION_MATERIAL)
-	e1:SetValue(1)
+	e1:SetCode(EFFECT_SPSUMMON_PROC)
+	e1:SetRange(LOCATION_EXTRA)
+	e1:SetCondition(s.selfspcon)
+	e1:SetTarget(s.selfsptg)
+	e1:SetOperation(s.selfspop)
 	c:RegisterEffect(e1)
-	--Cannot be used as Link Material
-	local e2=e1:Clone()
+	--Cannot be used as Fusion Material
+	local e2=Effect.CreateEffect(c)
+	e2:SetType(EFFECT_TYPE_SINGLE)
+	e2:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_UNCOPYABLE)
 	e2:SetCode(EFFECT_CANNOT_BE_LINK_MATERIAL)
+	e2:SetValue(1)
 	c:RegisterEffect(e2)
 	--nontuner
 	local e3=Effect.CreateEffect(c)
@@ -52,16 +65,22 @@ function s.initial_effect(c)
 	e7:SetTarget(s.remtg)
 	e7:SetOperation(s.remop)
 	c:RegisterEffect(e7)
+	local e8=e7:Clone()
+	e8:SetCondition(function(e) return e:GetHandler():IsFusionSummoned() end)
+	c:RegisterEffect(e8)
 	
 end
 s.listed_names={40155554,59482302}
 function s.mfilter1(c,fc,sumtype,tp,sub,mg,sg)
-	return (c:IsSetCard(SET_ALLY_OF_JUSTICE,fc,sumtype,tp) or c:IsSetCard(SET_FLAMVELL,fc,sumtype,tp) or c:IsCode(40155554)) and c:IsMonster() and (c:IsLocation(LOCATION_HAND) or c:IsFaceup())
+	return c:IsCode(40155554) and c:IsMonster() and (c:IsLocation(LOCATION_HAND) or c:IsFaceup())
 end
 function s.mfilter2(c,fc,sumtype,tp,sub,mg,sg)
-	return (c:IsSetCard(SET_ALLY_OF_JUSTICE,fc,sumtype,tp) or c:IsSetCard(SET_FLAMVELL,fc,sumtype,tp) or c:IsCode(59482302)) and c:IsMonster() and (c:IsLocation(LOCATION_HAND) or c:IsFaceup())
+	return c:IsCode(59482302) and c:IsMonster() and (c:IsLocation(LOCATION_HAND) or c:IsFaceup())
 end
---Alt Summoning Conditions Banish
+function s.mfilter3(c,fc,sumtype,tp,sub,mg,sg)
+	return c:IsSetCard(SET_ALLY_OF_JUSTICE,fc,sumtype,tp) or c:IsSetCard(SET_FLAMVELL,fc,sumtype,tp) and c:IsMonster() and (c:IsLocation(LOCATION_HAND) or c:IsFaceup())
+end
+--Modified Summoning Conditions
 function s.splimit(e,se,sp,st)
 	return e:GetHandler():GetLocation()~=LOCATION_EXTRA
 end
@@ -73,6 +92,31 @@ function s.contactop(g,tp)
 	if #fu>0 then Duel.HintSelection(fu,true) end
 	if #fd>0 then Duel.ConfirmCards(1-tp,fd) end
 	Duel.SendtoDeck(g,nil,SEQ_DECKSHUFFLE,REASON_COST|REASON_MATERIAL)
+end
+--Alt Summoning Procedure
+function s.selfspfilter(c,tp,sc)
+	return (c:IsCode(40155554) or c:IsCode(59482302) or c:IsSetCard(SET_ALLY_OF_JUSTICE,fc,sumtype,tp) or c:IsSetCard(SET_FLAMVELL,fc,sumtype,tp)) and c:IsMonster() and not c:IsType(TYPE_FUSION) and c:IsAbleToDeckOrExtraAsCost() and (c:IsLocation(LOCATION_HAND) or c:IsFaceup())
+end
+function s.selfspcon(e,c)
+	if c==nil then return true end
+	local tp=c:GetControler()
+	return Duel.IsExistingMatchingCard(s.selfspfilter,tp,LOCATION_HAND|LOCATION_MZONE|LOCATION_GRAVE|LOCATION_REMOVED,0,1,nil)
+end
+function s.selfsptg(e,tp,eg,ep,ev,re,r,rp,chk,c)
+	local g=Duel.SelectMatchingCard(tp,s.selfspfilter,tp,LOCATION_HAND|LOCATION_MZONE|LOCATION_GRAVE|LOCATION_REMOVED,0,1,1,nil)
+	if g then
+		g:KeepAlive()
+		e:SetLabelObject(g)
+	return true
+	end
+	return false
+end
+function s.selfspop(e,tp,eg,ep,ev,re,r,rp,c)
+	local g=e:GetLabelObject()
+	if not g then return end
+	c:SetMaterial(g)
+	Duel.SendtoDeck(g,nil,SEQ_DECKSHUFFLE,REASON_COST|REASON_MATERIAL)
+	g:DeleteGroup()
 end
 --Add
 function s.thcon(e,tp,eg,ep,ev,re,r,rp)
