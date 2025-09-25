@@ -3,8 +3,8 @@ local s,id=GetID()
 function s.initial_effect(c)
 	--fusion summon
 	c:EnableReviveLimit()
-	Fusion.AddProcMix(c,true,true,s.mfilter1,s.mfilter2,s.mfilter3)
-	--Fusion.AddContactProc(c,s.contactfil,s.contactop,s.splimit)
+	Fusion.AddProcMix(c,true,true,s.mfilter1,s.mfilter2)
+	Fusion.AddContactProc(c,s.contactfil,s.contactop,s.splimit)
 	--Must be either Fusion Summoned or Special Summoned by alternate procedure
 	local e0=Effect.CreateEffect(c)
 	e0:SetType(EFFECT_TYPE_SINGLE)
@@ -12,7 +12,7 @@ function s.initial_effect(c)
 	e0:SetCode(EFFECT_SPSUMMON_CONDITION)
 	e0:SetValue(s.splimit)
 	c:RegisterEffect(e0)
-	--Alternate Summon
+	--[[Alternate Summon
 	local e1=Effect.CreateEffect(c)
 	e1:SetType(EFFECT_TYPE_FIELD)
 	e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_UNCOPYABLE)
@@ -21,13 +21,16 @@ function s.initial_effect(c)
 	e1:SetCondition(s.selfspcon)
 	e1:SetTarget(s.selfsptg)
 	e1:SetOperation(s.selfspop)
+	c:RegisterEffect(e1)]]
+	--Cannot be used as Link Material
+	local e1=Effect.CreateEffect(c)
+	e1:SetType(EFFECT_TYPE_SINGLE)
+	e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_UNCOPYABLE)
+	e1:SetCode(EFFECT_CANNOT_BE_LINK_MATERIAL)
+	e1:SetValue(1)
 	c:RegisterEffect(e1)
-	--Cannot be used as Fusion Material
-	local e2=Effect.CreateEffect(c)
-	e2:SetType(EFFECT_TYPE_SINGLE)
-	e2:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_UNCOPYABLE)
-	e2:SetCode(EFFECT_CANNOT_BE_LINK_MATERIAL)
-	e2:SetValue(1)
+	local e2=e1:Clone()
+	e2:SetCode(EFFECT_CANNOT_BE_FUSION_MATERIAL)
 	c:RegisterEffect(e2)
 	--nontuner
 	local e3=Effect.CreateEffect(c)
@@ -65,20 +68,27 @@ function s.initial_effect(c)
 	e7:SetTarget(s.remtg)
 	e7:SetOperation(s.remop)
 	c:RegisterEffect(e7)
-	local e8=e7:Clone()
+	--[[local e8=e7:Clone()
 	e8:SetCondition(function(e) return e:GetHandler():IsFusionSummoned() end)
-	c:RegisterEffect(e8)
+	c:RegisterEffect(e8)]]--
+	local e9=Effect.CreateEffect(c)
+    e9:SetType(EFFECT_TYPE_FIELD)
+    e9:SetCode(EFFECT_DECREASE_TRIBUTE)
+    e9:SetRange(LOCATION_MZONE)
+    e9:SetTargetRange(LOCATION_HAND,0)
+    e9:SetTarget(aux.TargetBoolFunction(Card.IsLevelAbove,7))
+    e9:SetValue(0x1)
+    c:RegisterEffect(e9)
 	
 end
 s.listed_names={40155554,59482302}
 function s.mfilter1(c,fc,sumtype,tp,sub,mg,sg)
-	return c:IsCode(40155554) and c:IsMonster() and (c:IsLocation(LOCATION_HAND) or c:IsFaceup())
+	return c:IsMonster() and (c:IsLocation(LOCATION_HAND) or c:IsFaceup())
+		and ((c:IsRace(RACE_MACHINE) and c:IsAttribute(ATTRIBUTE_DARK)) or c:IsSetCard(SET_FLAMVELL,fc,sumtype,tp))
 end
 function s.mfilter2(c,fc,sumtype,tp,sub,mg,sg)
-	return c:IsCode(59482302) and c:IsMonster() and (c:IsLocation(LOCATION_HAND) or c:IsFaceup())
-end
-function s.mfilter3(c,fc,sumtype,tp,sub,mg,sg)
-	return c:IsSetCard(SET_ALLY_OF_JUSTICE,fc,sumtype,tp) or c:IsSetCard(SET_FLAMVELL,fc,sumtype,tp) and c:IsMonster() and (c:IsLocation(LOCATION_HAND) or c:IsFaceup())
+	return c:IsMonster() and (c:IsLocation(LOCATION_HAND) or c:IsFaceup())
+		and (c:IsCode(40155554) or c:IsCode(59482302) or c:IsAttribute(ATTRIBUTE_FIRE) or c:IsSetCard(SET_ALLY_OF_JUSTICE,fc,sumtype,tp))
 end
 --Modified Summoning Conditions
 function s.splimit(e,se,sp,st)
@@ -143,23 +153,24 @@ function s.remcon(e,tp,eg,ep,ev,re,r,rp)
 	return mg and e:GetHandler():IsSummonLocation(LOCATION_EXTRA) and mg:IsExists(Card.IsType,1,nil,TYPE_NORMAL)
 end
 function s.remtg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.IsExistingTarget(nil,tp,LOCATION_ONFIELD|LOCATION_GRAVE,LOCATION_ONFIELD|LOCATION_GRAVE,1,nil,tp) end
-	Duel.SetOperationInfo(0,CATEGORY_REMOVE,nil,1,LOCATION_ONFIELD|LOCATION_GRAVE,LOCATION_ONFIELD|LOCATION_GRAVE)
+	if chk==0 then return Duel.IsExistingTarget(nil,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,1,nil,tp) end
+	Duel.SetOperationInfo(0,CATEGORY_REMOVE,nil,1,LOCATION_ONFIELD,LOCATION_ONFIELD)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TARGET)
-	local g=Duel.SelectTarget(tp,nil,tp,LOCATION_ONFIELD|LOCATION_GRAVE,LOCATION_ONFIELD|LOCATION_GRAVE,1,1,nil)
-	Duel.SetPossibleOperationInfo(0,CATEGORY_DESTROY,g,1,tp,0)
-	Duel.SetPossibleOperationInfo(0,CATEGORY_REMOVE,g,1,tp,0)
+	local g=Duel.SelectTarget(tp,nil,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,1,1,nil)
+	--Duel.SetPossibleOperationInfo(0,CATEGORY_DESTROY,g,1,tp,0)
+	Duel.SetOperationInfo(0,CATEGORY_REMOVE,g,1,tp,0)
 end
 function s.remop(e,tp,eg,ep,ev,re,r,rp)
 	local tc=Duel.GetFirstTarget()
 	if tc:IsRelateToEffect(e) then
-		local op=Duel.SelectEffect(tp,
+		Duel.Remove(tc,POS_FACEUP,REASON_EFFECT)
+		--[[local op=Duel.SelectEffect(tp,
 			{tc:IsLocation(LOCATION_ONFIELD),aux.Stringid(id,2)},
 			{tc:IsAbleToRemove(),aux.Stringid(id,3)})
 		if op==1 then
 			Duel.Destroy(tc,REASON_EFFECT)
 		else
 			Duel.Remove(tc,POS_FACEUP,REASON_EFFECT)
-		end
+		end]]--
 	end
 end
