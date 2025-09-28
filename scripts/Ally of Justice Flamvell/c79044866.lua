@@ -11,7 +11,7 @@ function s.initial_effect(c)
 	e1:SetCode(EVENT_FREE_CHAIN)
 	e1:SetTarget(s.sptg)
 	e1:SetOperation(s.spop)
-	c:RegisterEffect(e1
+	c:RegisterEffect(e1)
 	--Flamvell monsters are Pyro
 	local e1=Effect.CreateEffect(c)
 	e1:SetType(EFFECT_TYPE_FIELD)
@@ -71,7 +71,7 @@ end
 s.listed_names={40155554,59482302}
 s.listed_series={SET_ALLY_OF_JUSTICE,SET_FLAMVELL}
 function s.spfilter(c,e,tp)
-	return (c:IsCode(s.listed_names) or (c:IsSetCard(s.listed_series) and c:IsLevelAbove(5)) and c:IsCanBeSpecialSummoned(e,0,tp,true,false)
+	return (c:IsCode(s.listed_names) or (c:IsSetCard(s.listed_series) and c:IsLevelAbove(5))) and c:IsCanBeSpecialSummoned(e,0,tp,true,false)
 end
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
@@ -85,7 +85,7 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	local tc=Duel.SelectMatchingCard(tp,aux.NecroValleyFilter(s.spfilter),tp,LOCATION_HAND|LOCATION_GRAVE,0,1,1,nil,e,tp):GetFirst()
 	if not tc then return end
 	local c=e:GetHandler()
-	if c:IsRelateToEffect(e) and Duel.SpecialSummon(tc,0,tp,tp,false,false,POS_FACEUP)>0 and Duel.Equip(tp,c,tc) then
+	if c:IsRelateToEffect(e) and Duel.SpecialSummon(tc,0,tp,tp,true,false,POS_FACEUP)>0 and Duel.Equip(tp,c,tc) then
 		--Equip limit
 		local e1=Effect.CreateEffect(c)
 		e1:SetType(EFFECT_TYPE_SINGLE)
@@ -95,6 +95,7 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 		e1:SetReset(RESET_EVENT|RESETS_STANDARD)
 		c:RegisterEffect(e1)
 	end
+end
 
 --Fix stats
 function s.tg(e,c)
