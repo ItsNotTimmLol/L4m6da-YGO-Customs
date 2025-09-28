@@ -4,31 +4,55 @@ local s,id=GetID()
 function s.initial_effect(c)
 	--Activate
 	local e0=Effect.CreateEffect(c)
-	--e0:SetDescription(aux.Stringid(id,0))
-	--e0:SetCategory(CATEGORY_SPECIAL_SUMMON)
 	e0:SetType(EFFECT_TYPE_ACTIVATE)
 	e0:SetCode(EVENT_FREE_CHAIN)
+	--e0:SetDescription(aux.Stringid(id,0))
+	--e0:SetCategory(CATEGORY_SPECIAL_SUMMON)
 	--e0:SetCountLimit(1,id,EFFECT_COUNT_CODE_OATH)
 	--e0:SetTarget(s.thtg)
 	--e0:SetOperation(s.thop)
 	c:RegisterEffect(e0)
-	--Extender--Sent
+	--change attribute
 	local e1=Effect.CreateEffect(c)
-	e1:SetDescription(aux.Stringid(id,1))
-	e1:SetCategory(CATEGORY_SPECIAL_SUMMON)
-	e1:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
-	e1:SetProperty(EFFECT_FLAG_CARD_TARGET+EFFECT_FLAG_DELAY+EFFECT_FLAG_DAMAGE_STEP)
-	e1:SetCode(EVENT_TO_GRAVE)
+	e1:SetType(EFFECT_TYPE_FIELD)
 	e1:SetRange(LOCATION_FZONE)
-	e1:SetCondition(s.sp2con)
-	e1:SetTarget(s.sp2tg)
-	e1:SetOperation(s.sp2op)
+	e1:SetTargetRange(0,LOCATION_MZONE|LOCATION_HAND|LOCATION_GRAVE)
+	e1:SetCondition(s.lightcon)
+	e1:SetCode(EFFECT_CHANGE_ATTRIBUTE)
+	e1:SetValue(ATTRIBUTE_LIGHT)
 	c:RegisterEffect(e1)
-	--Banished
-	local e2=e1:Clone()
-	e2:SetCode(EVENT_REMOVE)
+	--Monsters whose ATK is different from their original ATK are unaffected by your opponent's activated effects
+	local e2=Effect.CreateEffect(c)
+	e2:SetType(EFFECT_TYPE_FIELD)
+	e2:SetCode(EFFECT_IMMUNE_EFFECT)
+	e2:SetTargetRange(LOCATION_MZONE|LOCATION_HAND,0)
+	e2:SetRange(LOCATION_FZONE)
+	e2:SetTarget(s.immtg)
+	e2:SetValue(s.immval)
 	c:RegisterEffect(e2)
-	--avoid battle damage
+	--Also treated as Ally of Justice
+	local e3=e2:Clone()
+	e3:SetCode(EFFECT_ADD_SETCODE)
+	e3:SetValue(SET_ALLY_OF_JUSTICE)
+	c:RegisterEffect(e3)
+	--Also treated as Flamvell
+	local e4=e2:Clone()
+	e4:SetCode(EFFECT_ADD_SETCODE)
+	e4:SetValue(SET_FLAMVELL)
+	c:RegisterEffect(e6)
+	--SS if monster leaves opponent's field
+	local e5=Effect.CreateEffect(c)
+	e5:SetDescription(aux.Stringid(id,1))
+	e5:SetCategory(CATEGORY_SPECIAL_SUMMON)
+	e5:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
+	e5:SetProperty(EFFECT_FLAG_DELAY)
+	e5:SetCode(EVENT_LEAVE_FIELD)
+	e5:SetRange(LOCATION_FZONE)
+	e5:SetCondition(s.setcon)
+	e5:SetTarget(s.settg)
+	e5:SetOperation(s.setop)
+	c:RegisterEffect(e5)
+	--[[avoid battle damage
 	local e3=Effect.CreateEffect(c)
 	e3:SetDescription(aux.Stringid(id,0))
 	e3:SetType(EFFECT_TYPE_FIELD)
@@ -38,7 +62,7 @@ function s.initial_effect(c)
 	e3:SetTargetRange(LOCATION_MZONE,0)
 	e3:SetTarget(function(e,c) return c:IsSetCard(SET_FLAMVELL) end)
 	e3:SetValue(1)
-	c:RegisterEffect(e3)
+	c:RegisterEffect(e3)]]
 	--[[Flamvell banish mill
 	local e4=Effect.CreateEffect(c)
 	e4:SetDescription(aux.Stringid(id,2))
@@ -60,34 +84,6 @@ function s.initial_effect(c)
 	e4:SetTargetRange(0,1)
 	e4:SetValue(s.val)
 	c:RegisterEffect(e4)]]
-	--Monsters whose ATK is different from their original ATK are unaffected by your opponent's activated effects
-	local e4=Effect.CreateEffect(c)
-	e4:SetType(EFFECT_TYPE_FIELD)
-	e4:SetCode(EFFECT_IMMUNE_EFFECT)
-	e4:SetTargetRange(LOCATION_MZONE|LOCATION_HAND,0)
-	e4:SetRange(LOCATION_FZONE)
-	e4:SetTarget(s.immtg)
-	e4:SetValue(s.immval)
-	c:RegisterEffect(e4)
-	--Also treated as Ally of Justice
-	local e5=e4:Clone()
-	e5:SetCode(EFFECT_ADD_SETCODE)
-	e5:SetValue(SET_ALLY_OF_JUSTICE)
-	c:RegisterEffect(e5)
-	--Also treated as Flamvell
-	local e6=e4:Clone()
-	e6:SetCode(EFFECT_ADD_SETCODE)
-	e6:SetValue(SET_FLAMVELL)
-	c:RegisterEffect(e6)
-	--change attribute
-	local e7=Effect.CreateEffect(c)
-	e7:SetType(EFFECT_TYPE_FIELD)
-	e7:SetRange(LOCATION_FZONE)
-	e7:SetTargetRange(0,LOCATION_MZONE|LOCATION_HAND|LOCATION_GRAVE)
-	e7:SetCondition(s.lightcon)
-	e7:SetCode(EFFECT_CHANGE_ATTRIBUTE)
-	e7:SetValue(ATTRIBUTE_LIGHT)
-	c:RegisterEffect(e7)
 	--[[Flamvell monsters are Pyro
 	local e5=Effect.CreateEffect(c)
 	e5:SetType(EFFECT_TYPE_FIELD)
@@ -131,17 +127,8 @@ function s.initial_effect(c)
 	e10:SetRange(LOCATION_FZONE)
 	e10:SetTargetRange(1,0)
 	e10:SetValue(s.attval)
-	c:RegisterEffect(e10)
-	--register names
-	aux.GlobalCheck(s,function()
-		s.name_list={}
-		s.name_list[0]={}
-		s.name_list[1]={}
-		aux.AddValuesReset(function()
-			s.name_list[0]={}
-			s.name_list[1]={}
-		end)
-	end)]]
+	c:RegisterEffect(e10)]]
+	
 end
 s.listed_names={40155554}
 s.listed_series={SET_ALLY_OF_JUSTICE,SET_FLAMVELL}
@@ -158,8 +145,37 @@ function s.lightcon(e)
 	return Duel.IsExistingMatchingCard(s.lightfilter,e:GetHandlerPlayer(),LOCATION_MZONE,0,1,nil)
 end
 function s.lightfilter(c)
-	return c:IsSetCard(SET_FLAMVELL) or c:IsSetCard(SET_FLAMVELL)
+	return (c:IsSetCard(SET_ALLY_OF_JUSTICE) or c:IsSetCard(SET_FLAMVELL)
+		and (c:IsType(TYPE_NORMAL) or c:IsLevelAbove(7))
+		and c:IsMonster() and c:IsFaceup()
 end
+
+--Spam
+function s.spconfilter(c,tp)
+	return c:IsMonster() and c:IsPreviousControler(1-tp) and s.exfilter(c,tp)
+end
+function s.exfilter(c,tp)
+	return not c:IsForbidden() and c:CheckUniqueOnField(tp)
+end
+function s.spcon(e,tp,eg,ep,ev,re,r,rp)
+	return eg:IsExists(s.spconfilter,1,nil,tp)
+end
+function s.spfilter(c,tp)
+	return c:IsMonster() and c:IsSetCard(SET_ICEJADE) and c:IsAbleToHand()
+		and not Duel.IsExistingMatchingCard(aux.FaceupFilter(Card.IsCode,c:GetCode()),tp,LOCATION_ONFIELD|LOCATION_GRAVE,0,1,nil)
+end
+function s.settg(e,tp,eg,ep,ev,re,r,rp,chk)
+	local c=e:GetHandler()
+	if chk==0 then return c:IsSSetable() end
+	Duel.SetOperationInfo(0,CATEGORY_LEAVE_GRAVE,c,1,0,0)
+end
+function s.setop(e,tp,eg,ep,ev,re,r,rp)
+	local c=e:GetHandler()
+	if c:IsRelateToEffect(e) and c:IsSSetable() then
+		Duel.SSet(tp,c)
+	end
+end
+
 
 --To hand
 function s.thfilter(c)
@@ -189,67 +205,7 @@ function s.val(e,re,val,r,rp)
 	return val
 end
 
---Extender
-function s.cfilter(c,tp)
-	return c:IsSetCard(SET_FLAMVELL) and c:IsControler(tp)
-		and not s.name_list[tp][c:GetCode()]
-end
-function s.sp2con(e,tp,eg,ep,ev,re,r,rp)
-	for rc in aux.Next(eg) do
-		if rc:IsSetCard(SET_FLAMVELL) and rc:IsControler(tp) then return eg:IsExists(s.cfilter,1,nil,tp) end
-	end
-	return false
-end
 
-function s.sp2filter(c,e,tp,ev)
-	if c:GetReasonCard() and not c:GetReasonCard():IsSetCard(SET_FLAMVELL) then return end
-	if c:GetReasonEffect() and not c:GetReasonEffect():GetHandler():IsSetCard(SET_FLAMVELL) then return end
-	if c:GetReasonEffect()==REASON_COST and c:GetReasonEffect():IsActivated() and not Duel.GetChainInfo(ev,CHAININFO_TRIGGERING_SETCODES)==SET_FLAMVELL then return end
-	return s.cfilter(c,tp) and c:IsMonster() and c:IsCanBeEffectTarget(e) and c:IsFaceup() 
-		and (c:IsAbleToHand()
-		or (Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and c:IsCanBeSpecialSummoned(e,0,tp,true,false,POS_FACEUP,tp))
-		or (Duel.GetLocationCount(1-tp,LOCATION_MZONE)>0 and c:IsCanBeSpecialSummoned(e,0,tp,true,false,POS_FACEUP,1-tp)))
-end
-	--Activation legality
-function s.sp2tg(e,tp,eg,ep,ev,re,r,rp,chk)
-	local g=eg:Filter(s.sp2filter,nil,e,tp)
-	if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and #g>0 end
-	local c=nil
-	if #g>1 then
-		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
-		c=g:Select(tp,1,1,nil):GetFirst()
-	else
-		c=g:GetFirst()
-	end
-	Duel.SetTargetCard(c)
-	Duel.SetPossibleOperationInfo(0,CATEGORY_TOHAND,c,1,tp,0)
-	Duel.SetPossibleOperationInfo(0,CATEGORY_SPECIAL_SUMMON,c,1,tp,0)
-	if c:IsLocation(LOCATION_GRAVE) then
-		Duel.SetOperationInfo(0,CATEGORY_LEAVE_GRAVE,c,1,0,0)
-	end
-	--Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,c,1,0,g:GetFirst():GetLocation())
-	--Card.RegisterFlagEffect(e:GetHandler(),id,RESET_PHASE|PHASE_END+RESET_EVENT|RESET_LEAVE,0,1)
-end
-function s.sp2op(e,tp,eg,ep,ev,re,r,rp)
-	local tc=Duel.GetFirstTarget()
-	s.name_list[tp][tc:GetCode()]=true
-	if not tc:IsRelateToEffect(e) then return end
-	local b1=true
-	local b2=Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and tc:IsCanBeSpecialSummoned(e,0,tp,true,false)
-	local b3=Duel.GetLocationCount(1-tp,LOCATION_MZONE)>0 and tc:IsCanBeSpecialSummoned(e,0,tp,true,false,POS_FACEUP,1-tp)
-	if not (b1 or b2 or b3) then return end
-	local op=Duel.SelectEffect(tp,
-		{b1,aux.Stringid(id,3)},
-		{b2,aux.Stringid(id,4)},
-		{b3,aux.Stringid(id,5)})
-	if op==1 then
-		Duel.SendtoHand(tc,nil,REASON_EFFECT)
-		Duel.ConfirmCards(1-tp,tc)
-	elseif op==2 or op==3 then
-		local target_player=op==2 and tp or 1-tp
-		if Duel.SpecialSummon(tc,0,tp,target_player,true,false,POS_FACEUP)==0 then return end
-	end
-end
 
 --LP & Banish Ex
 function s.rmcon(e,tp,eg,ep,ev,re,r,rp)

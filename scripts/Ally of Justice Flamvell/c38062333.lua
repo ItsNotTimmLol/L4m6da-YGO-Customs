@@ -23,7 +23,24 @@ function s.initial_effect(c)
 	e1:SetOperation(s.rthop)
 	c:RegisterEffect(e1)
 	]]
-	--Flamvell banish & LP Ex
+	--Extender--Sent
+	local e1=Effect.CreateEffect(c)
+	e1:SetDescription(aux.Stringid(id,1))
+	e1:SetCategory(CATEGORY_SPECIAL_SUMMON)
+	e1:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
+	e1:SetProperty(EFFECT_FLAG_CARD_TARGET+EFFECT_FLAG_DELAY+EFFECT_FLAG_DAMAGE_STEP)
+	e1:SetCode(EVENT_TO_GRAVE)
+	e1:SetRange(LOCATION_FZONE)
+	e1:SetCondition(s.sp2con)
+	e1:SetTarget(s.sp2tg)
+	e1:SetOperation(s.sp2op)
+	c:RegisterEffect(e1)
+	--Banished
+	local e2=e1:Clone()
+	e2:SetCode(EVENT_REMOVE)
+	c:RegisterEffect(e2)
+
+	--[[Flamvell banish & LP Ex
 	local e3=Effect.CreateEffect(c)
 	e3:SetDescription(aux.Stringid(id,0))
 	e3:SetCategory(CATEGORY_RECOVER)
@@ -42,37 +59,86 @@ function s.initial_effect(c)
 	e7:SetCountLimit(1)
 	e7:SetTarget(s.tg)
 	e7:SetOperation(s.op)
-	c:RegisterEffect(e7)
-	--[[Modify Flamvell ATK/DEF
-	local e8=Effect.CreateEffect(c)
-	e8:SetType(EFFECT_TYPE_FIELD)
-	e8:SetCode(EFFECT_UPDATE_ATTACK)
-	e8:SetRange(LOCATION_SZONE)
-	e8:SetTargetRange(LOCATION_MZONE,0)
-	e8:SetTarget(function(_,c) return c:IsSetCard(SET_FLAMVELL) end)
-	e8:SetValue(function(_,c) return c:GetLevel()*100 end)
-	c:RegisterEffect(e8)
-	local e9=e8:Clone()
-	e9:SetCode(EFFECT_UPDATE_DEFENSE)
-	c:RegisterEffect(e9)
-	--[[local e9=e8:Clone()
-	e9:SetCode(EFFECT_ATTACK_ALL)
-	e9:SetValue(1,id)
-	c:RegisterEffect(e9)]]--
-	--[[local e10=Effect.CreateEffect(c)
-	e10:SetType(EFFECT_TYPE_FIELD)
-	e10:SetCode(EFFECT_CANNOT_ATTACK_ANNOUNCE)
-	e10:SetProperty(EFFECT_FLAG_IGNORE_IMMUNE+EFFECT_FLAG_OATH)
-	e10:SetRange(LOCATION_SZONE)
-	e10:SetTargetRange(LOCATION_MZONE,0)
-	e10:SetTarget(s.atk2tg)
-	c:RegisterEffect(e10)]]--
+	c:RegisterEffect(e7)]]
+	--register names
+	aux.GlobalCheck(s,function()
+		s.name_list={}
+		s.name_list[0]={}
+		s.name_list[1]={}
+		aux.AddValuesReset(function()
+			s.name_list[0]={}
+			s.name_list[1]={}
+		end)
+	end)]]
 end
-s.listed_names={74845897}
-s.listed_series={SET_FLAMVELL}
+s.listed_names={40155554}
+s.listed_series={SET_ALLY_OF_JUSTICE,SET_FLAMVELL}
+
+--Extender
+function s.cfilter(c,tp)
+	return (c:IsSetCard(SET_ALLY_OF_JUSTICE) or c:IsSetCard(SET_FLAMVELL) and c:IsControler(tp)
+		and not s.name_list[tp][c:GetCode()]
+end
+function s.sp2con(e,tp,eg,ep,ev,re,r,rp)
+	for rc in aux.Next(eg) do
+		if (rc:IsSetCard(SET_ALLY_OF_JUSTICE) or rc:IsSetCard(SET_FLAMVELL) and rc:IsControler(tp) then return eg:IsExists(s.cfilter,1,nil,tp) end
+	end
+	return false
+end
+
+function s.sp2filter(c,e,tp,ev)
+	if c:GetReasonCard() and not (c:GetReasonCard():IsSetCard(SET_ALLY_OF_JUSTICE) or c:GetReasonCard():IsSetCard(SET_FLAMVELL)) then return end
+	if c:GetReasonEffect() and not (c:GetReasonEffect():GetHandler():IsSetCard(SET_ALLY_OF_JUSTICE) or c:GetReasonEffect():GetHandler():IsSetCard(SET_FLAMVELL) ) then return end
+	if c:GetReasonEffect()==REASON_COST and c:GetReasonEffect():IsActivated() and not (Duel.GetChainInfo(ev,CHAININFO_TRIGGERING_SETCODES)==SET_ALLY_OF_JUSTICE or Duel.GetChainInfo(ev,CHAININFO_TRIGGERING_SETCODES)==SET_FLAMVELL) then return end
+	return s.cfilter(c,tp) and c:IsMonster() and c:IsCanBeEffectTarget(e) and c:IsFaceup() 
+		and (c:IsAbleToHand()
+		or (Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and c:IsCanBeSpecialSummoned(e,0,tp,true,false,POS_FACEUP,tp))
+		or (Duel.GetLocationCount(1-tp,LOCATION_MZONE)>0 and c:IsCanBeSpecialSummoned(e,0,tp,true,false,POS_FACEUP,1-tp)))
+end
+	--Activation legality
+function s.sp2tg(e,tp,eg,ep,ev,re,r,rp,chk)
+	local g=eg:Filter(s.sp2filter,nil,e,tp)
+	if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and #g>0 end
+	local c=nil
+	if #g>1 then
+		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
+		c=g:Select(tp,1,1,nil):GetFirst()
+	else
+		c=g:GetFirst()
+	end
+	Duel.SetTargetCard(c)
+	Duel.SetPossibleOperationInfo(0,CATEGORY_TOHAND,c,1,tp,0)
+	Duel.SetPossibleOperationInfo(0,CATEGORY_SPECIAL_SUMMON,c,1,tp,0)
+	if c:IsLocation(LOCATION_GRAVE) then
+		Duel.SetOperationInfo(0,CATEGORY_LEAVE_GRAVE,c,1,0,0)
+	end
+	--Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,c,1,0,g:GetFirst():GetLocation())
+	--Card.RegisterFlagEffect(e:GetHandler(),id,RESET_PHASE|PHASE_END+RESET_EVENT|RESET_LEAVE,0,1)
+end
+function s.sp2op(e,tp,eg,ep,ev,re,r,rp)
+	local tc=Duel.GetFirstTarget()
+	s.name_list[tp][tc:GetCode()]=true
+	if not tc:IsRelateToEffect(e) then return end
+	local b1=true
+	local b2=Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and tc:IsCanBeSpecialSummoned(e,0,tp,true,false)
+	local b3=Duel.GetLocationCount(1-tp,LOCATION_MZONE)>0 and tc:IsCanBeSpecialSummoned(e,0,tp,true,false,POS_FACEUP,1-tp)
+	if not (b1 or b2 or b3) then return end
+	local op=Duel.SelectEffect(tp,
+		{b1,aux.Stringid(id,3)},
+		{b2,aux.Stringid(id,4)},
+		{b3,aux.Stringid(id,5)})
+	if op==1 then
+		Duel.SendtoHand(tc,nil,REASON_EFFECT)
+		Duel.ConfirmCards(1-tp,tc)
+	elseif op==2 or op==3 then
+		local target_player=op==2 and tp or 1-tp
+		if Duel.SpecialSummon(tc,0,tp,target_player,true,false,POS_FACEUP)==0 then return end
+	end
+end
+
 --Add to hand
 function s.thfilter(c)
-	return (c:IsSetCard(SET_FLAMVELL) or c:IsCode(74845897)) --[[and not c:IsCode(id)]] and c:IsAbleToHand()
+	return ((c:IsSetCard(SET_ALLY_OF_JUSTICE) or c:IsSetCard(SET_FLAMVELL) or c:IsCode(74845897)) --[[and not c:IsCode(id)]] and c:IsAbleToHand()
 end
 function s.res1con(sg,e,tp,mg)
 	return sg:FilterCount(Card.IsSetCard,nil,SET_FLAMVELL)<=1 and sg:FilterCount(Card.IsCode,nil,74845897)<=1
@@ -111,11 +177,6 @@ end
 function s.atkval(e,c)
 	return c:GetBaseDefense()-200
 end
---Restrict attacks
-function s.atk2tg(e,c)
-	return not c:IsSetCard(SET_FLAMVELL)
-end
-
 
 --Shuffle and return to hand
 function s.rthfilter(c)
