@@ -17,3 +17,6 @@ To add the repository in EDOPro, add the following code to your (edopro-sim)\con
 ```
 
 *Be sure to include the comma at the end of the previous item.*
+
+## Uninstallation
+Reverse the steps for installation and delete the "L4m6da-YGO-Customs" folder in your (edopro-sim)\repositories folder.
