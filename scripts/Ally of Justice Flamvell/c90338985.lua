@@ -7,6 +7,7 @@ function s.initial_effect(c)
 	e1:SetType(EFFECT_TYPE_ACTIVATE)
 	e1:SetCategory(CATEGORY_SPECIAL_SUMMON)
 	e1:SetCode(EVENT_FREE_CHAIN)
+	e1:SetDescription(aux.Stringid(id,0))
 	e1:SetCountLimit(1,id)
 	e1:SetTarget(s.sptg)
 	e1:SetOperation(s.spop)
@@ -40,14 +41,21 @@ s.listed_names={40155554,59482302}
 s.listed_series={SET_ALLY_OF_JUSTICE,SET_FLAMVELL}
 --Basically soul charge
 function s.sp1filter(c,e,tp)
-	return (c:IsCode(59482302) or c:IsSetCard(SET_FLAMVELL)) and c:IsMonster() 
+	return (c:IsCode(40155554) or c:IsCode(59482302) or c:IsSetCard(SET_FLAMVELL)) and c:IsMonster() 
+		and ((Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and c:IsCanBeSpecialSummoned(e,0,tp,false,false,POS_FACEUP,tp))
+		or (Duel.GetLocationCount(1-tp,LOCATION_MZONE)>0 and c:IsCanBeSpecialSummoned(e,0,tp,false,false,POS_FACEUP,1-tp)))
+end
+function s.sp2filter(c,e,tp)
+	return (c:IsCode(40155554) or c:IsCode(59482302) or c:IsSetCard(SET_ALLY_OF_JUSTICE) or c:IsSetCard(SET_FLAMVELL)) and c:IsMonster() 
 		and ((Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and c:IsCanBeSpecialSummoned(e,0,tp,false,false,POS_FACEUP,tp))
 		or (Duel.GetLocationCount(1-tp,LOCATION_MZONE)>0 and c:IsCanBeSpecialSummoned(e,0,tp,false,false,POS_FACEUP,1-tp)))
 end
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
 	local c=e:GetHandler()
-	local g=Duel.GetMatchingGroup(s.sp1filter,tp,LOCATION_DECK,0,nil,e,tp)
-	if chk==0 then return #g>0
+	local g1=Duel.GetMatchingGroup(s.sp1filter,tp,LOCATION_DECK,0,nil,e,tp)
+	local g2=Duel.GetMatchingGroup(s.sp2filter,tp,LOCATION_DECK,0,nil,e,tp)
+	g1:Merge(g2)
+	if chk==0 then return #g1>0 end
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,PLAYER_ALL,LOCATION_DECK)
 end
 function s.spop(e,tp,eg,ep,ev,re,r,rp)
@@ -70,7 +78,7 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	local ft2=Duel.GetLocationCount(tp,LOCATION_MZONE)
 	if ft2<ct2 then ct2=ft2 end
 	if Duel.IsPlayerAffectedByEffect(tp,CARD_BLUEEYES_SPIRIT) then ft2=1 end
-	local g2=Duel.GetMatchingGroup(s.sp1filter,tp,LOCATION_DECK,0,nil,e,tp)
+	local g2=Duel.GetMatchingGroup(s.sp2filter,tp,LOCATION_DECK,0,nil,e,tp)
 	local sg2=g2:Select(tp,1,ct2,nil)
 	tc=sg2:GetFirst()
 	for tc in aux.Next(sg2) do
@@ -88,6 +96,7 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	e0:SetCountLimit(1)
 	e0:SetLabel(fid)
 	e0:SetLabelObject(sg1)
+	e0:SetDescription(aux.Stringid(id,1))
 	e0:SetCondition(s.descon)
 	e0:SetOperation(s.desop)
 	Duel.RegisterEffect(e0,tp)
@@ -97,17 +106,22 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	e1:SetCode(EVENT_PHASE|PHASE_END)
 	e1:SetCountLimit(1)
 	e1:SetReset(RESET_PHASE|PHASE_END)
+	e1:SetDescription(aux.Stringid(id,0))
 	e1:SetCondition(s.sp2con)
 	e1:SetTarget(s.sp2tg)
 	e1:SetOperation(s.sp2op)
 	Duel.RegisterEffect(e1,tp)
 end
 --Special Summon during End Phase
+function s.sp3filter(c,e,tp)
+	return c:IsSetCard(SET_FLAMVELL) and c:IsMonster() 
+		and Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and c:IsCanBeSpecialSummoned(e,0,tp,false,false,POS_FACEUP,tp)
+end
 function s.sp2con(e,tp,eg,ep,ev,re,r,rp)
 	return Duel.GetTurnCount()~=e:GetLabel()
 end
 function s.sp2tg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.IsExistingMatchingCard(s.spfilter,tp,LOCATION_DECK,0,1,nil,e,tp)
+	if chk==0 then return Duel.IsExistingMatchingCard(s.sp3filter,tp,LOCATION_DECK,0,1,nil,e,tp)
 		and Duel.GetLocationCount(tp,LOCATION_MZONE)>0 end
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_DECK)
 end
@@ -117,7 +131,7 @@ function s.sp2op(e,tp,eg,ep,ev,re,r,rp)
 	if ft<=0 then return end
 	if ft>3 then ft=3 end
 	if Duel.IsPlayerAffectedByEffect(tp,CARD_BLUEEYES_SPIRIT) then ft=1 end
-	local g=Duel.SelectMatchingCard(tp,s.spfilter,tp,LOCATION_DECK,0,ft,ft,nil,e,tp)
+	local g=Duel.SelectMatchingCard(tp,s.sp3filter,tp,LOCATION_DECK,0,ft,ft,nil,e,tp)
 	if #g>0 then
 		local tc=g:GetFirst()
 		for tc in aux.Next(g) do
@@ -134,6 +148,7 @@ function s.sp2op(e,tp,eg,ep,ev,re,r,rp)
 	e0:SetCode(EVENT_PHASE+PHASE_END)
 	e0:SetProperty(EFFECT_FLAG_IGNORE_IMMUNE)
 	e0:SetReset(RESET_PHASE|PHASE_END)
+	e0:SetDescription(aux.Stringid(id,1))
 	e0:SetCountLimit(1)
 	e0:SetLabel(fid)
 	e0:SetLabelObject(g)
@@ -160,7 +175,7 @@ function s.desop(e,tp,eg,ep,ev,re,r,rp)
 	Duel.Destroy(tg,REASON_EFFECT)
 end
 
-
+--[[
 function s.thfilter(c)
 	return c:IsMonster() and c:IsSetCard(SET_FLAMVELL) and c:IsAbleToHand()
 end
@@ -172,7 +187,7 @@ function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return Duel.IsExistingMatchingCard(s.spfilter,tp,LOCATION_DECK,0,1,nil,e,tp)
 		and Duel.IsExistingMatchingCard(s.thfilter,tp,LOCATION_DECK,0,1,nil,e,tp)
 		and Duel.GetLocationCount(tp,LOCATION_MZONE)>0	
-		--[[and not Duel.IsPlayerAffectedByEffect(tp,CARD_BLUEEYES_SPIRIT)]] end
+		--[[and not Duel.IsPlayerAffectedByEffect(tp,CARD_BLUEEYES_SPIRIT) end
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,2,tp,LOCATION_DECK)
 	Duel.SetOperationInfo(0,CATEGORY_TOHAND,nil,1,tp,LOCATION_DECK)
 	Duel.SetPossibleOperationInfo(0,CATEGORY_REMOVE,nil,3,1-tp,LOCATION_GRAVE)
@@ -290,4 +305,4 @@ function s.desop(e,tp,eg,ep,ev,re,r,rp)
 	local tg=g:Filter(s.desfilter,nil,e:GetLabel())
 	g:DeleteGroup()
 	Duel.Destroy(tg,REASON_EFFECT)
-end
+end]]
