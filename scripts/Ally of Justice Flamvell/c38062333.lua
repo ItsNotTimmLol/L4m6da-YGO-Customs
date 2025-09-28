@@ -173,9 +173,9 @@ function s.sp2op(e,tp,eg,ep,ev,re,r,rp)
 	local b3=Duel.GetLocationCount(1-tp,LOCATION_MZONE)>0 and tc:IsCanBeSpecialSummoned(e,0,tp,true,false,POS_FACEUP,1-tp)
 	if not (b1 or b2 or b3) then return end
 	local op=Duel.SelectEffect(tp,
-		{b1,aux.Stringid(id,3)},
-		{b2,aux.Stringid(id,4)},
-		{b3,aux.Stringid(id,5)})
+		{b1,aux.Stringid(id,2)},
+		{b2,aux.Stringid(id,3)},
+		{b3,aux.Stringid(id,4)})
 	if op==1 then
 		Duel.SendtoHand(tc,nil,REASON_EFFECT)
 		Duel.ConfirmCards(1-tp,tc)
