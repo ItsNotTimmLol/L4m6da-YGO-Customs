@@ -4,12 +4,8 @@ local s,id=GetID()
 function s.initial_effect(c)
 	--Activate
 	local e0=Effect.CreateEffect(c)
-	--e0:SetDescription(aux.Stringid(id,0))
-	--e0:SetCategory(CATEGORY_TOHAND+CATEGORY_SEARCH)
 	e0:SetType(EFFECT_TYPE_ACTIVATE)
 	e0:SetCode(EVENT_FREE_CHAIN)
-	--e0:SetCountLimit(1)
-	--e0:SetOperation(s.thop)
 	c:RegisterEffect(e0)
 	--[[Shuffle to return self to hand
 	local e1=Effect.CreateEffect(c)
@@ -21,24 +17,34 @@ function s.initial_effect(c)
 	e1:SetCost(s.rthcost)
 	e1:SetTarget(s.rthtg)
 	e1:SetOperation(s.rthop)
-	c:RegisterEffect(e1)
-	]]
-	--Extender--Sent
+	c:RegisterEffect(e1)]]
+	--Change to LIGHT or face-down
 	local e1=Effect.CreateEffect(c)
-	e1:SetDescription(aux.Stringid(id,1))
-	e1:SetCategory(CATEGORY_SPECIAL_SUMMON)
-	e1:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
-	e1:SetProperty(EFFECT_FLAG_CARD_TARGET+EFFECT_FLAG_DELAY+EFFECT_FLAG_DAMAGE_STEP)
-	e1:SetCode(EVENT_TO_GRAVE)
-	e1:SetRange(LOCATION_FZONE)
-	e1:SetCondition(s.sp2con)
-	e1:SetTarget(s.sp2tg)
-	e1:SetOperation(s.sp2op)
+	e1:SetDescription(aux.Stringid(id,0))
+	e1:SetCategory(CATEGORY_POSITION)
+	e1:SetType(EFFECT_TYPE_IGNITION)
+	e1:SetProperty(EFFECT_FLAG_CARD_TARGET)
+	e1:SetRange(LOCATION_SZONE)
+	e1:SetCountLimit(1)
+	e1:SetTarget(s.sptg)
+	e1:SetOperation(s.spop)
 	c:RegisterEffect(e1)
-	--Banished
-	local e2=e1:Clone()
-	e2:SetCode(EVENT_REMOVE)
+	--Extender--Sent
+	local e2=Effect.CreateEffect(c)
+	e2:SetDescription(aux.Stringid(id,1))
+	e2:SetCategory(CATEGORY_SPECIAL_SUMMON)
+	e2:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
+	e2:SetProperty(EFFECT_FLAG_CARD_TARGET+EFFECT_FLAG_DELAY+EFFECT_FLAG_DAMAGE_STEP)
+	e2:SetCode(EVENT_TO_GRAVE)
+	e2:SetRange(LOCATION_SZONE)
+	e2:SetCondition(s.sp2con)
+	e2:SetTarget(s.sp2tg)
+	e2:SetOperation(s.sp2op)
 	c:RegisterEffect(e2)
+	--Banished
+	local e3=e2:Clone()
+	e3:SetCode(EVENT_REMOVE)
+	c:RegisterEffect(e3)
 
 	--[[Flamvell banish & LP Ex
 	local e3=Effect.CreateEffect(c)
@@ -73,6 +79,38 @@ function s.initial_effect(c)
 end
 s.listed_names={40155554}
 s.listed_series={SET_ALLY_OF_JUSTICE,SET_FLAMVELL}
+
+function s.posfilter(c)
+	return c:IsFaceup() and (c:IsCanTurnSet() or not c:IsAttribute(ATTRIBUTE_LIGHT))
+end
+function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
+	if chkc then return false end
+	if chk==0 then return Duel.IsExistingTarget(s.posfilter,tp,LOCATION_MZONE,0,1,nil) or Duel.IsExistingTarget(s.posfilter,tp,0,LOCATION_MZONE,1,nil) end
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_POSCHANGE)
+	local g1=Duel.SelectTarget(tp,s.posfilter,tp,LOCATION_MZONE,0,0,1,nil)
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_POSCHANGE)
+	local g2=Duel.SelectTarget(tp,s.posfilter,tp,0,LOCATION_MZONE,0,1,nil)
+	g1:Merge(g2)
+	Duel.SetOperationInfo(0,CATEGORY_POSITION,g1,2,0,0)
+end
+function s.spop(e,tp,eg,ep,ev,re,r,rp)
+	local c=e:GetHandler()
+	local g1=Duel.GetTargetCards(e):Filter(Card.IsCanTurnSet,nil)
+	local g2=Duel.GetTargetCards(e):Filter(Card.IsAttribute,ATTRIBUTE_LIGHT)
+	if #g1>0 then
+		for tc in g1:GetFirst() do
+			--It becomes LIGHT
+			local e1=Effect.CreateEffect(c)
+			e1:SetType(EFFECT_TYPE_SINGLE)
+			e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE)
+			e1:SetCode(EFFECT_CHANGE_ATTRIBUTE)
+			e1:SetValue(ATTRIBUTE_LIGHT)
+			e1:SetReset(RESET_EVENT|RESETS_STANDARD)
+			tc:RegisterEffect(e1)
+		end
+	else Duel.ChangePosition(g,POS_FACEDOWN_DEFENSE)
+	end
+end
 
 --Extender
 function s.cfilter(c,tp)

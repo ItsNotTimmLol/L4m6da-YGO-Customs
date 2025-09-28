@@ -25,7 +25,7 @@ function s.initial_effect(c)
 	local e2=Effect.CreateEffect(c)
 	e2:SetType(EFFECT_TYPE_FIELD)
 	e2:SetCode(EFFECT_IMMUNE_EFFECT)
-	e2:SetTargetRange(LOCATION_MZONE|LOCATION_HAND,0)
+	e2:SetTargetRange(LOCATION_MZONE,0)
 	e2:SetRange(LOCATION_FZONE)
 	e2:SetTarget(s.immtg)
 	e2:SetValue(s.immval)
@@ -133,8 +133,8 @@ end
 s.listed_names={40155554}
 s.listed_series={SET_ALLY_OF_JUSTICE,SET_FLAMVELL}
 
-function s.immtg(c)
-	return (c:IsCode(40155554) or c:IsCode(59482302) or c:IsSetCard(SET_ALLY_OF_JUSTICE,fc,sumtype,tp) or c:IsSetCard(SET_FLAMVELL,fc,sumtype,tp)) and c:IsMonster() and not c:IsAttack(c:GetBaseAttack())
+function s.immtg(e,c)
+	return (c:IsCode(40155554) or c:IsSetCard(SET_ALLY_OF_JUSTICE) or c:IsSetCard(SET_FLAMVELL)) and c:IsMonster() --and not c:IsAttack(c:GetBaseAttack())
 end
 function s.immval(e,te)
 	return re:GetOwnerPlayer()~=e:GetHandlerPlayer()
