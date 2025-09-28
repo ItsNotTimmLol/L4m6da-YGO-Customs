@@ -1,6 +1,5 @@
---Ally of Justice Synthesis
+--Flamvell Coalescence
 --Scripted by WolfSif
-
 local s,id=GetID()
 function s.initial_effect(c)
 	--Special Summon 1 'Ally' monster from your hand or GY, and if you do, equip it with this card
@@ -39,22 +38,35 @@ function s.initial_effect(c)
 	e4:SetTarget(s.tg)
 	c:RegisterEffect(e4)
 	--Code check Pyro
+	local e5=Effect.CreateEffect(c)
+	e5:SetType(EFFECT_TYPE_FIELD)
+	e5:SetProperty(EFFECT_FLAG_PLAYER_TARGET)
+	e5:SetCode(id)
+	e5:SetRange(LOCATION_SZONE)
+	e5:SetTargetRange(1,0)
+	e5:SetValue(s.raceval)
+	c:RegisterEffect(e5)
+	--Code check Fire
 	local e6=Effect.CreateEffect(c)
 	e6:SetType(EFFECT_TYPE_FIELD)
 	e6:SetProperty(EFFECT_FLAG_PLAYER_TARGET)
 	e6:SetCode(id)
 	e6:SetRange(LOCATION_SZONE)
 	e6:SetTargetRange(1,0)
-	e6:SetValue(s.raceval)
+	e6:SetValue(s.attval)
 	c:RegisterEffect(e6)
-	--Code check Fire
+	--Add to hand to shuffle into Deck and bounce to hand
 	local e7=Effect.CreateEffect(c)
-	e7:SetType(EFFECT_TYPE_FIELD)
-	e7:SetProperty(EFFECT_FLAG_PLAYER_TARGET)
-	e7:SetCode(id)
-	e7:SetRange(LOCATION_SZONE)
-	e7:SetTargetRange(1,0)
-	e7:SetValue(s.attval)
+	e7:SetDescription(aux.Stringid(id,1))
+	e7:SetType(EFFECT_TYPE_TRIGGER_O)
+	e7:SetCategory(CATEGORY_TODECK)
+	e7:SetProperty(EFFECT_FLAG_DELAY)
+	e7:SetCode(EVENT_CHAINING)
+	e7:SetRange(LOCATION_GRAVE|LOCATION_REMOVED)
+	e7:SetCountLimit(1,0,EFFECT_COUNT_CODE_CHAIN)
+	e7:SetCondition(function(e,tp,eg,ep,ev,re,r,rp) return rp==tp and re:IsMonsterEffect() and re:IsActiveType(TYPE_SYNCHRO) and re:IsSetCard(s.listedseries) end)
+	e7:SetTarget(s.returntg)
+	e7:SetOperation(s.returnop)
 	c:RegisterEffect(e7)
 	--[[Flamvell banish & LP Ex
 	local e8=Effect.CreateEffect(c)
@@ -117,6 +129,34 @@ end
 function s.attval(e,c,re,chk)
 	if chk==0 then return true end
 	return ATTRIBUTE_FIRE
+end
+
+--Shuffle to bounce
+function s.returnfilter(c)
+	return (c:IsLocation(LOCATION_GRAVE) or c:IsFaceup()) and c:IsAbleToDeck()
+end
+function s.returntg(e,tp,eg,ep,ev,re,r,rp,chk)
+	local c=e:GetHandler()
+	if chk==0 then return c:IsAbleToHand() and Duel.IsExistingMatchingCard(s.returnfilter,tp,LOCATION_HAND,0,2,nil) end
+	Duel.SetOperationInfo(0,CATEGORY_TODECK,nil,1,tp,LOCATION_GRAVE|LOCATION_REMOVED)
+end
+function s.returnop(e,tp,eg,ep,ev,re,r,rp)
+	local c=e:GetHandler()
+	if not (c:IsRelateToEffect(e) and Duel.SendtoHand(c,nil,REASON_EFFECT)>0 and c:IsLocation(LOCATION_HAND)) then return end
+	Duel.ShuffleHand(tp)
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TODECK)
+	local g1=Duel.SelectMatchingCard(tp,s.tdfilter,tp,LOCATION_GRAVE,0,1,1,nil)
+	if #g1>0 then
+		Duel.HintSelection(g,true)
+		local g2=Duel.GetMatchingGroup(Card.IsAbleToHand,tp,0,LOCATION_ONFIELD,nil)
+		if Duel.SendtoDeck(g1,nil,SEQ_DECKSHUFFLE,REASON_EFFECT) and Duel.SelectYesNo(tp,aux.Stringid(id,2)) then
+			Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_RTOHAND)
+			local hg=g2:Select(tp,1,1,nil)
+			Duel.HintSelection(hg,true)
+			Duel.BreakEffect()
+			Duel.SendtoHand(hg,nil,REASON_EFFECT)
+		end	
+	end
 end
 
 --LP & Banish Ex

@@ -1,4 +1,4 @@
---Ally of Justice Simulation
+--Ally of Justice Simulacrum
 --Scripted by WolfSif
 local s,id=GetID()
 function s.initial_effect(c)
@@ -95,7 +95,7 @@ s.listed_series={SET_ALLY_OF_JUSTICE,SET_FLAMVELL}
 
 --setcodes
 function s.setcodetg(e,c)
-	return (c:IsCode(40155554) or c:IsCode(59482302) or c:GetOriginalSetCard()==SET_ALLY_OF_JUSTICE or c:GetOriginalSetCard()==SET_FLAMVELL) and c:IsMonster()
+	return (c:IsCode(40155554) or c:IsCode(59482302) or c:GetOriginalSetCard()==s.listed_series) and c:IsMonster()
 end
 --to light or facedown
 function s.posfilter(c)
@@ -203,7 +203,7 @@ end
 
 --Add to hand
 function s.thfilter(c)
-	return ((c:IsSetCard(SET_ALLY_OF_JUSTICE) or c:IsSetCard(SET_FLAMVELL)) or c:IsCode(74845897)) --[[and not c:IsCode(id)]] and c:IsAbleToHand()
+	return (c:IsSetCard(s.listed_series) or c:IsCode(74845897)) --[[and not c:IsCode(id)]] and c:IsAbleToHand()
 end
 function s.res1con(sg,e,tp,mg)
 	return sg:FilterCount(Card.IsSetCard,nil,SET_FLAMVELL)<=1 and sg:FilterCount(Card.IsCode,nil,74845897)<=1

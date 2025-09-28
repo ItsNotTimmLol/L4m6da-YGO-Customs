@@ -1,4 +1,4 @@
---Ally of Justice Flamvell Impact
+--Ally of Justice Flamvell Contractor
 --Scripted by WolfSif
 local s,id=GetID()
 function s.initial_effect(c)
@@ -136,7 +136,7 @@ function s.thcon(e,tp,eg,ep,ev,re,r,rp)
 	return c:IsPreviousPosition(POS_FACEUP) and not c:IsLocation(LOCATION_EXTRA)
 end
 function s.thfilter(c)
-	return (c:IsSetCard(SET_ALLY_OF_JUSTICE) or c:IsSetCard(SET_FLAMVELL)) and c:IsAbleToHand()
+	return c:IsSetCard(s.listed_series) and c:IsAbleToHand()
 end
 function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return Duel.IsExistingMatchingCard(s.thfilter,tp,LOCATION_DECK,0,1,nil) end

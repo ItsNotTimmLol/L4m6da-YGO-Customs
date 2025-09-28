@@ -1,4 +1,4 @@
---Ally of Justice Field
+--Ally of Justice Assimilation
 --Scripted by WolfSif
 local s,id=GetID()
 function s.initial_effect(c)
@@ -84,8 +84,8 @@ function s.initial_effect(c)
 		end)
 	end)
 end
-
-s.listed_series={SET_ALLY_OF_JUSTICE}
+s.listed_names={40155554,59482302}
+s.listed_series={SET_ALLY_OF_JUSTICE,SET_FLAMVELL}
 --To hand
 function s.thfilter(c)
 	return c:IsSetCard(SET_ALLY_OF_JUSTICE) --[[and c:IsMonster()]] and c:IsAbleToHand()
