@@ -46,9 +46,14 @@ function s.sp1filter(c,e,tp)
 		or (Duel.GetLocationCount(1-tp,LOCATION_MZONE)>0 and c:IsCanBeSpecialSummoned(e,0,tp,false,false,POS_FACEUP,1-tp)))
 end
 function s.sp2filter(c,e,tp)
-	return (c:IsCode(40155554) or c:IsCode(59482302) or c:IsSetCard(SET_ALLY_OF_JUSTICE) or c:IsSetCard(SET_FLAMVELL)) and c:IsMonster() 
+	return (c:IsCode(40155554) or c:IsCode(59482302) or c:IsSetCard(SET_ALLY_OF_JUSTICE) or c:IsSetCard(SET_FLAMVELL))
 		and ((Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and c:IsCanBeSpecialSummoned(e,0,tp,false,false,POS_FACEUP,tp))
 		or (Duel.GetLocationCount(1-tp,LOCATION_MZONE)>0 and c:IsCanBeSpecialSummoned(e,0,tp,false,false,POS_FACEUP,1-tp)))
+		and not Duel.IsExistingMatchingCard(s.uniquefilter,tp,LOCATION_MZONE|LOCATION_GRAVE|LOCATION_REMOVED,0,1,nil,c:GetCode())
+		and c:IsMonster() 
+end
+function s.uniquefilter(c,code)
+	return c:IsCode(code) and c:IsFaceup() and c:IsMonster()
 end
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
 	local c=e:GetHandler()
@@ -58,13 +63,15 @@ function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return #g1>0 end
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,PLAYER_ALL,LOCATION_DECK)
 end
+function s.rescon1(sg,e,tp,mg)
+	return sg:FilterCount(Card.IsSetCard,nil,SET_FLAMVELL)<=1 and sg:FilterCount(Card.IsCode,nil,40155554)<=1 and sg:FilterCount(Card.IsCode,nil,59482302)<=1
+end
 function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	local fid=e:GetHandler():GetFieldID()
 	local g1=Duel.GetMatchingGroup(s.sp1filter,tp,LOCATION_DECK,0,nil,e,tp)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
 	local ft1=Duel.GetLocationCount(1-tp,LOCATION_MZONE)
-	if ft1>1 then ft1=1 end
-	local sg1=g1:Select(tp,1,ft1,nil)
+	local sg1=aux.SelectUnselectGroup(g1,e,tp,1,ft1,s.rescon1,1,tp,HINTMSG_SPSUMMON)
 	local tc=sg1:GetFirst()
 	if Duel.IsPlayerAffectedByEffect(tp,CARD_BLUEEYES_SPIRIT) then ft1=1 end
 	if ft1>0 then
@@ -77,9 +84,9 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	local ct2=Duel.GetFieldGroupCount(tp,0,LOCATION_ONFIELD)
 	local ft2=Duel.GetLocationCount(tp,LOCATION_MZONE)
 	if ft2<ct2 then ct2=ft2 end
-	if Duel.IsPlayerAffectedByEffect(tp,CARD_BLUEEYES_SPIRIT) then ft2=1 end
+	if Duel.IsPlayerAffectedByEffect(tp,CARD_BLUEEYES_SPIRIT) then ct2=1 end
 	local g2=Duel.GetMatchingGroup(s.sp2filter,tp,LOCATION_DECK,0,nil,e,tp)
-	local sg2=g2:Select(tp,1,ct2,nil)
+	local sg2=aux.SelectUnselectGroup(g2,e,tp,1,ct2,aux.dncheck,1,tp,HINTMSG_SPSUMMON)
 	tc=sg2:GetFirst()
 	for tc in aux.Next(sg2) do
 		Duel.SpecialSummonStep(tc,0,tp,tp,false,false,POS_FACEUP)
