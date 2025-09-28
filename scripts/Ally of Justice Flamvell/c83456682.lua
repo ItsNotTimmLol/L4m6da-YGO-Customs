@@ -41,7 +41,6 @@ function s.initial_effect(c)
 	c:RegisterEffect(e3)
 	--Also treated as Flamvell
 	local e4=e3:Clone()
-	e4:SetCode(EFFECT_ADD_SETCODE)
 	e4:SetValue(SET_FLAMVELL)
 	c:RegisterEffect(e4)
 	--SS if monster leaves opponent's field
@@ -140,12 +139,12 @@ s.listed_series={SET_ALLY_OF_JUSTICE,SET_FLAMVELL}
 function s.immtg(e,c)
 	return (c:IsCode(40155554) or c:IsSetCard(SET_ALLY_OF_JUSTICE) or c:IsSetCard(SET_FLAMVELL)) and c:IsMonster() and not c:IsAttack(c:GetBaseAttack())
 end
-function s.immval(e,te)
+function s.immval(e,re)
 	return re:GetOwnerPlayer()~=e:GetHandlerPlayer()
 end
 --setcodes
 function s.setcodetg(e,c)
-	return (c:IsCode(40155554) or c:IsSetCard(SET_ALLY_OF_JUSTICE) or c:IsSetCard(SET_FLAMVELL)) and c:IsMonster()
+	return (c:IsCode(40155554) or c:GetOriginalSetCard()==SET_ALLY_OF_JUSTICE or c:GetOriginalSetCard()==SET_FLAMVELL) and c:IsMonster()
 end
 
 function s.lightcon(e)

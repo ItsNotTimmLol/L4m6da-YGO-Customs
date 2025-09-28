@@ -81,7 +81,13 @@ s.listed_names={40155554}
 s.listed_series={SET_ALLY_OF_JUSTICE,SET_FLAMVELL}
 
 function s.posfilter(c)
-	return c:IsFaceup() and (c:IsCanTurnSet() or not c:IsAttribute(ATTRIBUTE_LIGHT))
+	return c:IsFaceup() and (s.pos1filter(c) or s.pos2filter(c))
+end
+function s.pos1filter(c)
+	return not c:IsAttribute(ATTRIBUTE_LIGHT)
+end
+function s.pos2filter(c)
+	return c:IsAttribute(ATTRIBUTE_LIGHT) and c:IsCanTurnSet()
 end
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	if chkc then return false end
@@ -89,16 +95,17 @@ function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_POSCHANGE)
 	local g1=Duel.SelectTarget(tp,s.posfilter,tp,LOCATION_MZONE,0,0,1,nil)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_POSCHANGE)
-	local g2=Duel.SelectTarget(tp,s.posfilter,tp,0,LOCATION_MZONE,0,1,nil)
+	local g2=Duel.SelectTarget(tp,s.posfilter,tp,0,LOCATION_MZONE,#g1-1,1,nil)
 	g1:Merge(g2)
 	Duel.SetOperationInfo(0,CATEGORY_POSITION,g1,2,0,0)
 end
 function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
-	local g1=Duel.GetTargetCards(e):Filter(Card.IsCanTurnSet,nil)
-	local g2=Duel.GetTargetCards(e):Filter(Card.IsAttribute,ATTRIBUTE_LIGHT)
+	local g1=Duel.GetTargetCards(e):Filter(s.pos1filter,nil)
+	local g2=Duel.GetTargetCards(e):Filter(s.pos2filter,nil)
 	if #g1>0 then
-		for tc in g1:GetFirst() do
+		local tc1=g1:GetFirst()
+		for tc1 in aux.Next(g1) do
 			--It becomes LIGHT
 			local e1=Effect.CreateEffect(c)
 			e1:SetType(EFFECT_TYPE_SINGLE)
@@ -106,9 +113,13 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 			e1:SetCode(EFFECT_CHANGE_ATTRIBUTE)
 			e1:SetValue(ATTRIBUTE_LIGHT)
 			e1:SetReset(RESET_EVENT|RESETS_STANDARD)
-			tc:RegisterEffect(e1)
+			tc1:RegisterEffect(e1)
 		end
-	else Duel.ChangePosition(g,POS_FACEDOWN_DEFENSE)
+	elseif #g2>0 then
+		local tc2=g2:GetFirst()
+		for tc2 in aux.Next(g2) do
+			Duel.ChangePosition(tc2,POS_FACEDOWN_DEFENSE)
+		end
 	end
 end
 
