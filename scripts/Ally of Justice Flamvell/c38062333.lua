@@ -69,19 +69,19 @@ function s.initial_effect(c)
 			s.name_list[0]={}
 			s.name_list[1]={}
 		end)
-	end)]]
+	end)
 end
 s.listed_names={40155554}
 s.listed_series={SET_ALLY_OF_JUSTICE,SET_FLAMVELL}
 
 --Extender
 function s.cfilter(c,tp)
-	return (c:IsSetCard(SET_ALLY_OF_JUSTICE) or c:IsSetCard(SET_FLAMVELL) and c:IsControler(tp)
+	return (c:IsSetCard(SET_ALLY_OF_JUSTICE) or c:IsSetCard(SET_FLAMVELL)) and c:IsControler(tp)
 		and not s.name_list[tp][c:GetCode()]
 end
 function s.sp2con(e,tp,eg,ep,ev,re,r,rp)
 	for rc in aux.Next(eg) do
-		if (rc:IsSetCard(SET_ALLY_OF_JUSTICE) or rc:IsSetCard(SET_FLAMVELL) and rc:IsControler(tp) then return eg:IsExists(s.cfilter,1,nil,tp) end
+		if (rc:IsSetCard(SET_ALLY_OF_JUSTICE) or rc:IsSetCard(SET_FLAMVELL)) and rc:IsControler(tp) then return eg:IsExists(s.cfilter,1,nil,tp) end
 	end
 	return false
 end
@@ -138,7 +138,7 @@ end
 
 --Add to hand
 function s.thfilter(c)
-	return ((c:IsSetCard(SET_ALLY_OF_JUSTICE) or c:IsSetCard(SET_FLAMVELL) or c:IsCode(74845897)) --[[and not c:IsCode(id)]] and c:IsAbleToHand()
+	return ((c:IsSetCard(SET_ALLY_OF_JUSTICE) or c:IsSetCard(SET_FLAMVELL)) or c:IsCode(74845897)) --[[and not c:IsCode(id)]] and c:IsAbleToHand()
 end
 function s.res1con(sg,e,tp,mg)
 	return sg:FilterCount(Card.IsSetCard,nil,SET_FLAMVELL)<=1 and sg:FilterCount(Card.IsCode,nil,74845897)<=1

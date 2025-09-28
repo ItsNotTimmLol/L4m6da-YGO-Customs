@@ -39,7 +39,7 @@ function s.initial_effect(c)
 	local e4=e2:Clone()
 	e4:SetCode(EFFECT_ADD_SETCODE)
 	e4:SetValue(SET_FLAMVELL)
-	c:RegisterEffect(e6)
+	c:RegisterEffect(e4)
 	--SS if monster leaves opponent's field
 	local e5=Effect.CreateEffect(c)
 	e5:SetDescription(aux.Stringid(id,1))
@@ -48,9 +48,9 @@ function s.initial_effect(c)
 	e5:SetProperty(EFFECT_FLAG_DELAY)
 	e5:SetCode(EVENT_LEAVE_FIELD)
 	e5:SetRange(LOCATION_FZONE)
-	e5:SetCondition(s.setcon)
-	e5:SetTarget(s.settg)
-	e5:SetOperation(s.setop)
+	e5:SetCondition(s.spcon)
+	e5:SetTarget(s.sptg)
+	e5:SetOperation(s.spop)
 	c:RegisterEffect(e5)
 	--[[avoid battle damage
 	local e3=Effect.CreateEffect(c)
@@ -137,7 +137,7 @@ function s.immtg(c)
 	return (c:IsCode(40155554) or c:IsCode(59482302) or c:IsSetCard(SET_ALLY_OF_JUSTICE,fc,sumtype,tp) or c:IsSetCard(SET_FLAMVELL,fc,sumtype,tp)) and c:IsMonster() and not c:IsAttack(c:GetBaseAttack())
 end
 function s.immval(e,te)
-	return te:GetOwnerPlayer()==1-e:GetHandlerPlayer() and te:IsActivated()
+	return re:GetOwnerPlayer()~=e:GetHandlerPlayer()
 end
 
 
@@ -145,7 +145,7 @@ function s.lightcon(e)
 	return Duel.IsExistingMatchingCard(s.lightfilter,e:GetHandlerPlayer(),LOCATION_MZONE,0,1,nil)
 end
 function s.lightfilter(c)
-	return (c:IsSetCard(SET_ALLY_OF_JUSTICE) or c:IsSetCard(SET_FLAMVELL)
+	return (c:IsSetCard(SET_ALLY_OF_JUSTICE) or c:IsSetCard(SET_FLAMVELL))
 		and (c:IsType(TYPE_NORMAL) or c:IsLevelAbove(7))
 		and c:IsMonster() and c:IsFaceup()
 end
@@ -161,19 +161,45 @@ function s.spcon(e,tp,eg,ep,ev,re,r,rp)
 	return eg:IsExists(s.spconfilter,1,nil,tp)
 end
 function s.spfilter(c,tp)
-	return c:IsMonster() and c:IsSetCard(SET_ICEJADE) and c:IsAbleToHand()
-		and not Duel.IsExistingMatchingCard(aux.FaceupFilter(Card.IsCode,c:GetCode()),tp,LOCATION_ONFIELD|LOCATION_GRAVE,0,1,nil)
+	return (c:IsSetCard(SET_ALLY_OF_JUSTICE) or c:IsSetCard(SET_FLAMVELL))
+		and (Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and c:IsCanBeSpecialSummoned(e,0,tp,false,false)) or (Duel.GetLocationCount(1-tp,LOCATION_MZONE)>0 and c:IsCanBeSpecialSummoned(e,0,tp,false,false,POS_FACEUP,1-tp))
+		and not Duel.IsExistingMatchingCard(s.uniquefilter,tp,LOCATION_MZONE|LOCATION_GRAVE|LOCATION_REMOVED,0,1,nil,c:GetCode())
+		and c:IsMonster()
 end
-function s.settg(e,tp,eg,ep,ev,re,r,rp,chk)
-	local c=e:GetHandler()
-	if chk==0 then return c:IsSSetable() end
-	Duel.SetOperationInfo(0,CATEGORY_LEAVE_GRAVE,c,1,0,0)
+function s.uniquefilter(c,code)
+	return c:IsCode(code) and c:IsFaceup() and c:IsMonster()
 end
-function s.setop(e,tp,eg,ep,ev,re,r,rp)
+function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return #g>2 
+		and Duel.IsExistingMatchingCard(s.spfilter,tp,LOCATION_DECK,0,2,nil,e,tp)
+		and not Duel.IsPlayerAffectedByEffect(tp,CARD_BLUEEYES_SPIRIT)
+		and Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and Duel.GetLocationCount(1-tp,LOCATION_MZONE,tp)>0 end
+	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,2,tp,LOCATION_DECK)
+end
+function s.rescon(sg,e,tp,mg)
+	return sg:IsExists(s.firstsummon,1,nil,e,tp,sg)
+end
+function s.firstsummon(c,e,tp,sg)
+	return c:IsCanBeSpecialSummoned(e,0,tp,false,false)
+		and Duel.GetLocationCount(tp,LOCATION_MZONE)>0
+		and sg:IsExists(s.secondsummon,1,c,e,tp) --exclude 'c'
+end
+function s.secondsummon(c,e,tp)
+	return c:IsCanBeSpecialSummoned(e,0,tp,false,false,POS_FACEUP,1-tp)
+		and Duel.GetLocationCount(1-tp,LOCATION_MZONE,tp)>0
+end
+function s.spop(e,tp,eg,ep,ev,re,r,rp)
+	if Duel.GetLocationCount(tp,LOCATION_MZONE)<1 or Duel.GetLocationCount(1-tp,LOCATION_MZONE,tp)<1 or Duel.IsPlayerAffectedByEffect(tp,CARD_BLUEEYES_SPIRIT) then return end
 	local c=e:GetHandler()
-	if c:IsRelateToEffect(e) and c:IsSSetable() then
-		Duel.SSet(tp,c)
-	end
+	Duel.Hint(HINT_SELECTMSG,tp,aux.Stringid(id,2))
+	local g=Duel.GetMatchingGroup(s.spfilter,tp,LOCATION_DECK,0,nil,e,tp)
+	local sg=aux.SelectUnselectGroup(g,e,tp,2,2,s.rescon,1,tp,HINTMSG_SPSUMMON)
+	if #sg~=2 then return end
+	local sc1=sg:FilterSelect(tp,s.firstsummon,1,1,nil,e,tp,sg):GetFirst()
+	local sc2=sg:RemoveCard(sc1):GetFirst()
+	Duel.SpecialSummonStep(sc1,0,tp,tp,false,false,POS_FACEUP)
+	Duel.SpecialSummonStep(sc2,0,tp,1-tp,false,false,POS_FACEUP)
+	Duel.SpecialSummonComplete()
 end
 
 
