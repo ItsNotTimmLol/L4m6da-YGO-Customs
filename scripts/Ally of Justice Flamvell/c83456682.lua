@@ -134,7 +134,7 @@ s.listed_names={40155554}
 s.listed_series={SET_ALLY_OF_JUSTICE,SET_FLAMVELL}
 
 function s.immtg(e,c)
-	return c:IsCode(40155554) --or c:IsSetCard(SET_ALLY_OF_JUSTICE) or c:IsSetCard(SET_FLAMVELL)) and c:IsMonster() --and not c:IsAttack(c:GetBaseAttack())
+	return (c:IsCode(40155554) --or c:IsSetCard(SET_ALLY_OF_JUSTICE) or c:IsSetCard(SET_FLAMVELL)) and c:IsMonster() and c:IsFaceup() --and not c:IsAttack(c:GetBaseAttack())
 end
 function s.immval(e,te)
 	return re:GetOwnerPlayer()~=e:GetHandlerPlayer()
