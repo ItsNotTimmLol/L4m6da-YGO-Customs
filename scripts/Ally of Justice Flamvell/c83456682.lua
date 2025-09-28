@@ -30,19 +30,6 @@ function s.initial_effect(c)
 	e2:SetTarget(s.immtg)
 	e2:SetValue(s.immval)
 	c:RegisterEffect(e2)
-	--Also treated as Ally of Justice
-	local e3=Effect.CreateEffect(c)
-	e3:SetType(EFFECT_TYPE_FIELD)
-	e3:SetRange(LOCATION_FZONE)
-	e3:SetCode(EFFECT_ADD_SETCODE)
-	e3:SetTargetRange(LOCATION_MZONE,0)
-	e3:SetTarget(s.setcodetg)
-	e3:SetValue(SET_ALLY_OF_JUSTICE)
-	c:RegisterEffect(e3)
-	--Also treated as Flamvell
-	local e4=e3:Clone()
-	e4:SetValue(SET_FLAMVELL)
-	c:RegisterEffect(e4)
 	--SS if monster leaves opponent's field
 	local e5=Effect.CreateEffect(c)
 	e5:SetDescription(aux.Stringid(id,0))
@@ -141,10 +128,6 @@ function s.immtg(e,c)
 end
 function s.immval(e,re)
 	return re:GetOwnerPlayer()~=e:GetHandlerPlayer()
-end
---setcodes
-function s.setcodetg(e,c)
-	return (c:IsCode(40155554) or c:GetOriginalSetCard()==SET_ALLY_OF_JUSTICE or c:GetOriginalSetCard()==SET_FLAMVELL) and c:IsMonster()
 end
 
 function s.lightcon(e)

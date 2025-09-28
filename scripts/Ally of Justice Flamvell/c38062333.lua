@@ -45,6 +45,19 @@ function s.initial_effect(c)
 	local e3=e2:Clone()
 	e3:SetCode(EVENT_REMOVE)
 	c:RegisterEffect(e3)
+	--Also treated as Ally of Justice
+	local e3=Effect.CreateEffect(c)
+	e3:SetType(EFFECT_TYPE_FIELD)
+	e3:SetRange(LOCATION_FZONE)
+	e3:SetCode(EFFECT_ADD_SETCODE)
+	e3:SetTargetRange(LOCATION_MZONE,0)
+	e3:SetTarget(s.setcodetg)
+	e3:SetValue(SET_ALLY_OF_JUSTICE)
+	c:RegisterEffect(e3)
+	--Also treated as Flamvell
+	local e4=e3:Clone()
+	e4:SetValue(SET_FLAMVELL)
+	c:RegisterEffect(e4)
 
 	--[[Flamvell banish & LP Ex
 	local e3=Effect.CreateEffect(c)
@@ -77,14 +90,19 @@ function s.initial_effect(c)
 		end)
 	end)
 end
-s.listed_names={40155554}
+s.listed_names={40155554,59482302}
 s.listed_series={SET_ALLY_OF_JUSTICE,SET_FLAMVELL}
 
+--setcodes
+function s.setcodetg(e,c)
+	return (c:IsCode(40155554) or c:IsCode(59482302) or c:GetOriginalSetCard()==SET_ALLY_OF_JUSTICE or c:GetOriginalSetCard()==SET_FLAMVELL) and c:IsMonster()
+end
+--to light or facedown
 function s.posfilter(c)
 	return c:IsFaceup() and (s.pos1filter(c) or s.pos2filter(c))
 end
 function s.pos1filter(c)
-	return not c:IsAttribute(ATTRIBUTE_LIGHT)
+	return c:IsAttributeExcept(ATTRIBUTE_LIGHT)
 end
 function s.pos2filter(c)
 	return c:IsAttribute(ATTRIBUTE_LIGHT) and c:IsCanTurnSet()
@@ -93,11 +111,9 @@ function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	if chkc then return false end
 	if chk==0 then return Duel.IsExistingTarget(s.posfilter,tp,LOCATION_MZONE,0,1,nil) or Duel.IsExistingTarget(s.posfilter,tp,0,LOCATION_MZONE,1,nil) end
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_POSCHANGE)
-	local g1=Duel.SelectTarget(tp,s.posfilter,tp,LOCATION_MZONE,0,0,1,nil)
+	local g=Duel.SelectTarget(tp,s.posfilter,tp,LOCATION_MZONE,LOCATION_MZONE,1,2,nil)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_POSCHANGE)
-	local g2=Duel.SelectTarget(tp,s.posfilter,tp,0,LOCATION_MZONE,#g1-1,1,nil)
-	g1:Merge(g2)
-	Duel.SetOperationInfo(0,CATEGORY_POSITION,g1,2,0,0)
+	Duel.SetPossibleOperationInfo(0,CATEGORY_POSITION,g,2,0,0)
 end
 function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
@@ -125,7 +141,7 @@ end
 
 --Extender
 function s.cfilter(c,tp)
-	return (c:IsSetCard(SET_ALLY_OF_JUSTICE) or c:IsSetCard(SET_FLAMVELL)) and c:IsControler(tp)
+	return c:IsSetCard(SET_FLAMVELL) and c:IsControler(tp)
 		and not s.name_list[tp][c:GetCode()]
 end
 function s.sp2con(e,tp,eg,ep,ev,re,r,rp)
