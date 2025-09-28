@@ -25,18 +25,22 @@ function s.initial_effect(c)
 	local e2=Effect.CreateEffect(c)
 	e2:SetType(EFFECT_TYPE_FIELD)
 	e2:SetCode(EFFECT_IMMUNE_EFFECT)
-	e2:SetTargetRange(LOCATION_MZONE,0)
 	e2:SetRange(LOCATION_FZONE)
+	e2:SetTargetRange(LOCATION_MZONE,0)
 	e2:SetTarget(s.immtg)
 	e2:SetValue(s.immval)
 	c:RegisterEffect(e2)
 	--Also treated as Ally of Justice
-	local e3=e2:Clone()
+	local e3=Effect.CreateEffect(c)
+	e3:SetType(EFFECT_TYPE_FIELD)
+	e3:SetRange(LOCATION_FZONE)
 	e3:SetCode(EFFECT_ADD_SETCODE)
+	e3:SetTargetRange(LOCATION_MZONE,0)
+	e3:SetTarget(s.setcodetg)
 	e3:SetValue(SET_ALLY_OF_JUSTICE)
 	c:RegisterEffect(e3)
 	--Also treated as Flamvell
-	local e4=e2:Clone()
+	local e4=e3:Clone()
 	e4:SetCode(EFFECT_ADD_SETCODE)
 	e4:SetValue(SET_FLAMVELL)
 	c:RegisterEffect(e4)
@@ -132,14 +136,17 @@ function s.initial_effect(c)
 end
 s.listed_names={40155554}
 s.listed_series={SET_ALLY_OF_JUSTICE,SET_FLAMVELL}
-
+--immune
 function s.immtg(e,c)
-	return (c:IsCode(40155554) --or c:IsSetCard(SET_ALLY_OF_JUSTICE) or c:IsSetCard(SET_FLAMVELL)) and c:IsMonster() and c:IsFaceup() --and not c:IsAttack(c:GetBaseAttack())
+	return (c:IsCode(40155554) or c:IsSetCard(SET_ALLY_OF_JUSTICE) or c:IsSetCard(SET_FLAMVELL)) and c:IsMonster() and not c:IsAttack(c:GetBaseAttack())
 end
 function s.immval(e,te)
 	return re:GetOwnerPlayer()~=e:GetHandlerPlayer()
 end
-
+--setcodes
+function s.setcodetg(e,c)
+	return (c:IsCode(40155554) or c:IsSetCard(SET_ALLY_OF_JUSTICE) or c:IsSetCard(SET_FLAMVELL)) and c:IsMonster()
+end
 
 function s.lightcon(e)
 	return Duel.IsExistingMatchingCard(s.lightfilter,e:GetHandlerPlayer(),LOCATION_MZONE,0,1,nil)
