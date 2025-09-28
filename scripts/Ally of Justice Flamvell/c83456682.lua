@@ -1,4 +1,4 @@
---Flamvell Fervor
+--Ally of Justice Field
 --Scripted by WolfSif
 local s,id=GetID()
 function s.initial_effect(c)
@@ -50,7 +50,7 @@ function s.initial_effect(c)
 	e4:SetCondition(s.rmcon)
 	e4:SetTarget(s.rmtg)
 	e4:SetOperation(s.rmop)
-	c:RegisterEffect(e4)]]
+	c:RegisterEffect(e4)
 	--Change damage
 	local e4=Effect.CreateEffect(c)
 	e4:SetType(EFFECT_TYPE_FIELD)
@@ -59,8 +59,36 @@ function s.initial_effect(c)
 	e4:SetProperty(EFFECT_FLAG_PLAYER_TARGET)
 	e4:SetTargetRange(0,1)
 	e4:SetValue(s.val)
+	c:RegisterEffect(e4)]]
+	--Monsters whose ATK is different from their original ATK are unaffected by your opponent's activated effects
+	local e4=Effect.CreateEffect(c)
+	e4:SetType(EFFECT_TYPE_FIELD)
+	e4:SetCode(EFFECT_IMMUNE_EFFECT)
+	e4:SetTargetRange(LOCATION_MZONE|LOCATION_HAND,0)
+	e4:SetRange(LOCATION_FZONE)
+	e4:SetTarget(s.immtg)
+	e4:SetValue(s.immval)
 	c:RegisterEffect(e4)
-	--Flamvell monsters are Pyro
+	--Also treated as Ally of Justice
+	local e5=e4:Clone()
+	e5:SetCode(EFFECT_ADD_SETCODE)
+	e5:SetValue(SET_ALLY_OF_JUSTICE)
+	c:RegisterEffect(e5)
+	--Also treated as Flamvell
+	local e6=e4:Clone()
+	e6:SetCode(EFFECT_ADD_SETCODE)
+	e6:SetValue(SET_FLAMVELL)
+	c:RegisterEffect(e6)
+	--change attribute
+	local e7=Effect.CreateEffect(c)
+	e7:SetType(EFFECT_TYPE_FIELD)
+	e7:SetRange(LOCATION_FZONE)
+	e7:SetTargetRange(0,LOCATION_MZONE|LOCATION_HAND|LOCATION_GRAVE)
+	e7:SetCondition(s.lightcon)
+	e7:SetCode(EFFECT_CHANGE_ATTRIBUTE)
+	e7:SetValue(ATTRIBUTE_LIGHT)
+	c:RegisterEffect(e7)
+	--[[Flamvell monsters are Pyro
 	local e5=Effect.CreateEffect(c)
 	e5:SetType(EFFECT_TYPE_FIELD)
 	e5:SetCode(EFFECT_CHANGE_RACE)
@@ -113,19 +141,24 @@ function s.initial_effect(c)
 			s.name_list[0]={}
 			s.name_list[1]={}
 		end)
-	end)
+	end)]]
+end
+s.listed_names={40155554}
+s.listed_series={SET_ALLY_OF_JUSTICE,SET_FLAMVELL}
+
+function s.immtg(c)
+	return (c:IsCode(40155554) or c:IsCode(59482302) or c:IsSetCard(SET_ALLY_OF_JUSTICE,fc,sumtype,tp) or c:IsSetCard(SET_FLAMVELL,fc,sumtype,tp)) and c:IsMonster() and not c:IsAttack(c:GetBaseAttack())
+end
+function s.immval(e,te)
+	return te:GetOwnerPlayer()==1-e:GetHandlerPlayer() and te:IsActivated()
 end
 
-s.listed_series={SET_FLAMVELL}
---x2 damage test
-function s.val(e,re,val,r,rp)
-	if r&REASON_EFFECT==REASON_EFFECT and re and re:IsMonsterEffect() then
-		local rc=re:GetHandler()
-		if rc:IsFaceup() and rc:IsSetCard(SET_FLAMVELL) then
-			return val*2
-		end
-	end
-	return val
+
+function s.lightcon(e)
+	return Duel.IsExistingMatchingCard(s.lightfilter,e:GetHandlerPlayer(),LOCATION_MZONE,0,1,nil)
+end
+function s.lightfilter(c)
+	return c:IsSetCard(SET_FLAMVELL) or c:IsSetCard(SET_FLAMVELL)
 end
 
 --To hand
@@ -143,6 +176,17 @@ function s.thop(e,tp,eg,ep,ev,re,r,rp)
 		Duel.SendtoHand(g,nil,REASON_EFFECT)
 		Duel.ConfirmCards(1-tp,g)
 	end
+end
+
+--x2 damage test
+function s.val(e,re,val,r,rp)
+	if r&REASON_EFFECT==REASON_EFFECT and re and re:IsMonsterEffect() then
+		local rc=re:GetHandler()
+		if rc:IsFaceup() and rc:IsSetCard(SET_FLAMVELL) then
+			return val*2
+		end
+	end
+	return val
 end
 
 --Extender

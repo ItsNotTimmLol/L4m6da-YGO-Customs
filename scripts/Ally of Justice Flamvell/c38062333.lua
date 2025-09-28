@@ -1,4 +1,4 @@
---Flamvell Esclation
+--Ally of Justice Simulation
 --Scripted by WolfSif
 local s,id=GetID()
 function s.initial_effect(c)

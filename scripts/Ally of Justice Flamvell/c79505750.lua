@@ -82,6 +82,7 @@ function s.initial_effect(c)
 	
 end
 s.listed_names={40155554,59482302}
+s.listed_series={SET_ALLY_OF_JUSTICE,SET_FLAMVELL}
 function s.mfilter1(c,fc,sumtype,tp,sub,mg,sg)
 	return c:IsMonster() and (c:IsLocation(LOCATION_HAND) or c:IsFaceup())
 		and ((c:IsRace(RACE_MACHINE) and c:IsAttribute(ATTRIBUTE_DARK)) or c:IsSetCard(SET_FLAMVELL,fc,sumtype,tp))
