@@ -6,11 +6,6 @@ function s.initial_effect(c)
 	local e0=Effect.CreateEffect(c)
 	e0:SetType(EFFECT_TYPE_ACTIVATE)
 	e0:SetCode(EVENT_FREE_CHAIN)
-	--e0:SetDescription(aux.Stringid(id,0))
-	--e0:SetCategory(CATEGORY_SPECIAL_SUMMON)
-	--e0:SetCountLimit(1,id,EFFECT_COUNT_CODE_OATH)
-	--e0:SetTarget(s.thtg)
-	--e0:SetOperation(s.thop)
 	c:RegisterEffect(e0)
 	--change attribute
 	local e1=Effect.CreateEffect(c)
@@ -35,8 +30,8 @@ function s.initial_effect(c)
 	e5:SetDescription(aux.Stringid(id,0))
 	e5:SetCategory(CATEGORY_SPECIAL_SUMMON)
 	e5:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
-	e5:SetProperty(EFFECT_FLAG_DELAY)
-	e5:SetCode(EVENT_LEAVE_FIELD)
+	e5:SetProperty(EFFECT_FLAG_DELAY+EFFECT_FLAG_DAMAGE_STEP+EFFECT_FLAG_DAMAGE_CAL)
+	e5:SetCode(EVENT_SPSUMMON_SUCCESS)
 	e5:SetRange(LOCATION_FZONE)
 	e5:SetCondition(s.spcon)
 	e5:SetTarget(s.sptg)
@@ -141,7 +136,7 @@ end
 
 --Spam
 function s.spconfilter(c,tp)
-	return c:IsMonster() and c:IsPreviousControler(1-tp) and s.exfilter(c,tp)
+	return c:IsMonster() and c:IsPreviousControler(1-tp) and c:IsAttributeExcept(ATTRIBUTE_LIGHT) --s.exfilter(c,tp)
 end
 function s.exfilter(c,tp)
 	return not c:IsForbidden() and c:CheckUniqueOnField(tp)
@@ -152,18 +147,18 @@ end
 function s.spfilter(c,tp)
 	return (c:IsSetCard(SET_ALLY_OF_JUSTICE) or c:IsSetCard(SET_FLAMVELL))
 		and (Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and c:IsCanBeSpecialSummoned(e,0,tp,false,false)) or (Duel.GetLocationCount(1-tp,LOCATION_MZONE)>0 and c:IsCanBeSpecialSummoned(e,0,tp,false,false,POS_FACEUP,1-tp))
-		and not Duel.IsExistingMatchingCard(s.uniquefilter,tp,LOCATION_MZONE|LOCATION_GRAVE|LOCATION_REMOVED,0,1,nil,c:GetCode())
-		and c:IsMonster()
+		and --not Duel.IsExistingMatchingCard(s.uniquefilter,tp,LOCATION_MZONE|LOCATION_GRAVE|LOCATION_REMOVED,0,1,nil,c:GetCode())
+		and c:IsMonster() and c:IsLevelBelow(3)
 end
 function s.uniquefilter(c,code)
 	return c:IsCode(code) and c:IsFaceup() and c:IsMonster()
 end
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return #g>2 
-		and Duel.IsExistingMatchingCard(s.spfilter,tp,LOCATION_DECK,0,2,nil,e,tp)
-		and not Duel.IsPlayerAffectedByEffect(tp,CARD_BLUEEYES_SPIRIT)
-		and Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and Duel.GetLocationCount(1-tp,LOCATION_MZONE,tp)>0 end
-	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,2,tp,LOCATION_DECK)
+		and Duel.IsExistingMatchingCard(s.spfilter,tp,LOCATION_DECK,0,1,nil,e,tp)
+		--and not Duel.IsPlayerAffectedByEffect(tp,CARD_BLUEEYES_SPIRIT)
+		and (Duel.GetLocationCount(tp,LOCATION_MZONE)>0 or Duel.GetLocationCount(1-tp,LOCATION_MZONE,tp)>0) end
+	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_DECK)
 end
 function s.rescon(sg,e,tp,mg)
 	return sg:IsExists(s.firstsummon,1,nil,e,tp,sg)
@@ -178,7 +173,14 @@ function s.secondsummon(c,e,tp)
 		and Duel.GetLocationCount(1-tp,LOCATION_MZONE,tp)>0
 end
 function s.spop(e,tp,eg,ep,ev,re,r,rp)
-	if Duel.GetLocationCount(tp,LOCATION_MZONE)<1 or Duel.GetLocationCount(1-tp,LOCATION_MZONE,tp)<1 or Duel.IsPlayerAffectedByEffect(tp,CARD_BLUEEYES_SPIRIT) then return end
+	if Duel.GetLocationCount(tp,LOCATION_MZONE)>0 then
+		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
+		local g=Duel.SelectMatchingCard(tp,s.spfilter,tp,LOCATION_DECK,0,1,1,nil,e,tp)
+		if #g>0 then
+			Duel.SpecialSummon(g,0,tp,tp,false,false,POS_FACEUP)
+		end
+	end
+	--[[if Duel.GetLocationCount(tp,LOCATION_MZONE)<1 or Duel.GetLocationCount(1-tp,LOCATION_MZONE,tp)<1 or Duel.IsPlayerAffectedByEffect(tp,CARD_BLUEEYES_SPIRIT) then return end
 	local c=e:GetHandler()
 	Duel.Hint(HINT_SELECTMSG,tp,aux.Stringid(id,2))
 	local g=Duel.GetMatchingGroup(s.spfilter,tp,LOCATION_DECK,0,nil,e,tp)
@@ -188,7 +190,7 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	local sc2=sg:RemoveCard(sc1):GetFirst()
 	Duel.SpecialSummonStep(sc1,0,tp,tp,false,false,POS_FACEUP)
 	Duel.SpecialSummonStep(sc2,0,tp,1-tp,false,false,POS_FACEUP)
-	Duel.SpecialSummonComplete()
+	Duel.SpecialSummonComplete]]
 end
 
 

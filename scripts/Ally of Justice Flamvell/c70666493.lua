@@ -1,84 +1,74 @@
---遮攻カーテン
---Blockout Curtain
---Scripted by AlphaKretin
+--Ally of Justice Warp
+--Scripted by WolfSif
 local s,id=GetID()
 function s.initial_effect(c)
-	--Activate
+	--Activate 1 or both of these effects
 	local e1=Effect.CreateEffect(c)
+	e1:SetDescription(aux.Stringid(id,0))
+	e1:SetCategory(CATEGORY_SPECIAL_SUMMON)
 	e1:SetType(EFFECT_TYPE_ACTIVATE)
 	e1:SetCode(EVENT_FREE_CHAIN)
+	e1:SetTarget(s.tg)
+	e1:SetOperation(s.op)
 	c:RegisterEffect(e1)
-	--destroy replace yours
-	local e2=Effect.CreateEffect(c)
-	e2:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
-	e2:SetCode(EFFECT_DESTROY_REPLACE)
-	e2:SetRange(LOCATION_SZONE)
-	e2:SetTarget(s.reptg)
-	e2:SetValue(s.repval)
-	e2:SetOperation(s.repop)
-	c:RegisterEffect(e2)
-	--destroy replace opps
-	local e3=Effect.CreateEffect(c)
-	e3:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
-	e3:SetCode(EFFECT_DESTROY_REPLACE)
-	e3:SetRange(LOCATION_GRAVE)
-	e3:SetTarget(s.reptg2)
-	e3:SetValue(s.repval2)
-	e3:SetOperation(s.repop2)
-	c:RegisterEffect(e3)
 end
-function s.repfilter(c,tp)
-	return c:IsControler(tp) and not c:IsReason(REASON_REPLACE)
-		and (c:IsReason(REASON_BATTLE) or (c:IsReason(REASON_EFFECT) and c:GetReasonPlayer()==1-tp)) 
+function s.exfilter(c,e,tp,ft)
+	return (c:IsSetCard(SET_ALLY_OF_JUSTICE) or c:IsSetCard(SET_FLAMVELL)) and c.material 
+		and Duel.IsExistingMatchingCard(s.spfilter,tp,LOCATION_HAND|LOCATION_DECK,0,1,nil,e,tp,c,ft)
 end
-function s.reptg(e,tp,eg,ep,ev,re,r,rp,chk)
-	local c=e:GetHandler()
-	if chk==0 then return Duel.GetFlagEffect(tp,id)==0 and c:IsDestructable(e) and not c:IsStatus(STATUS_DESTROY_CONFIRMED+STATUS_BATTLE_DESTROYED) 
-		and eg:IsExists(s.repfilter,1,nil,tp) end
-	if Duel.SelectEffectYesNo(tp,c,aux.Stringid(id,0)) then
-		local g=eg:Filter(s.repfilter,nil,tp)
-		if #g==1 then
-			e:SetLabelObject(g:GetFirst())
-		else
-			Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_DESREPLACE)
-			local cg=g:Select(tp,1,1,nil)
-			e:SetLabelObject(cg:GetFirst())
+function s.sp1filter(c,e,tp,mc,ft)
+	return (c:IsCode(table.unpack(sc.material)) or c:IsCode(table.unpack(fc.material)))
+		and ft>0 and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
+end
+function s.sp2confilter(c,e,tp)
+	return c:IsFaceup() and c:IsType(TYPE_SYNCHRO)
+end
+function s.sp2filter(c,e,tp)
+	return (c:IsSetCard(SET_ALLY_OF_JUSTICE) or c:IsSetCard(SET_FLAMVELL))
+		and c:IsType(TYPE_SYNCHRO) 
+		and Duel.GetLocationCountFromEx(tp,tp,nil,c)>0
+		and c:IsCanBeSpecialSummoned(e,SUMMON_TYPE_SYNCHRO,tp,false,false)
+end
+function s.tg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
+	if chkc then return e:GetLabel()==2 and chkc:IsControler(tp) and chkc:IsLocation(LOCATION_MZONE) and s.tgfilter(chkc,e,tp) end
+	local ft=Duel.GetLocationCount(tp,LOCATION_MZONE
+	if ft<1 then return false end
+	local b1=Duel.IsExistingMatchingCard(s.exfilter,tp,LOCATION_EXTRA,0,1,nil,e,tp) end
+	local b2=Duel.IsExistingTarget(s.sp2confilter,tp,LOCATION_MZONE,0,1,nil,e,tp) and Duel.IsExistingMatchingCard(s.sp2filter,tp,LOCATION_EXTRA,0,1,nil,e,tp)
+	if chk==0 then return b1 or b2 end
+	local op=Duel.SelectEffect(tp,
+		{b1,aux.Stringid(id,1)},
+		{b2,aux.Stringid(id,2)})
+	e:SetLabel(op)
+	if op==1 then
+		e:SetProperty(0)
+	elseif op==2 then
+		e:SetProperty(EFFECT_FLAG_CARD_TARGET)
+		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TARGET)
+		Duel.SelectTarget(tp,s.tgfilter,tp,LOCATION_MZONE,0,1,1,nil,e,tp)
+	end
+	local loc=op==1 and LOCATION_DECK or LOCATION_DECK|LOCATION_GRAVE
+	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,loc)
+end
+function s.effop(e,tp,eg,ep,ev,re,r,rp)
+	local op=e:GetLabel()
+	if op==1 then
+		--Special Summon 1 Level 4 Warrior monster from your Deck
+		if Duel.GetLocationCount(tp,LOCATION_MZONE)<=0 then return end
+		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
+		local g=Duel.SelectMatchingCard(tp,s.lv4warriorspfilter,tp,LOCATION_DECK,0,1,1,nil,e,tp)
+		if #g>0 then
+			Duel.SpecialSummon(g,0,tp,tp,false,false,POS_FACEUP)
 		end
-		c:SetStatus(STATUS_DESTROY_CONFIRMED,true)
-		Duel.RegisterFlagEffect(tp,id,RESET_PHASE|PHASE_END,0,1)
-		return true
-	else return false end
-end
-function s.repval(e,c)
-	return c==e:GetLabelObject()
-end
-function s.repop(e,tp,eg,ep,ev,re,r,rp)
-	local c=e:GetHandler()
-	c:SetStatus(STATUS_DESTROY_CONFIRMED,false)
-	Duel.Destroy(c,REASON_EFFECT|REASON_REPLACE)
-end
-function s.repfilter2(c,tp)
-	return c:IsControler(1-tp) and not c:IsReason(REASON_REPLACE) and c:IsReason(REASON_BATTLE|REASON_EFFECT)
-end
-function s.reptg2(e,tp,eg,ep,ev,re,r,rp,chk)
-	local c=e:GetHandler()
-	if chk==0 then return Duel.GetFlagEffect(tp,id+1)==0 and c:IsAbleToRemove() and eg:IsExists(s.repfilter2,1,nil,tp) end
-	if Duel.SelectEffectYesNo(tp,c,aux.Stringid(id,1)) then
-		local g=eg:Filter(s.repfilter2,nil,tp)
-		if #g==1 then
-			e:SetLabelObject(g:GetFirst())
-		else
-			Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_DESREPLACE)
-			local cg=g:Select(tp,1,1,nil)
-			e:SetLabelObject(cg:GetFirst())
+	elseif op==2 then
+		--Special Summon 1 EARTH Warrior monster with an equal or lower Level than the target from your Deck or GY
+		if Duel.GetLocationCount(tp,LOCATION_MZONE)<=0 then return end
+		local tc=Duel.GetFirstTarget()
+		if not (tc:IsRelateToEffect(e) and tc:IsFaceup() and tc:HasLevel()) then return end
+		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
+		local g=Duel.SelectMatchingCard(tp,aux.NecroValleyFilter(s.earthwarriorspfilter),tp,LOCATION_DECK|LOCATION_GRAVE,0,1,1,nil,e,tp,tc:GetLevel())
+		if #g>0 then
+			Duel.SpecialSummon(g,0,tp,tp,false,false,POS_FACEUP)
 		end
-		Duel.RegisterFlagEffect(tp,id+1,RESET_PHASE|PHASE_END,0,1)
-		return true
-	else return false end
-end
-function s.repval2(e,c)
-	return c==e:GetLabelObject()
-end
-function s.repop2(e,tp,eg,ep,ev,re,r,rp)
-	Duel.Remove(e:GetHandler(),POS_FACEUP,REASON_EFFECT|REASON_REPLACE)
+	end
 end

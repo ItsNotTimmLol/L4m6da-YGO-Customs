@@ -1,4 +1,5 @@
---Ally of Justice Flamvell Genesis
+--Ally of Justice Flamvell Impact
+--Scripted by WolfSif
 local s,id=GetID()
 function s.initial_effect(c)
 	--fusion summon

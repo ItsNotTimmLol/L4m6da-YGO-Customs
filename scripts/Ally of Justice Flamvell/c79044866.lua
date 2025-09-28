@@ -1,35 +1,24 @@
---
---Flamvell Fighting
+--Ally of Justice Synthesis
+--Scripted by WolfSif
+
 local s,id=GetID()
 function s.initial_effect(c)
-	--Activate
-	local e0=Effect.CreateEffect(c)
-	e0:SetDescription(aux.Stringid(id,0))
-	e0:SetCategory(CATEGORY_SPECIAL_SUMMON)
-	e0:SetType(EFFECT_TYPE_ACTIVATE)
-	e0:SetCode(EVENT_FREE_CHAIN)
-	e0:SetCountLimit(1,id,EFFECT_COUNT_CODE_OATH)
-	e0:SetOperation(s.spop)
-	c:RegisterEffect(e0)
-	--Decrease ATK/DEF for each banished card
-	local e3=Effect.CreateEffect(c)
-	e3:SetType(EFFECT_TYPE_FIELD)
-	e3:SetCode(EFFECT_UPDATE_ATTACK)
-	e3:SetRange(LOCATION_SZONE)
-	e3:SetCondition(s.atkcon)
-	e3:SetTargetRange(0,LOCATION_MZONE)
-	e3:SetValue(s.atkval)
-	c:RegisterEffect(e3)
-	local e4=e3:Clone()
-	e4:SetCode(EFFECT_UPDATE_DEFENSE)
-	c:RegisterEffect(e4)
+	--Special Summon 1 'Ally' monster from your hand or GY, and if you do, equip it with this card
+	local e1=Effect.CreateEffect(c)
+	e1:SetDescription(aux.Stringid(id,0))
+	e1:SetCategory(CATEGORY_SPECIAL_SUMMON+CATEGORY_EQUIP)
+	e1:SetType(EFFECT_TYPE_ACTIVATE)
+	e1:SetCode(EVENT_FREE_CHAIN)
+	e1:SetTarget(s.sptg)
+	e1:SetOperation(s.spop)
+	c:RegisterEffect(e1
 	--Flamvell monsters are Pyro
 	local e1=Effect.CreateEffect(c)
 	e1:SetType(EFFECT_TYPE_FIELD)
 	e1:SetCode(EFFECT_CHANGE_RACE)
 	e1:SetRange(LOCATION_SZONE)
 	e1:SetTargetRange(LOCATION_MZONE,0)
-	e1:SetTarget(aux.TargetBoolFunction(Card.IsSetCard,SET_FLAMVELL))
+	--e1:SetTarget(aux.TargetBoolFunction(Card.IsSetCard,SET_FLAMVELL))
 	e1:SetValue(RACE_PYRO)
 	c:RegisterEffect(e1)
 	local e2=e1:Clone()
@@ -42,7 +31,7 @@ function s.initial_effect(c)
 	e3:SetCode(EFFECT_CHANGE_ATTRIBUTE)
 	e3:SetRange(LOCATION_SZONE)
 	e3:SetTargetRange(LOCATION_MZONE,0)
-	e3:SetTarget(aux.TargetBoolFunction(Card.IsSetCard,SET_FLAMVELL))
+	--e3:SetTarget(aux.TargetBoolFunction(Card.IsSetCard,SET_FLAMVELL))
 	e3:SetValue(ATTRIBUTE_FIRE)
 	c:RegisterEffect(e3)
 	local e4=e3:Clone()
@@ -67,7 +56,7 @@ function s.initial_effect(c)
 	e7:SetTargetRange(1,0)
 	e7:SetValue(s.attval)
 	c:RegisterEffect(e7)
-	--Flamvell banish & LP Ex
+	--[[Flamvell banish & LP Ex
 	local e8=Effect.CreateEffect(c)
 	e8:SetDescription(aux.Stringid(id,0))
 	e8:SetCategory(CATEGORY_REMOVE)
@@ -77,90 +66,36 @@ function s.initial_effect(c)
 	e8:SetCondition(s.rmcon)
 	e8:SetTarget(s.rmtg)
 	e8:SetOperation(s.rmop)
-	c:RegisterEffect(e8)
+	c:RegisterEffect(e8]]
 end
+s.listed_names={40155554,59482302}
+s.listed_series={SET_ALLY_OF_JUSTICE,SET_FLAMVELL}
 function s.spfilter(c,e,tp)
-	return c:IsSetCard(SET_FLAMVELL) and c:IsMonster() and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
+	return (c:IsCode(s.listed_names) or (c:IsSetCard(s.listed_series) and c:IsLevelAbove(5)) and c:IsCanBeSpecialSummoned(e,0,tp,true,false)
+end
+function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
+	if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
+		and Duel.IsExistingMatchingCard(s.spfilter,tp,LOCATION_HAND|LOCATION_GRAVE,0,1,nil,e,tp) end
+	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_HAND|LOCATION_GRAVE)
+	Duel.SetOperationInfo(0,CATEGORY_EQUIP,e:GetHandler(),1,tp,0)
 end
 function s.spop(e,tp,eg,ep,ev,re,r,rp)
-	if not e:GetHandler():IsRelateToEffect(e) then return end
-	if Duel.GetLocationCount(tp,LOCATION_MZONE)<=0 then return end
-	local ft=Duel.GetLocationCount(1-tp,LOCATION_MZONE)
-	if ft<=0 then return end
-	if Duel.IsPlayerAffectedByEffect(tp,CARD_BLUEEYES_SPIRIT) then ft=1 end
-	local g1=Duel.GetMatchingGroup(s.spfilter,tp,LOCATION_DECK,0,nil,e,tp)
-	if #g1>0 and Duel.SelectYesNo(tp,aux.Stringid(id,0)) then
-		local fid=e:GetHandler():GetFieldID()
-		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
-		local sg1=g1:Select(tp,1,ft,nil)
-		local tc=sg1:GetFirst()
-		for tc in aux.Next(sg1) do
-			Duel.SpecialSummonStep(tc,0,tp,1-tp,false,false,POS_FACEUP)
-			tc:RegisterFlagEffect(id,RESET_EVENT|RESETS_STANDARD,0,1,fid)
-		end
-		local g2=Duel.GetMatchingGroup(s.spfilter,tp,LOCATION_DECK,0,nil,e,tp)
-		local sg2=g2:Select(tp,1,#sg1,nil)
-		for tc in aux.Next(sg2) do
-			Duel.SpecialSummonStep(tc,0,tp,tp,false,false,POS_FACEUP)
-			tc:RegisterFlagEffect(id,RESET_EVENT|RESETS_STANDARD,0,1,fid)
-		end
-		Duel.SpecialSummonComplete()
-		sg1:Merge(sg2)
-		sg1:KeepAlive()
-		local e0=Effect.CreateEffect(e:GetHandler())
-		e0:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
-		e0:SetCode(EVENT_PHASE+PHASE_END)
-		e0:SetProperty(EFFECT_FLAG_IGNORE_IMMUNE)
-		e0:SetReset(RESET_PHASE|PHASE_END)
-		e0:SetCountLimit(1)
-		e0:SetLabel(fid)
-		e0:SetLabelObject(sg1)
-		e0:SetCondition(s.descon)
-		e0:SetOperation(s.desop)
-		Duel.RegisterEffect(e0,tp)
-		--Cannot Special Summon monsters from Deck/GY, except Flamvell monsters
-		local c=e:GetHandler()
+	if Duel.GetLocationCount(tp,LOCATION_MZONE)==0 then return end
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
+	local tc=Duel.SelectMatchingCard(tp,aux.NecroValleyFilter(s.spfilter),tp,LOCATION_HAND|LOCATION_GRAVE,0,1,1,nil,e,tp):GetFirst()
+	if not tc then return end
+	local c=e:GetHandler()
+	if c:IsRelateToEffect(e) and Duel.SpecialSummon(tc,0,tp,tp,false,false,POS_FACEUP)>0 and Duel.Equip(tp,c,tc) then
+		--Equip limit
 		local e1=Effect.CreateEffect(c)
-		e1:SetDescription(aux.Stringid(id,1))
-		e1:SetType(EFFECT_TYPE_FIELD)
-		e1:SetProperty(EFFECT_FLAG_PLAYER_TARGET+EFFECT_FLAG_CLIENT_HINT)
-		e1:SetCode(EFFECT_CANNOT_SPECIAL_SUMMON)
-		e1:SetTargetRange(1,0)
-		e1:SetTarget(function(e,c) return not c:IsSetCard(SET_FLAMVELL) and c:IsLocation(LOCATION_DECK|LOCATION_GRAVE) end)
-		e1:SetReset(RESET_PHASE|PHASE_END)
-		Duel.RegisterEffect(e1,tp)
-		local e2=e1:Clone()
-		e2:SetCode(EFFECT_CANNOT_SPECIAL_SUMMON)
-		Duel.RegisterEffect(e2,tp)
+		e1:SetType(EFFECT_TYPE_SINGLE)
+		e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE)
+		e1:SetCode(EFFECT_EQUIP_LIMIT)
+		e1:SetValue(function(e,c) return c==tc end)
+		e1:SetReset(RESET_EVENT|RESETS_STANDARD)
+		c:RegisterEffect(e1)
 	end
-end
-function s.desfilter(c,fid)
-	return c:GetFlagEffectLabel(id)==fid
-end
-function s.descon(e,tp,eg,ep,ev,re,r,rp)
-	local g=e:GetLabelObject()
-	if not g:IsExists(s.desfilter,1,nil,e:GetLabel()) then
-		g:DeleteGroup()
-		e:Reset()
-		return false
-	else return true end
-end
-function s.desop(e,tp,eg,ep,ev,re,r,rp)
-	local g=e:GetLabelObject()
-	local tg=g:Filter(s.desfilter,nil,e:GetLabel())
-	g:DeleteGroup()
-	Duel.Destroy(tg,REASON_EFFECT)
-end
---ATK/DEF change
-function s.atkfilter(c)
-	return c:IsFaceup() and c:IsSetCard(SET_FLAMVELL) and c:IsMonster()
-end
-function s.atkcon(e,tp,ev,ep,eg,re,r,rp)
-	return Duel.IsExistingMatchingCard(s.atkfilter,e:GetHandlerPlayer(),LOCATION_MZONE,0,1,e:GetHandler())
-end
-function s.atkval(e,c)
-	return Duel.GetFieldGroupCount(0,LOCATION_REMOVED,LOCATION_REMOVED)*(-100)
-end
+
 --Fix stats
 function s.tg(e,c)
 	if c:GetFlagEffect(1)==0 then
@@ -172,7 +107,7 @@ function s.tg(e,c)
 			if not op or op(e,c) then return false end
 		end
 	end
-	return c:IsSetCard(SET_FLAMVELL) and c:IsMonster()
+	return c:IsMonster()
 end
 function s.raceval(e,c,re,chk)
 	if chk==0 then return true end
@@ -182,6 +117,7 @@ function s.attval(e,c,re,chk)
 	if chk==0 then return true end
 	return ATTRIBUTE_FIRE
 end
+
 --LP & Banish Ex
 function s.rmcon(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
