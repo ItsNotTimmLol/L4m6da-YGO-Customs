@@ -7,18 +7,7 @@ function s.initial_effect(c)
 	e0:SetType(EFFECT_TYPE_ACTIVATE)
 	e0:SetCode(EVENT_FREE_CHAIN)
 	c:RegisterEffect(e0)
-	--[[Shuffle to return self to hand
-	local e1=Effect.CreateEffect(c)
-	e1:SetDescription(aux.Stringid(id,1))
-	e1:SetCategory(CATEGORY_TOHAND)
-	e1:SetType(EFFECT_TYPE_IGNITION)
-	e1:SetRange(LOCATION_SZONE)
-	e1:SetCountLimit(1,id)
-	e1:SetCost(s.rthcost)
-	e1:SetTarget(s.rthtg)
-	e1:SetOperation(s.rthop)
-	c:RegisterEffect(e1)]]
-	--Change to LIGHT or face-down
+	--decktop other
 	local e1=Effect.CreateEffect(c)
 	e1:SetDescription(aux.Stringid(id,0))
 	e1:SetCategory(CATEGORY_POSITION)
@@ -26,10 +15,11 @@ function s.initial_effect(c)
 	e1:SetProperty(EFFECT_FLAG_CARD_TARGET)
 	e1:SetRange(LOCATION_SZONE)
 	e1:SetCountLimit(1)
-	e1:SetTarget(s.sptg)
-	e1:SetOperation(s.spop)
+	e1:SetTarget(s.dttg)
+	e1:SetOperation(s.dtop)
 	c:RegisterEffect(e1)
-	--Extender--Sent
+	--Extender
+		--Sent
 	local e2=Effect.CreateEffect(c)
 	e2:SetDescription(aux.Stringid(id,1))
 	e2:SetCategory(CATEGORY_SPECIAL_SUMMON)
@@ -41,7 +31,7 @@ function s.initial_effect(c)
 	e2:SetTarget(s.sp2tg)
 	e2:SetOperation(s.sp2op)
 	c:RegisterEffect(e2)
-	--Banished
+		--Banished
 	local e3=e2:Clone()
 	e3:SetCode(EVENT_REMOVE)
 	c:RegisterEffect(e3)
@@ -97,47 +87,26 @@ s.listed_series={SET_ALLY_OF_JUSTICE,SET_FLAMVELL}
 function s.setcodetg(e,c)
 	return (c:IsCode(40155554) or c:IsCode(59482302) or c:GetOriginalSetCard()==s.listed_series) and c:IsMonster()
 end
---to light or facedown
-function s.posfilter(c)
-	return c:IsFaceup() and (s.pos1filter(c) or s.pos2filter(c))
+
+--recycle
+function s.dtfilter(c)
+	return (c:IsAttribute(ATTRIBUTE_DARK) and c:IsRace(RACE_MACHINE) or c:IsAttribute(ATTRIBUTE_FIRE)) and c:IsMonster() and c:IsLevelBelow(4) and c:IsAbleToDeck()
 end
-function s.pos1filter(c)
-	return c:IsAttributeExcept(ATTRIBUTE_LIGHT)
+function s.dttg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return Duel.IsExistingMatchingCard(s.dtfilter,tp,LOCATION_GRAVE|LOCATION_REMOVED,0,1,nil) end
+	Duel.SetOperationInfo(0,CATEGORY_TODECK,nil,1,tp,LOCATION_GRAVE|LOCATION_REMOVED)
 end
-function s.pos2filter(c)
-	return c:IsAttribute(ATTRIBUTE_LIGHT) and c:IsCanTurnSet()
-end
-function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
-	if chkc then return false end
-	if chk==0 then return Duel.IsExistingTarget(s.posfilter,tp,LOCATION_MZONE,0,1,nil) or Duel.IsExistingTarget(s.posfilter,tp,0,LOCATION_MZONE,1,nil) end
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_POSCHANGE)
-	local g=Duel.SelectTarget(tp,s.posfilter,tp,LOCATION_MZONE,LOCATION_MZONE,1,2,nil)
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_POSCHANGE)
-	Duel.SetPossibleOperationInfo(0,CATEGORY_POSITION,g,2,0,0)
-end
-function s.spop(e,tp,eg,ep,ev,re,r,rp)
-	local c=e:GetHandler()
-	local g1=Duel.GetTargetCards(e):Filter(s.pos1filter,nil)
-	local g2=Duel.GetTargetCards(e):Filter(s.pos2filter,nil)
-	if #g1>0 then
-		local tc1=g1:GetFirst()
-		for tc1 in aux.Next(g1) do
-			--It becomes LIGHT
-			local e1=Effect.CreateEffect(c)
-			e1:SetType(EFFECT_TYPE_SINGLE)
-			e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE)
-			e1:SetCode(EFFECT_CHANGE_ATTRIBUTE)
-			e1:SetValue(ATTRIBUTE_LIGHT)
-			e1:SetReset(RESET_EVENT|RESETS_STANDARD)
-			tc1:RegisterEffect(e1)
-		end
-	elseif #g2>0 then
-		local tc2=g2:GetFirst()
-		for tc2 in aux.Next(g2) do
-			Duel.ChangePosition(tc2,POS_FACEDOWN_DEFENSE)
+function s.dtop(e,tp,eg,ep,ev,re,r,rp)
+	Duel.Hint(HINT_SELECTMSG,tp,aux.Stringid(id,0))
+	local tc=Duel.SelectMatchingCard(tp,aux.NecroValleyFilter(s.dtfilter),tp,LOCATION_GRAVE|LOCATION_REMOVED,0,1,1,nil):GetFirst()
+	if tc then
+		Duel.SendtoDeck(tc,nil,SEQ_DECKTOP,REASON_EFFECT)
+		if not tc:IsLocation(LOCATION_EXTRA) then
+			Duel.ConfirmDecktop(tp,1)
 		end
 	end
 end
+
 
 --Extender
 function s.cfilter(c,tp)
