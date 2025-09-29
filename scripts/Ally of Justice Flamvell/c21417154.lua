@@ -6,14 +6,17 @@ function s.initial_effect(c)
 	local e0=Effect.CreateEffect(c)
 	e0:SetType(EFFECT_TYPE_ACTIVATE)
 	e0:SetCode(EVENT_FREE_CHAIN)
+	e0:SetCost(s.cost)
 	c:RegisterEffect(e0)
 	--Can be activated from the hand
 	local e1=Effect.CreateEffect(c)
 	e1:SetDescription(aux.Stringid(id,1))
 	e1:SetType(EFFECT_TYPE_SINGLE)
+	e1:SetCost(s.cost)
 	e1:SetCode(EFFECT_TRAP_ACT_IN_HAND)
 	c:RegisterEffect(e1)
-	--Special Summon Limitation if activated from hand
+	Duel.AddCustomActivityCounter(id,ACTIVITY_SPSUMMON,s.counterfilter)
+	--[[Special Summon Limitation if activated from hand
 	local e2=Effect.CreateEffect(c)
 	e2:SetCode(EFFECT_CANNOT_SPECIAL_SUMMON)
 	e2:SetType(EFFECT_TYPE_FIELD)
@@ -24,7 +27,7 @@ function s.initial_effect(c)
 	e2:SetTarget(s.sumlimit)
 	c:RegisterEffect(e2)
 	--ClockLizard check
-	aux.addContinuousLizardCheck(c,LOCATION_SZONE,s.lizfilter)
+	aux.addContinuousLizardCheck(c,LOCATION_SZONE,s.lizfilter)]]
 	--All your opponent's monsters must attack
 	local e3=Effect.CreateEffect(c)
 	e3:SetType(EFFECT_TYPE_FIELD)
@@ -73,6 +76,26 @@ function s.initial_effect(c)
 end
 s.listed_names={40155554,59482302}
 s.listed_series={SET_ALLY_OF_JUSTICE,SET_FLAMVELL}
+function s.counterfilter(c)
+	return not (c:IsSummonLocation(LOCATION_EXTRA) and not c:IsSetCard(s.listed_series))
+end
+
+function s.cost(e,tp,eg,ep,ev,re,r,rp,chk)
+	local c=e:GetHandler()
+	if chk==0 then return Duel.GetCustomActivityCount(id,tp,ACTIVITY_SPSUMMON)==0 end
+	--Cannot Special Summon from the Extra Deck, except Ally Monsters
+	local e1=Effect.CreateEffect(c)
+	e1:SetDescription(aux.Stringid(id,1))
+	e1:SetType(EFFECT_TYPE_FIELD)
+	e1:SetProperty(EFFECT_FLAG_PLAYER_TARGET+EFFECT_FLAG_OATH+EFFECT_FLAG_CLIENT_HINT)
+	e1:SetCode(EFFECT_CANNOT_SPECIAL_SUMMON)
+	e1:SetTargetRange(1,0)
+	e1:SetTarget(s.sumlimit)
+	e1:SetReset(RESET_PHASE|PHASE_END,2)
+	Duel.RegisterEffect(e1,tp)
+	--Clock Lizard check
+	aux.addTempLizardCheck(c,tp,s.sumlimit)
+end
 
 function s.sumcon(e,tp,eg,ep,ev,re,r,rp)
 	return e:GetHandler():IsPreviousLocation(LOCATION_HAND)
