@@ -33,7 +33,7 @@ function s.initial_effect(c)
 	e5:SetProperty(EFFECT_FLAG_DELAY+EFFECT_FLAG_DAMAGE_STEP+EFFECT_FLAG_DAMAGE_CAL)
 	e5:SetCode(EVENT_SPSUMMON_SUCCESS)
 	e5:SetRange(LOCATION_FZONE)
-	e5:SetCondition(s.spcon)
+	e5:SetCondition(function(e,c) return c:IsMonster() end)
 	e5:SetTarget(s.sptg)
 	e5:SetOperation(s.spop)
 	c:RegisterEffect(e5)
@@ -136,7 +136,7 @@ end
 
 --Spam
 function s.spconfilter(c,tp)
-	return c:IsMonster() and c:IsPreviousControler(1-tp) --and c:IsAttributeExcept(ATTRIBUTE_LIGHT) --s.exfilter(c,tp)
+	return c:IsMonster() --and c:IsPreviousControler(1-tp) --and c:IsAttributeExcept(ATTRIBUTE_LIGHT) --s.exfilter(c,tp)
 end
 function s.exfilter(c,tp)
 	return not c:IsForbidden() and c:CheckUniqueOnField(tp)
