@@ -136,7 +136,7 @@ end
 
 --Spam
 function s.spconfilter(c,tp)
-	return c:IsMonster() and c:IsPreviousControler(1-tp) and c:IsAttributeExcept(ATTRIBUTE_LIGHT) --s.exfilter(c,tp)
+	return c:IsMonster() and c:IsPreviousControler(1-tp) --and c:IsAttributeExcept(ATTRIBUTE_LIGHT) --s.exfilter(c,tp)
 end
 function s.exfilter(c,tp)
 	return not c:IsForbidden() and c:CheckUniqueOnField(tp)
@@ -144,9 +144,9 @@ end
 function s.spcon(e,tp,eg,ep,ev,re,r,rp)
 	return eg:IsExists(s.spconfilter,1,nil,tp)
 end
-function s.spfilter(c,tp)
+function s.spfilter(c,e,tp)
 	return c:IsSetCard(s.listed_series)
-		and (Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and c:IsCanBeSpecialSummoned(e,0,tp,false,false)) or (Duel.GetLocationCount(1-tp,LOCATION_MZONE)>0 and c:IsCanBeSpecialSummoned(e,0,tp,false,false,POS_FACEUP,1-tp))
+		and (Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and c:IsCanBeSpecialSummoned(e,0,tp,false,false,e,tp)) --or (Duel.GetLocationCount(1-tp,LOCATION_MZONE)>0 and c:IsCanBeSpecialSummoned(e,0,tp,false,false,POS_FACEUP,1-tp))
 		--and not Duel.IsExistingMatchingCard(s.uniquefilter,tp,LOCATION_MZONE|LOCATION_GRAVE|LOCATION_REMOVED,0,1,nil,c:GetCode())
 		and c:IsMonster() and c:IsLevelBelow(3)
 end
@@ -154,8 +154,7 @@ function s.uniquefilter(c,code)
 	return c:IsCode(code) and c:IsFaceup() and c:IsMonster()
 end
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return #g>2 
-		and Duel.IsExistingMatchingCard(s.spfilter,tp,LOCATION_DECK,0,1,nil,e,tp)
+	if chk==0 then return Duel.IsExistingMatchingCard(s.spfilter,tp,LOCATION_DECK,0,1,nil,e,tp)
 		--and not Duel.IsPlayerAffectedByEffect(tp,CARD_BLUEEYES_SPIRIT)
 		and (Duel.GetLocationCount(tp,LOCATION_MZONE)>0 or Duel.GetLocationCount(1-tp,LOCATION_MZONE,tp)>0) end
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_DECK)
