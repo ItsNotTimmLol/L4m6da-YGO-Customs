@@ -181,7 +181,7 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 		local op=Duel.SelectEffect(tp,
 		{b1,aux.Stringid(id,1)},
 		{b2,aux.Stringid(id,2)})
-		if op==1 or op==1 then
+		if op==1 or op==2 then
 			local target_player=op==1 and tp or 1-tp
 			if Duel.SpecialSummon(g,0,tp,target_player,true,false,POS_FACEUP)==0 then return end
 		end
