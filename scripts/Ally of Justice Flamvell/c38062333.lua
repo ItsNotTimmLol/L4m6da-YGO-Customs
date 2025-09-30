@@ -38,9 +38,9 @@ function s.initial_effect(c)
 	--Also treated as Ally of Justice
 	local e3=Effect.CreateEffect(c)
 	e3:SetType(EFFECT_TYPE_FIELD)
-	e3:SetRange(LOCATION_FZONE)
+	e3:SetRange(LOCATION_SZONE)
 	e3:SetCode(EFFECT_ADD_SETCODE)
-	e3:SetTargetRange(LOCATION_MZONE,0)
+	e3:SetTargetRange(LOCATION_MZONE|LOCATION_GRAVE|LOCATION_REMOVED,0)
 	e3:SetTarget(s.setcodetg)
 	e3:SetValue(SET_ALLY_OF_JUSTICE)
 	c:RegisterEffect(e3)
@@ -85,12 +85,12 @@ s.listed_series={SET_ALLY_OF_JUSTICE,SET_FLAMVELL}
 
 --setcodes
 function s.setcodetg(e,c)
-	return (c:IsCode(40155554) or c:IsCode(59482302) or c:GetOriginalSetCard()==s.listed_series) and c:IsMonster()
+	return (c:IsCode(40155554) or c:IsCode(59482302) or c:GetOriginalSetCard()==SET_ALLY_OF_JUSTICE or c:GetOriginalSetCard()==SET_FLAMVELL) and c:IsMonster()
 end
 
 --recycle
 function s.dtfilter(c)
-	return (c:IsAttribute(ATTRIBUTE_DARK) and c:IsRace(RACE_MACHINE) or c:IsAttribute(ATTRIBUTE_FIRE)) and c:IsMonster() and c:IsLevelBelow(4) and c:IsAbleToDeck()
+	return (c:IsAttribute(ATTRIBUTE_DARK) and c:IsRace(RACE_MACHINE) or c:IsAttribute(ATTRIBUTE_FIRE)) and c:IsMonster() and c:IsLevelBelow(4) and c:IsFaceup() and c:IsAbleToDeck()
 end
 function s.dttg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return Duel.IsExistingMatchingCard(s.dtfilter,tp,LOCATION_GRAVE|LOCATION_REMOVED,0,1,nil) end

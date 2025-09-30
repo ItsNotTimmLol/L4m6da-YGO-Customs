@@ -66,7 +66,7 @@ function s.initial_effect(c)
 	--Add to hand to shuffle into Deck and bounce to hand
 	local e8=Effect.CreateEffect(c)
 	e8:SetDescription(aux.Stringid(id,1))
-	e8:SetType(EFFECT_TYPE_TRIGGER_O)
+	e8:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
 	e8:SetCategory(CATEGORY_TODECK)
 	e8:SetProperty(EFFECT_FLAG_DELAY)
 	e8:SetCode(EVENT_CHAINING)
