@@ -154,7 +154,7 @@ function s.returnop(e,tp,eg,ep,ev,re,r,rp)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TODECK)
 	local g1=Duel.SelectMatchingCard(tp,s.returnfilter,tp,LOCATION_GRAVE|LOCATION_REMOVED,0,1,1,nil)
 	if #g1>0 then
-		Duel.HintSelection(g,true)
+		Duel.HintSelection(#g1,true)
 		local g2=Duel.GetMatchingGroup(Card.IsAbleToHand,tp,0,LOCATION_ONFIELD,nil)
 		if Duel.SendtoDeck(g1,nil,SEQ_DECKSHUFFLE,REASON_EFFECT) and Duel.SelectYesNo(tp,aux.Stringid(id,2)) then
 			Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_RTOHAND)
