@@ -71,8 +71,7 @@ function s.initial_effect(c)
 	e8:SetProperty(EFFECT_FLAG_DELAY)
 	e8:SetCode(EVENT_CHAINING)
 	e8:SetRange(LOCATION_GRAVE|LOCATION_REMOVED)
-	e8:SetCountLimit(1,0,EFFECT_COUNT_CODE_CHAIN)
-	e8:SetCondition(function(e,tp,eg,ep,ev,re,r,rp) return rp==tp and re:IsMonsterEffect() and re:IsActiveType(TYPE_SYNCHRO) and re:IsSetCard(s.listedseries) end)
+	e8:SetCondition(function(e,tp,eg,ep,ev,re,r,rp) return rp==tp and re:IsMonsterEffect() and re:IsActiveType(TYPE_SYNCHRO) and re:IsSetCard(s.listed_series) end)
 	e8:SetTarget(s.returntg)
 	e8:SetOperation(s.returnop)
 	c:RegisterEffect(e8)
@@ -145,7 +144,7 @@ function s.returnfilter(c)
 end
 function s.returntg(e,tp,eg,ep,ev,re,r,rp,chk)
 	local c=e:GetHandler()
-	if chk==0 then return c:IsAbleToHand() and Duel.IsExistingMatchingCard(s.returnfilter,tp,LOCATION_HAND,0,2,nil) end
+	if chk==0 then return c:IsAbleToHand() and Duel.IsExistingMatchingCard(s.returnfilter,tp,LOCATION_GRAVE|LOCATION_REMOVED,0,2,nil) end
 	Duel.SetOperationInfo(0,CATEGORY_TODECK,nil,1,tp,LOCATION_GRAVE|LOCATION_REMOVED)
 end
 function s.returnop(e,tp,eg,ep,ev,re,r,rp)
@@ -153,7 +152,7 @@ function s.returnop(e,tp,eg,ep,ev,re,r,rp)
 	if not (c:IsRelateToEffect(e) and Duel.SendtoHand(c,nil,REASON_EFFECT)>0 and c:IsLocation(LOCATION_HAND)) then return end
 	Duel.ShuffleHand(tp)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TODECK)
-	local g1=Duel.SelectMatchingCard(tp,s.tdfilter,tp,LOCATION_GRAVE,0,1,1,nil)
+	local g1=Duel.SelectMatchingCard(tp,s.returnfilter,tp,LOCATION_GRAVE|LOCATION_REMOVED,0,1,1,nil)
 	if #g1>0 then
 		Duel.HintSelection(g,true)
 		local g2=Duel.GetMatchingGroup(Card.IsAbleToHand,tp,0,LOCATION_ONFIELD,nil)
