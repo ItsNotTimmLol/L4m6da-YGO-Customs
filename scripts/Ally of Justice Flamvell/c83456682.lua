@@ -126,7 +126,7 @@ s.listed_series={SET_ALLY_OF_JUSTICE,SET_FLAMVELL}
 
 
 function s.lightcon(e)
-	return Duel.IsExistingMatchingCard(s.lightfilter,e:GetHandlerPlayer(),LOCATION_MZONE,0,1,nil)
+	return Duel.IsBattlePhase() or Duel.IsExistingMatchingCard(s.lightfilter,e:GetHandlerPlayer(),LOCATION_MZONE,0,1,nil)
 end
 function s.lightfilter(c)
 	return c:IsSetCard(s.listed_series)
