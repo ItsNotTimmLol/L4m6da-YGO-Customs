@@ -177,7 +177,8 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 		local g=Duel.SelectMatchingCard(tp,s.spfilter,tp,LOCATION_DECK,0,1,1,nil,e,tp)
 		local b1=Duel.GetLocationCount(tp,LOCATION_MZONE)>0
 		local b2=Duel.GetLocationCount(1-tp,LOCATION_MZONE)>0
-		if not (b1 or b2 or #g<0) then return end
+		if not g then return end
+		if not (b1 or b2) then return end
 		local op=Duel.SelectEffect(tp,
 		{b1,aux.Stringid(id,1)},
 		{b2,aux.Stringid(id,2)})
