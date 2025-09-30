@@ -153,7 +153,7 @@ function s.nsop(e,tp,eg,ep,ev,re,r,rp)
 		Duel.BreakEffect()
 		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SUMMON)
 		local sg=g3:Select(tp,1,1,nil):GetFirst()
-		Duel.Summon(tp,sg,true,nil)
+		Duel.SummonOrSet(tp,sg,true,nil)
 	end
 end
 

@@ -41,7 +41,7 @@ s.listed_names={40155554,59482302}
 s.listed_series={SET_ALLY_OF_JUSTICE,SET_FLAMVELL}
 --Basically soul charge
 function s.sp1filter(c,e,tp)
-	return (c:IsCode(40155554) or c:IsCode(59482302) or c:IsSetCard(SET_FLAMVELL)) and c:IsMonster() 
+	return (c:IsCode(59482302) or c:IsSetCard(SET_FLAMVELL)) and c:IsMonster() 
 		and ((Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and c:IsCanBeSpecialSummoned(e,0,tp,false,false,POS_FACEUP,tp))
 		or (Duel.GetLocationCount(1-tp,LOCATION_MZONE)>0 and c:IsCanBeSpecialSummoned(e,0,tp,false,false,POS_FACEUP,1-tp)))
 end
