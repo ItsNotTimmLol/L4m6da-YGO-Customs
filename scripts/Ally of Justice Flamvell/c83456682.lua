@@ -1,4 +1,4 @@
---Ally of Justice Field
+--Ally of Justice Assimilation
 --Scripted by WolfSif
 local s,id=GetID()
 function s.initial_effect(c)
@@ -16,27 +16,33 @@ function s.initial_effect(c)
 	e1:SetCode(EFFECT_CHANGE_ATTRIBUTE)
 	e1:SetValue(ATTRIBUTE_LIGHT)
 	c:RegisterEffect(e1)
-	--Monsters whose ATK is different from their original ATK are unaffected by your opponent's activated effects
-	local e2=Effect.CreateEffect(c)
-	e2:SetType(EFFECT_TYPE_FIELD)
-	e2:SetCode(EFFECT_IMMUNE_EFFECT)
-	e2:SetRange(LOCATION_FZONE)
-	e2:SetTargetRange(LOCATION_MZONE,0)
-	e2:SetTarget(s.immtg)
-	e2:SetValue(s.immval)
-	c:RegisterEffect(e2)
-	--SS if monster leaves opponent's field
+	--extra material
+	local e4=Effect.CreateEffect(c)
+	e4:SetType(EFFECT_TYPE_SINGLE)
+	e4:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_UNCOPYABLE)
+	e4:SetCode(EFFECT_ADD_EXTRA_TRIBUTE)
+	e4:SetTargetRange(0,LOCATION_MZONE)
+	e4:SetTarget(aux.TargetBoolFunction(Card.IsAttribute,ATTRIBUTE_LIGHT))
+	e4:SetValue(POS_FACEUP)
 	local e5=Effect.CreateEffect(c)
-	e5:SetDescription(aux.Stringid(id,0))
-	e5:SetCategory(CATEGORY_SPECIAL_SUMMON)
-	e5:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
-	e5:SetProperty(EFFECT_FLAG_DAMAGE_STEP+EFFECT_FLAG_DELAY)
-	e5:SetCode(EVENT_SPSUMMON_SUCCESS)
-	e5:SetRange(LOCATION_FZONE)
-	e5:SetCondition(function(e,tp,eg,ep,ev,re,r,rp) return eg:IsExists(Card.IsControler,1,nil,1-tp) end)
-	e5:SetTarget(s.sptg)
-	e5:SetOperation(s.spop)
+	e5:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_GRANT)
+	e5:SetRange(LOCATION_MZONE)
+	e5:SetTargetRange(LOCATION_HAND,0)
+	e5:SetTarget(function(e,tp,eg,ep,ev,re,r,rp) return c:IsMonster() and (c:IsCode(40155554)  or c:IsSetCard(s.listed_series)) end)
+	e5:SetLabelObject(e4)
 	c:RegisterEffect(e5)
+	--SS if monster leaves opponent's field
+	local e6=Effect.CreateEffect(c)
+	e6:SetDescription(aux.Stringid(id,0))
+	e6:SetCategory(CATEGORY_SPECIAL_SUMMON)
+	e6:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
+	e6:SetProperty(EFFECT_FLAG_DAMAGE_STEP+EFFECT_FLAG_DELAY)
+	e6:SetCode(EVENT_SPSUMMON_SUCCESS)
+	e6:SetRange(LOCATION_FZONE)
+	e6:SetCondition(function(e,tp,eg,ep,ev,re,r,rp) return eg:IsExists(Card.IsControler,1,nil,1-tp) end)
+	e6:SetTarget(s.sptg)
+	e6:SetOperation(s.spop)
+	c:RegisterEffect(e6)
 	--[[avoid battle damage
 	local e3=Effect.CreateEffect(c)
 	e3:SetDescription(aux.Stringid(id,0))
@@ -117,13 +123,7 @@ function s.initial_effect(c)
 end
 s.listed_names={40155554,59482302}
 s.listed_series={SET_ALLY_OF_JUSTICE,SET_FLAMVELL}
---immune
-function s.immtg(e,c)
-	return (c:IsCode(40155554) or c:IsSetCard(SET_ALLY_OF_JUSTICE) or c:IsSetCard(SET_FLAMVELL)) and c:IsMonster() and not c:IsAttack(c:GetBaseAttack())
-end
-function s.immval(e,re)
-	return re:GetOwnerPlayer()~=e:GetHandlerPlayer()
-end
+
 
 function s.lightcon(e)
 	return Duel.IsExistingMatchingCard(s.lightfilter,e:GetHandlerPlayer(),LOCATION_MZONE,0,1,nil)
@@ -175,8 +175,15 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	if Duel.GetLocationCount(tp,LOCATION_MZONE)>0 then
 		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
 		local g=Duel.SelectMatchingCard(tp,s.spfilter,tp,LOCATION_DECK,0,1,1,nil,e,tp)
-		if #g>0 then
-			Duel.SpecialSummon(g,0,tp,tp,false,false,POS_FACEUP)
+		local b1=Duel.GetLocationCount(tp,LOCATION_MZONE)>0
+		local b2=Duel.GetLocationCount(1-tp,LOCATION_MZONE)>0
+		if not (b1 or b2 or #g<0) then return end
+		local op=Duel.SelectEffect(tp,
+		{b1,aux.Stringid(id,1)},
+		{b2,aux.Stringid(id,2)})
+		if op==1 or op==1 then
+			local target_player=op==1 and tp or 1-tp
+			if Duel.SpecialSummon(g,0,tp,target_player,true,false,POS_FACEUP)==0 then return end
 		end
 	end
 	--[[if Duel.GetLocationCount(tp,LOCATION_MZONE)<1 or Duel.GetLocationCount(1-tp,LOCATION_MZONE,tp)<1 or Duel.IsPlayerAffectedByEffect(tp,CARD_BLUEEYES_SPIRIT) then return end

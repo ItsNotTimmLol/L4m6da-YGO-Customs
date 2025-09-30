@@ -1,4 +1,4 @@
---Ally of Justice Assimilation
+--Ally of Justice Field
 --Scripted by WolfSif
 local s,id=GetID()
 function s.initial_effect(c)
@@ -6,6 +6,8 @@ function s.initial_effect(c)
 	local e0=Effect.CreateEffect(c)
 	e0:SetType(EFFECT_TYPE_ACTIVATE)
 	e0:SetCode(EVENT_FREE_CHAIN)
+	e0:SetTarget(s.acttg)
+	e0:SetOperation(s.actop)
 	e0:SetCost(s.cost)
 	c:RegisterEffect(e0)
 	--Can be activated from the hand
@@ -28,6 +30,15 @@ function s.initial_effect(c)
 	c:RegisterEffect(e2)
 	--ClockLizard check
 	aux.addContinuousLizardCheck(c,LOCATION_SZONE,s.lizfilter)]]
+	--Monsters whose ATK is different from their original ATK are unaffected by your opponent's activated effects
+	local e2=Effect.CreateEffect(c)
+	e2:SetType(EFFECT_TYPE_FIELD)
+	e2:SetCode(EFFECT_IMMUNE_EFFECT)
+	e2:SetRange(LOCATION_FZONE)
+	e2:SetTargetRange(LOCATION_MZONE,0)
+	e2:SetTarget(s.immtg)
+	e2:SetValue(s.immval)
+	c:RegisterEffect(e2)
 	--All your opponent's monsters must attack
 	local e3=Effect.CreateEffect(c)
 	e3:SetType(EFFECT_TYPE_FIELD)
@@ -35,21 +46,6 @@ function s.initial_effect(c)
 	e3:SetRange(LOCATION_MZONE)
 	e3:SetTargetRange(0,LOCATION_MZONE)
 	c:RegisterEffect(e3)
-	--extra material
-	local e4=Effect.CreateEffect(c)
-	e4:SetType(EFFECT_TYPE_SINGLE)
-	e4:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_UNCOPYABLE)
-	e4:SetCode(EFFECT_ADD_EXTRA_TRIBUTE)
-	e4:SetTargetRange(0,LOCATION_MZONE)
-	e4:SetTarget(aux.TargetBoolFunction(Card.IsAttribute,ATTRIBUTE_LIGHT))
-	e4:SetValue(POS_FACEUP)
-	local e5=Effect.CreateEffect(c)
-	e5:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_GRANT)
-	e5:SetRange(LOCATION_MZONE)
-	e5:SetTargetRange(LOCATION_HAND,0)
-	e5:SetTarget(function(e,tp,eg,ep,ev,re,r,rp) return c:IsMonster() and (c:IsCode(40155554)  or c:IsSetCard(s.listed_series)) end)
-	e5:SetLabelObject(e4)
-	c:RegisterEffect(e5)
 	--Change to LIGHT or face-down to Normal Summon
 	local e6=Effect.CreateEffect(c)
 	e6:SetDescription(aux.Stringid(id,0))
@@ -75,7 +71,7 @@ function s.initial_effect(c)
 	e4:SetOperation(s.rmop)
 	c:RegisterEffect(e4)]]
 end
-s.listed_names={40155554,59482302}
+s.listed_names={40155554,59482302,83456682}
 s.listed_series={SET_ALLY_OF_JUSTICE,SET_FLAMVELL}
 function s.counterfilter(c)
 	return not (c:IsSummonLocation(LOCATION_EXTRA) and not c:IsSetCard(s.listed_series))
@@ -96,6 +92,32 @@ function s.cost(e,tp,eg,ep,ev,re,r,rp,chk)
 	Duel.RegisterEffect(e1,tp)
 	--Clock Lizard check
 	aux.addTempLizardCheck(c,tp,s.sumlimit)
+end
+
+--activate
+function s.actfilter(c,tp)
+	return c:IsCode(83456682) and c:GetActivateEffect() and c:GetActivateEffect():IsActivatable(tp,true,true)
+end
+function s.acttg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return true end
+end
+function s.actop(e,tp,eg,ep,ev,re,r,rp)
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOFIELD)
+	local g=Duel.GetMatchingGroup(s.actfilter,tp,LOCATION_DECK|LOCATION_HAND|LOCATION_GRAVE,0,nil,tp) 
+	if #g>0 and Duel.SelectYesNo(tp,aux.Stringid(id,1)) then
+		local sc=Duel.SelectMatchingCard(tp,s.actfilter,tp,LOCATION_DECK|LOCATION_HAND|LOCATION_GRAVE,0,1,1,nil,tp):GetFirst()
+		if sc then
+			Duel.ActivateFieldSpell(sc,e,tp,eg,ep,ev,re,r,rp)
+		end
+	end
+end
+
+--immune
+function s.immtg(e,c)
+	return (c:IsCode(40155554) or c:IsSetCard(SET_ALLY_OF_JUSTICE) or c:IsSetCard(SET_FLAMVELL)) and c:IsMonster() and not c:IsAttack(c:GetBaseAttack())
+end
+function s.immval(e,re)
+	return re:GetOwnerPlayer()~=e:GetHandlerPlayer()
 end
 
 function s.sumcon(e,tp,eg,ep,ev,re,r,rp)
