@@ -1,4 +1,4 @@
---Ally of Justice Simulacrum
+--Flamvell Coalescence
 --Scripted by WolfSif
 local s,id=GetID()
 function s.initial_effect(c)
@@ -7,17 +7,6 @@ function s.initial_effect(c)
 	e0:SetType(EFFECT_TYPE_ACTIVATE)
 	e0:SetCode(EVENT_FREE_CHAIN)
 	c:RegisterEffect(e0)
-	--decktop other
-	local e1=Effect.CreateEffect(c)
-	e1:SetDescription(aux.Stringid(id,0))
-	e1:SetCategory(CATEGORY_POSITION)
-	e1:SetType(EFFECT_TYPE_IGNITION)
-	e1:SetProperty(EFFECT_FLAG_CARD_TARGET)
-	e1:SetRange(LOCATION_SZONE)
-	e1:SetCountLimit(1)
-	e1:SetTarget(s.dttg)
-	e1:SetOperation(s.dtop)
-	c:RegisterEffect(e1)
 	--Extender
 		--Sent
 	local e2=Effect.CreateEffect(c)
@@ -46,9 +35,27 @@ function s.initial_effect(c)
 	c:RegisterEffect(e3)
 	--Also treated as Flamvell
 	local e4=e3:Clone()
+	e3:SetCode(EFFECT_CHANGE_ATTRIBUTE)
+	e3:SetValue(ATTRIBUTE_FIRE)
+	c:RegisterEffect(e4)
+	--Also FIRE
+	local e4=e3:Clone()
 	e4:SetValue(SET_FLAMVELL)
 	c:RegisterEffect(e4)
-
+	--Also FIRE in grave
+	local e4=e3:Clone()
+	e4:SetTargetRange(LOCATION_GRAVE,0)
+	e4:SetTarget(s.tg)
+	c:RegisterEffect(e4)
+	--Code check Fire
+	local e6=Effect.CreateEffect(c)
+	e6:SetType(EFFECT_TYPE_FIELD)
+	e6:SetProperty(EFFECT_FLAG_PLAYER_TARGET)
+	e6:SetCode(id)
+	e6:SetRange(LOCATION_SZONE)
+	e6:SetTargetRange(1,0)
+	e6:SetValue(s.attval)
+	c:RegisterEffect(e6)
 	--[[Flamvell banish & LP Ex
 	local e3=Effect.CreateEffect(c)
 	e3:SetDescription(aux.Stringid(id,0))
@@ -83,28 +90,29 @@ end
 s.listed_names={40155554,59482302}
 s.listed_series={SET_ALLY_OF_JUSTICE,SET_FLAMVELL}
 
---setcodes
+--Fix stats
 function s.setcodetg(e,c)
 	return (c:IsCode(40155554) or c:IsCode(59482302) or c:GetOriginalSetCard()==SET_ALLY_OF_JUSTICE or c:GetOriginalSetCard()==SET_FLAMVELL) and c:IsMonster()
 end
-
---recycle
-function s.dtfilter(c)
-	return (c:IsAttribute(ATTRIBUTE_DARK) and c:IsRace(RACE_MACHINE) or c:IsAttribute(ATTRIBUTE_FIRE)) and c:IsMonster() and c:IsLevelBelow(4) and c:IsFaceup() and c:IsAbleToDeck()
-end
-function s.dttg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.IsExistingMatchingCard(s.dtfilter,tp,LOCATION_GRAVE|LOCATION_REMOVED,0,1,nil) end
-	Duel.SetOperationInfo(0,CATEGORY_TODECK,nil,1,tp,LOCATION_GRAVE|LOCATION_REMOVED)
-end
-function s.dtop(e,tp,eg,ep,ev,re,r,rp)
-	Duel.Hint(HINT_SELECTMSG,tp,aux.Stringid(id,0))
-	local tc=Duel.SelectMatchingCard(tp,aux.NecroValleyFilter(s.dtfilter),tp,LOCATION_GRAVE|LOCATION_REMOVED,0,1,1,nil):GetFirst()
-	if tc then
-		Duel.SendtoDeck(tc,nil,SEQ_DECKTOP,REASON_EFFECT)
-		if not tc:IsLocation(LOCATION_EXTRA) then
-			Duel.ConfirmDecktop(tp,1)
+function s.tg(e,c)
+	if c:GetFlagEffect(1)==0 then
+		c:RegisterFlagEffect(1,0,0,0)
+		local eff={c:GetCardEffect(EFFECT_NECRO_VALLEY)}
+		c:ResetFlagEffect(1)
+		for _,te in ipairs(eff) do
+			local op=te:GetOperation()
+			if not op or op(e,c) then return false end
 		end
 	end
+	return (c:IsCode(40155554) or c:IsCode(59482302) or c:GetOriginalSetCard()==SET_ALLY_OF_JUSTICE or c:GetOriginalSetCard()==SET_FLAMVELL) and c:IsMonster()
+end
+function s.raceval(e,c,re,chk)
+	if chk==0 then return true end
+	return RACE_PYRO
+end
+function s.attval(e,c,re,chk)
+	if chk==0 then return true end
+	return ATTRIBUTE_FIRE
 end
 
 
@@ -170,9 +178,10 @@ function s.sp2op(e,tp,eg,ep,ev,re,r,rp)
 	end
 end
 
+--[[Deprecated
 --Add to hand
 function s.thfilter(c)
-	return (c:IsSetCard(s.listed_series) or c:IsCode(74845897)) --[[and not c:IsCode(id)]] and c:IsAbleToHand()
+	return (c:IsSetCard(s.listed_series) or c:IsCode(74845897)) and not c:IsCode(id) and c:IsAbleToHand()
 end
 function s.res1con(sg,e,tp,mg)
 	return sg:FilterCount(Card.IsSetCard,nil,SET_FLAMVELL)<=1 and sg:FilterCount(Card.IsCode,nil,74845897)<=1
@@ -329,7 +338,7 @@ function s.op(e,tp,eg,ep,ev,re,r,rp)
 			Duel.RegisterEffect(e1,tp)
 			local e2=e1:Clone()
 			e2:SetCode(EFFECT_CANNOT_SPECIAL_SUMMON)
-			Duel.RegisterEffect(e2,tp)]]--
+			Duel.RegisterEffect(e2,tp)
 		end
 	elseif op==2 then
 		local c=e:GetHandler()
@@ -359,4 +368,4 @@ function s.desop(e,tp,eg,ep,ev,re,r,rp)
 	local tg=g:Filter(s.desfilter,nil,e:GetLabel())
 	g:DeleteGroup()
 	Duel.Destroy(tg,REASON_EFFECT)
-end
+end]]--

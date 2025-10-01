@@ -1,4 +1,4 @@
---Flamvell Coalescence
+--Ally of Justice Simulacrum
 --Scripted by WolfSif
 local s,id=GetID()
 function s.initial_effect(c)
@@ -11,48 +11,26 @@ function s.initial_effect(c)
 	e1:SetTarget(s.sptg)
 	e1:SetOperation(s.spop)
 	c:RegisterEffect(e1)
-	--Flamvell monsters are Pyro
-	local e1=Effect.CreateEffect(c)
-	e1:SetType(EFFECT_TYPE_FIELD)
-	e1:SetCode(EFFECT_CHANGE_RACE)
-	e1:SetRange(LOCATION_SZONE)
-	e1:SetTargetRange(LOCATION_MZONE,0)
-	--e1:SetTarget(aux.TargetBoolFunction(Card.IsSetCard,SET_FLAMVELL))
-	e1:SetValue(RACE_PYRO)
-	c:RegisterEffect(e1)
-	local e2=e1:Clone()
-	e2:SetTargetRange(LOCATION_GRAVE,0)
-	e2:SetTarget(s.tg)
+	--LIGHT Lock during Main Phase
+	local e2=Effect.CreateEffect(c)
+	e2:SetType(EFFECT_TYPE_FIELD)
+	e2:SetRange(LOCATION_SZONE)
+	e2:SetTargetRange(0,LOCATION_HAND|LOCATION_ONFIELD|LOCATION_GRAVE)
+	e2:SetCondition(function() return Duel.IsTurnPlayer(e:GetHandlerPlayer()) and Duel.IsPhase(PHASE_MAIN2) end)
+	e2:SetCode(EFFECT_CHANGE_ATTRIBUTE)
+	e2:SetValue(ATTRIBUTE_LIGHT)
 	c:RegisterEffect(e2)
-	--Flamvell monsters are Fire
-	local e3=Effect.CreateEffect(c)
-	e3:SetType(EFFECT_TYPE_FIELD)
-	e3:SetCode(EFFECT_CHANGE_ATTRIBUTE)
-	e3:SetRange(LOCATION_SZONE)
-	e3:SetTargetRange(LOCATION_MZONE,0)
-	--e3:SetTarget(aux.TargetBoolFunction(Card.IsSetCard,SET_FLAMVELL))
-	e3:SetValue(ATTRIBUTE_FIRE)
+	local e3=e2:Clone()
+	e3:SetTargetRange(LOCATION_GRAVE,0)
+	e3:SetTarget(s.tg)
 	c:RegisterEffect(e3)
-	local e4=e3:Clone()
-	e4:SetTargetRange(LOCATION_GRAVE,0)
-	e4:SetTarget(s.tg)
-	c:RegisterEffect(e4)
-	--Code check Pyro
-	local e5=Effect.CreateEffect(c)
-	e5:SetType(EFFECT_TYPE_FIELD)
-	e5:SetProperty(EFFECT_FLAG_PLAYER_TARGET)
-	e5:SetCode(id)
-	e5:SetRange(LOCATION_SZONE)
-	e5:SetTargetRange(1,0)
-	e5:SetValue(s.raceval)
-	c:RegisterEffect(e5)
-	--Code check Fire
+	--Code check LIGHT
 	local e6=Effect.CreateEffect(c)
 	e6:SetType(EFFECT_TYPE_FIELD)
 	e6:SetProperty(EFFECT_FLAG_PLAYER_TARGET)
 	e6:SetCode(id)
 	e6:SetRange(LOCATION_SZONE)
-	e6:SetTargetRange(1,0)
+	e6:SetTargetRange(0,1)
 	e6:SetValue(s.attval)
 	c:RegisterEffect(e6)
 	--avoid battle damage
@@ -71,7 +49,7 @@ function s.initial_effect(c)
 	e8:SetProperty(EFFECT_FLAG_DELAY)
 	e8:SetCode(EVENT_CHAINING)
 	e8:SetRange(LOCATION_GRAVE|LOCATION_REMOVED)
-	e8:SetCondition(function(e,tp,eg,ep,ev,re,r,rp) return rp==tp and re:IsMonsterEffect() and re:IsActiveType(TYPE_SYNCHRO) and re:GetHandler():IsSetCard(s.listed_series) end)
+	e8:SetCondition(function(e,tp,eg,ep,ev,re,r,rp) return rp==tp and re:IsMonsterEffect() and re:GetHandler():IsSetCard(s.listed_series) end)
 	e8:SetTarget(s.returntg)
 	e8:SetOperation(s.returnop)
 	c:RegisterEffect(e8)
@@ -135,7 +113,7 @@ function s.raceval(e,c,re,chk)
 end
 function s.attval(e,c,re,chk)
 	if chk==0 then return true end
-	return ATTRIBUTE_FIRE
+	return ATTRIBUTE_LIGHT
 end
 
 --Shuffle to bounce
@@ -144,7 +122,7 @@ function s.returnfilter(c)
 end
 function s.returntg(e,tp,eg,ep,ev,re,r,rp,chk)
 	local c=e:GetHandler()
-	if chk==0 then return c:IsAbleToHand() and Duel.IsExistingMatchingCard(s.returnfilter,tp,LOCATION_GRAVE|LOCATION_REMOVED,0,2,nil) end
+	if chk==0 then return c:IsAbleToHand() and Duel.IsExistingMatchingCard(Card.IsAbleToDeck,tp,LOCATION_GRAVE|LOCATION_REMOVED,LOCATION_REMOVED,1,nil) end
 	Duel.SetOperationInfo(0,CATEGORY_TODECK,nil,1,tp,LOCATION_GRAVE|LOCATION_REMOVED)
 end
 function s.returnop(e,tp,eg,ep,ev,re,r,rp)
@@ -152,11 +130,11 @@ function s.returnop(e,tp,eg,ep,ev,re,r,rp)
 	if not (c:IsRelateToEffect(e) and Duel.SendtoHand(c,nil,REASON_EFFECT)>0 and c:IsLocation(LOCATION_HAND)) then return end
 	Duel.ShuffleHand(tp)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TODECK)
-	local g1=Duel.SelectMatchingCard(tp,s.returnfilter,tp,LOCATION_GRAVE|LOCATION_REMOVED,0,1,1,nil)
+	local g1=Duel.SelectMatchingCard(tp,Card.IsAbleToDeck,tp,LOCATION_GRAVE|LOCATION_REMOVED,0,1,1,nil)
 	if #g1>0 then
 		Duel.HintSelection(g1,true)
 		local g2=Duel.GetMatchingGroup(Card.IsAbleToHand,tp,0,LOCATION_ONFIELD,nil)
-		if Duel.SendtoDeck(g1,nil,SEQ_DECKSHUFFLE,REASON_EFFECT) and Duel.SelectYesNo(tp,aux.Stringid(id,2)) then
+		if Duel.SendtoDeck(g1,nil,SEQ_DECKSHUFFLE,REASON_EFFECT) and #g2>0 and Duel.SelectYesNo(tp,aux.Stringid(id,2)) then
 			Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_RTOHAND)
 			local hg=g2:Select(tp,1,1,nil)
 			Duel.HintSelection(hg,true)

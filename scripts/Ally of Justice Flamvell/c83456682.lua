@@ -7,41 +7,54 @@ function s.initial_effect(c)
 	e0:SetType(EFFECT_TYPE_ACTIVATE)
 	e0:SetCode(EVENT_FREE_CHAIN)
 	c:RegisterEffect(e0)
-	--change attribute
+	--Flamvell monsters are Pyro
 	local e1=Effect.CreateEffect(c)
 	e1:SetType(EFFECT_TYPE_FIELD)
-	e1:SetRange(LOCATION_FZONE)
-	e1:SetTargetRange(LOCATION_GRAVE,LOCATION_ONFIELD|LOCATION_HAND|LOCATION_GRAVE)
-	e1:SetCondition(s.lightcon)
-	e1:SetCode(EFFECT_CHANGE_ATTRIBUTE)
-	e1:SetValue(ATTRIBUTE_LIGHT)
+	e1:SetCode(EFFECT_CHANGE_RACE)
+	e1:SetRange(LOCATION_SZONE)
+	e1:SetTargetRange(LOCATION_MZONE,0)
+	--e1:SetTarget(aux.TargetBoolFunction(Card.IsSetCard,SET_FLAMVELL))
+	e1:SetValue(RACE_PYRO)
 	c:RegisterEffect(e1)
+	local e2=e1:Clone()
+	e2:SetTargetRange(LOCATION_GRAVE,0)
+	e2:SetTarget(s.tg)
+	c:RegisterEffect(e2)
 	--extra material
+	local e3=Effect.CreateEffect(c)
+	e3:SetType(EFFECT_TYPE_SINGLE)
+	e3:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_UNCOPYABLE)
+	e3:SetCode(EFFECT_ADD_EXTRA_TRIBUTE)
+	e3:SetTargetRange(0,LOCATION_MZONE)
+	e3:SetTarget(aux.TargetBoolFunction(Card.IsAttribute,ATTRIBUTE_LIGHT))
+	e3:SetValue(POS_FACEUP)
 	local e4=Effect.CreateEffect(c)
-	e4:SetType(EFFECT_TYPE_SINGLE)
-	e4:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_UNCOPYABLE)
-	e4:SetCode(EFFECT_ADD_EXTRA_TRIBUTE)
-	e4:SetTargetRange(0,LOCATION_MZONE)
-	e4:SetTarget(aux.TargetBoolFunction(Card.IsAttribute,ATTRIBUTE_LIGHT))
-	e4:SetValue(POS_FACEUP)
-	local e5=Effect.CreateEffect(c)
-	e5:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_GRANT)
-	e5:SetRange(LOCATION_MZONE)
-	e5:SetTargetRange(LOCATION_HAND,0)
-	e5:SetTarget(function(e,tp,eg,ep,ev,re,r,rp) return c:IsMonster() and (c:IsCode(40155554)  or c:IsSetCard(s.listed_series)) end)
-	e5:SetLabelObject(e4)
-	c:RegisterEffect(e5)
+	e4:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_GRANT)
+	e4:SetRange(LOCATION_MZONE)
+	e4:SetTargetRange(LOCATION_HAND,0)
+	e4:SetTarget(function(e,tp,eg,ep,ev,re,r,rp) return c:IsMonster() and (c:IsCode(40155554)  or c:IsSetCard(SET_ALLY_OF_JUSTICE)) end)
+	e4:SetLabelObject(e3)
+	c:RegisterEffect(e4)
 	--SS if monster leaves opponent's field
+	local e5=Effect.CreateEffect(c)
+	e5:SetDescription(aux.Stringid(id,0))
+	e5:SetCategory(CATEGORY_SPECIAL_SUMMON)
+	e5:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
+	e5:SetProperty(EFFECT_FLAG_DAMAGE_STEP+EFFECT_FLAG_DELAY)
+	e5:SetCode(EVENT_SPSUMMON_SUCCESS)
+	e5:SetRange(LOCATION_FZONE)
+	e5:SetCondition(function(e,tp,eg,ep,ev,re,r,rp) return eg:IsExists(Card.IsControler,1,nil,1-tp) end)
+	e5:SetTarget(s.sptg)
+	e5:SetOperation(s.spop)
+	c:RegisterEffect(e5)
+	--Decktop
 	local e6=Effect.CreateEffect(c)
-	e6:SetDescription(aux.Stringid(id,0))
-	e6:SetCategory(CATEGORY_SPECIAL_SUMMON)
-	e6:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
-	e6:SetProperty(EFFECT_FLAG_DAMAGE_STEP+EFFECT_FLAG_DELAY)
-	e6:SetCode(EVENT_SPSUMMON_SUCCESS)
-	e6:SetRange(LOCATION_FZONE)
-	e6:SetCondition(function(e,tp,eg,ep,ev,re,r,rp) return eg:IsExists(Card.IsControler,1,nil,1-tp) end)
-	e6:SetTarget(s.sptg)
-	e6:SetOperation(s.spop)
+	e6:SetDescription(aux.Stringid(id,3))
+	e6:SetType(EFFECT_TYPE_IGNITION)
+	e6:SetRange(LOCATION_SZONE)
+	e6:SetCountLimit(1)
+	e6:SetTarget(s.dttg)
+	e6:SetOperation(s.dtop)
 	c:RegisterEffect(e6)
 	--[[avoid battle damage
 	local e3=Effect.CreateEffect(c)
@@ -89,15 +102,15 @@ function s.initial_effect(c)
 	e6:SetTarget(s.tg)
 	c:RegisterEffect(e6)
 	--Flamvell monsters are Fire
-	local e7=Effect.CreateEffect(c)
-	e7:SetType(EFFECT_TYPE_FIELD)
-	e7:SetCode(EFFECT_CHANGE_ATTRIBUTE)
-	e7:SetRange(LOCATION_FZONE)
-	e7:SetTargetRange(LOCATION_MZONE,0)
-	e7:SetTarget(aux.TargetBoolFunction(Card.IsSetCard,SET_FLAMVELL))
-	e7:SetValue(ATTRIBUTE_FIRE)
-	c:RegisterEffect(e7)
-	local e8=e7:Clone()
+	local e6=Effect.CreateEffect(c)
+	e6:SetType(EFFECT_TYPE_FIELD)
+	e6:SetCode(EFFECT_CHANGE_ATTRIBUTE)
+	e6:SetRange(LOCATION_FZONE)
+	e6:SetTargetRange(LOCATION_MZONE,0)
+	e6:SetTarget(aux.TargetBoolFunction(Card.IsSetCard,SET_FLAMVELL))
+	e6:SetValue(ATTRIBUTE_FIRE)
+	c:RegisterEffect(e6)
+	local e8=e6:Clone()
 	e8:SetTargetRange(LOCATION_GRAVE,0)
 	e8:SetTarget(s.tg)
 	c:RegisterEffect(e8)
@@ -123,15 +136,26 @@ function s.initial_effect(c)
 end
 s.listed_names={40155554,59482302}
 s.listed_series={SET_ALLY_OF_JUSTICE,SET_FLAMVELL}
-
-
-function s.lightcon(e)
-	return Duel.IsBattlePhase() or Duel.IsExistingMatchingCard(s.lightfilter,e:GetHandlerPlayer(),LOCATION_MZONE,0,1,nil)
+--Fix stats
+function s.tg(e,c)
+	if c:GetFlagEffect(1)==0 then
+		c:RegisterFlagEffect(1,0,0,0)
+		local eff={c:GetCardEffect(EFFECT_NECRO_VALLEY)}
+		c:ResetFlagEffect(1)
+		for _,te in ipairs(eff) do
+			local op=te:GetOperation()
+			if not op or op(e,c) then return false end
+		end
+	end
+	return c:IsSetCard(SET_FLAMVELL) and c:IsMonster()
 end
-function s.lightfilter(c)
-	return c:IsSetCard(s.listed_series)
-		and (c:IsType(TYPE_NORMAL) or c:IsLevelAbove(7))
-		and c:IsMonster() and c:IsFaceup()
+function s.raceval(e,c,re,chk)
+	if chk==0 then return true end
+	return RACE_PYRO
+end
+function s.attval(e,c,re,chk)
+	if chk==0 then return true end
+	return ATTRIBUTE_FIRE
 end
 
 --Spam
@@ -147,7 +171,7 @@ end
 function s.spfilter(c,e,tp)
 	return (c:IsSetCard(s.listed_series) or c:IsCode(59482302))
 		and ((Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and c:IsCanBeSpecialSummoned(e,0,tp,false,false,nil,tp)) or (Duel.GetLocationCount(1-tp,LOCATION_MZONE)>0 and c:IsCanBeSpecialSummoned(e,0,tp,false,false,POS_FACEUP,1-tp)))
-		and c:IsMonster() and c:IsLevelBelow(3)
+		and c:IsMonster() and c:IsAttackBelow(1600)
 		--and not Duel.IsExistingMatchingCard(s.uniquefilter,tp,LOCATION_MZONE|LOCATION_GRAVE|LOCATION_REMOVED,0,1,nil,c:GetCode())
 end
 function s.uniquefilter(c,code)
@@ -187,7 +211,8 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 			if Duel.SpecialSummon(g,0,tp,target_player,true,false,POS_FACEUP)==0 then return end
 		end
 	end
-	--[[if Duel.GetLocationCount(tp,LOCATION_MZONE)<1 or Duel.GetLocationCount(1-tp,LOCATION_MZONE,tp)<1 or Duel.IsPlayerAffectedByEffect(tp,CARD_BLUEEYES_SPIRIT) then return end
+	--[[--to both fields
+	if Duel.GetLocationCount(tp,LOCATION_MZONE)<1 or Duel.GetLocationCount(1-tp,LOCATION_MZONE,tp)<1 or Duel.IsPlayerAffectedByEffect(tp,CARD_BLUEEYES_SPIRIT) then return end
 	local c=e:GetHandler()
 	Duel.Hint(HINT_SELECTMSG,tp,aux.Stringid(id,2))
 	local g=Duel.GetMatchingGroup(s.spfilter,tp,LOCATION_DECK,0,nil,e,tp)
@@ -201,9 +226,35 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 end
 
 
+--Decktop
+function s.dttfilter(c)
+	return (c:IsSetCard(s.listed_series) or c:IsCode(59482302))
+		and c:IsMonster() and c:IsLevelBelow(4)
+end
+function s.dttg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return Duel.IsExistingMatchingCard(s.dttfilter,tp,LOCATION_DECK,0,1,nil) end
+end
+function s.dtop(e,tp,eg,ep,ev,re,r,rp)
+	Duel.Hint(HINT_SELECTMSG,tp,aux.Stringid(id,1))
+	local g=Duel.SelectMatchingCard(tp,s.dttfilter,tp,LOCATION_DECK,0,1,1,nil)
+	if #g>0 then
+		Duel.ShuffleDeck(tp)
+		Duel.MoveSequence(g:GetFirst(),0)
+		Duel.ConfirmDecktop(tp,1)
+	end
+end
+
+
+--[[Deprecated
+function s.lightfilter(c)
+	return c:IsSetCard(s.listed_series)
+		and (c:IsType(TYPE_NORMAL) or c:IsLevelAbove(7))
+		and c:IsMonster() and c:IsFaceup()
+end
+
 --To hand
 function s.thfilter(c)
-	return c:IsSetCard(SET_FLAMVELL) --[[and c:IsMonster()]] and c:IsAbleToHand()
+	return c:IsSetCard(SET_FLAMVELL) --[[and c:IsMonster() and c:IsAbleToHand()
 end
 function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return Duel.IsExistingMatchingCard(s.thfilter,tp,LOCATION_DECK,0,1,nil) end
@@ -243,30 +294,8 @@ end
 function s.rmop(e,tp,eg,ep,ev,re,r,rp)
 	--[[local rc=re:GetHandler()
 	Duel.Recover(tp,rc:GetLevel()*200,REASON_EFFECT)
-	Duel.BreakEffect()]]--
+	Duel.BreakEffect()
 	local g=Duel.GetDecktopGroup(1-tp,1)
 	Duel.DisableShuffleCheck()
 	Duel.Remove(g,POS_FACEUP,REASON_EFFECT)
-end
-
---Fix stats
-function s.tg(e,c)
-	if c:GetFlagEffect(1)==0 then
-		c:RegisterFlagEffect(1,0,0,0)
-		local eff={c:GetCardEffect(EFFECT_NECRO_VALLEY)}
-		c:ResetFlagEffect(1)
-		for _,te in ipairs(eff) do
-			local op=te:GetOperation()
-			if not op or op(e,c) then return false end
-		end
-	end
-	return c:IsSetCard(SET_FLAMVELL) and c:IsMonster()
-end
-function s.raceval(e,c,re,chk)
-	if chk==0 then return true end
-	return RACE_PYRO
-end
-function s.attval(e,c,re,chk)
-	if chk==0 then return true end
-	return ATTRIBUTE_FIRE
-end
+end]]--

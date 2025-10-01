@@ -8,16 +8,18 @@ function s.initial_effect(c)
 	e0:SetCode(EVENT_FREE_CHAIN)
 	e0:SetTarget(s.acttg)
 	e0:SetOperation(s.actop)
-	e0:SetCost(s.cost)
+	e0:SetCost(s.actcost)
 	c:RegisterEffect(e0)
 	--Can be activated from the hand
 	local e1=Effect.CreateEffect(c)
 	e1:SetDescription(aux.Stringid(id,1))
 	e1:SetType(EFFECT_TYPE_SINGLE)
-	e1:SetCost(s.cost)
+	e1:SetCondition(function(e) return Duel.IsExistingMatchingCard(s.actcostfilter,e:GetHandlerPlayer(),LOCATION_HAND,0,1,nil) end)
+	e1:SetValue(function(e,c) e:SetLabel(1) end)
 	e1:SetCode(EFFECT_TRAP_ACT_IN_HAND)
 	c:RegisterEffect(e1)
-	Duel.AddCustomActivityCounter(id,ACTIVITY_SPSUMMON,s.counterfilter)
+	e0:SetLabelObject(e1)
+	--Duel.AddCustomActivityCounter(id,ACTIVITY_SPSUMMON,s.counterfilter)
 	--[[Special Summon Limitation if activated from hand
 	local e2=Effect.CreateEffect(c)
 	e2:SetCode(EFFECT_CANNOT_SPECIAL_SUMMON)
@@ -46,7 +48,7 @@ function s.initial_effect(c)
 	e3:SetRange(LOCATION_MZONE)
 	e3:SetTargetRange(0,LOCATION_MZONE)
 	c:RegisterEffect(e3)
-	--Change to LIGHT or face-down to Normal Summon
+	--Change to LIGHT or face-down
 	local e6=Effect.CreateEffect(c)
 	e6:SetDescription(aux.Stringid(id,0))
 	e6:SetCategory(CATEGORY_POSITION)
@@ -71,14 +73,29 @@ function s.initial_effect(c)
 	e4:SetOperation(s.rmop)
 	c:RegisterEffect(e4)]]
 end
-s.listed_names={40155554,59482302,83456682}
+s.listed_names={40155554,59482302}
 s.listed_series={SET_ALLY_OF_JUSTICE,SET_FLAMVELL}
-function s.counterfilter(c)
-	return not (c:IsSummonLocation(LOCATION_EXTRA) and not c:IsSetCard(s.listed_series))
+
+--activate from hand
+function s.actcostfilter(c)
+	return (c:IsCode(s.listed_names) or c:IsSetCard(s.listed_series)) 
+		and c:IsMonster() and c:IsDiscardable()
+end
+function s.actcon(e,c)
+	if c==nil then return true end
+	local tp=c:GetControler()
+	return Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and Duel.IsExistingMatchingCard(s.actcostfilter,tp,LOCATION_HAND,0,1,c)
 end
 
-function s.cost(e,tp,eg,ep,ev,re,r,rp,chk)
-	local c=e:GetHandler()
+--cost
+function s.actcost(e,tp,eg,ep,ev,re,r,rp,chk)
+	local label_obj=e:GetLabelObject()
+	if chk==0 then label_obj:SetLabel(0) return true end
+	if label_obj:GetLabel()>0 then
+		label_obj:SetLabel(0)
+		Duel.DiscardHand(tp,s.actcostfilter,1,1,REASON_COST|REASON_DISCARD)
+	end
+	--[[--Summon lock
 	if chk==0 then return Duel.GetCustomActivityCount(id,tp,ACTIVITY_SPSUMMON)==0 end
 	--Cannot Special Summon from the Extra Deck, except Ally Monsters
 	local e1=Effect.CreateEffect(c)
@@ -91,30 +108,41 @@ function s.cost(e,tp,eg,ep,ev,re,r,rp,chk)
 	e1:SetReset(RESET_PHASE|PHASE_END,2)
 	Duel.RegisterEffect(e1,tp)
 	--Clock Lizard check
-	aux.addTempLizardCheck(c,tp,s.sumlimit)
+	aux.addTempLizardCheck(c,tp,s.sumlimit)]]
 end
 
---activate
+--[[summon lock
+function s.counterfilter(c)
+	return not (c:IsSummonLocation(LOCATION_EXTRA) and not c:IsSetCard(s.listed_series))
+end]]
+
+--place spells
 function s.actfilter(c,tp)
-	return c:IsCode(83456682) and c:GetActivateEffect() and c:GetActivateEffect():IsActivatable(tp,true,true)
+	return (c:IsType(TYPE_FIELD) or c:IsType(TYPE_CONTINUOUS))
+		and c:IsSetCard(s.listed_series) 
+		and c:IsSpell() and not c:IsForbidden() and c:CheckUniqueOnField(tp)
 end
 function s.acttg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return true end
+	if chk==0 then return (Duel.GetLocationCount(tp,LOCATION_SZONE)>0 or Duel.GetLocationCount(tp,LOCATION_FZONE)>0)
+		and Duel.IsExistingMatchingCard(s.actfilter,tp,LOCATION_HAND|LOCATION_DECK,0,1,nil,tp) end
 end
 function s.actop(e,tp,eg,ep,ev,re,r,rp)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOFIELD)
-	local g=Duel.GetMatchingGroup(s.actfilter,tp,LOCATION_DECK|LOCATION_HAND|LOCATION_GRAVE,0,nil,tp) 
-	if #g>0 and Duel.SelectYesNo(tp,aux.Stringid(id,1)) then
+	local g=Duel.GetMatchingGroup(s.actfilter,tp,LOCATION_DECK|LOCATION_HAND,0,nil,tp) 
+	if #g>0 and Duel.SelectYesNo(tp,aux.Stringid(id,5)) then
+		if Duel.GetLocationCount(tp,LOCATION_SZONE)<=0 and Duel.GetLocationCount(tp,LOCATION_FZONE)<=0 then return end
 		local sc=Duel.SelectMatchingCard(tp,s.actfilter,tp,LOCATION_DECK|LOCATION_HAND|LOCATION_GRAVE,0,1,1,nil,tp):GetFirst()
+		local loc=LOCATION_SZONE
+		if sc:IsType(TYPE_FIELD) then loc=LOCATION_FZONE end
 		if sc then
-			Duel.ActivateFieldSpell(sc,e,tp,eg,ep,ev,re,r,rp)
+			Duel.MoveToField(sc,tp,tp,loc,POS_FACEUP,true)
 		end
 	end
 end
 
 --immune
 function s.immtg(e,c)
-	return (c:IsCode(40155554) or c:IsSetCard(SET_ALLY_OF_JUSTICE) or c:IsSetCard(SET_FLAMVELL)) and c:IsMonster() and not c:IsAttack(c:GetBaseAttack())
+	return (c:IsCode(s.listed_names) or c:IsSetCard(s.listed_series)) and c:IsMonster() and not c:IsAttack(c:GetBaseAttack())
 end
 function s.immval(e,re)
 	return re:GetOwnerPlayer()~=e:GetHandlerPlayer()
@@ -170,13 +198,14 @@ function s.nsop(e,tp,eg,ep,ev,re,r,rp)
 			Duel.ChangePosition(tc2,POS_FACEDOWN_DEFENSE)
 		end
 	end
+	--[[Normal Summmon after
 	local g3=Duel.GetMatchingGroup(Card.IsSummonable,tp,LOCATION_HAND,0,nil,true,nil)
 	if #g3>0 and Duel.SelectYesNo(tp,aux.Stringid(id,3)) then
 		Duel.BreakEffect()
 		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SUMMON)
 		local sg=g3:Select(tp,1,1,nil):GetFirst()
 		Duel.SummonOrSet(tp,sg,true,nil)
-	end
+	end]]
 end
 
 --To hand
