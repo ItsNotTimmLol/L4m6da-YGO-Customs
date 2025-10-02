@@ -145,7 +145,7 @@ function s.immtg(e,c)
 	return (c:IsCode(s.listed_names) or c:IsSetCard(s.listed_series)) and c:IsMonster() and not c:IsAttack(c:GetBaseAttack())
 end
 function s.immval(e,te)
-	return te:GetOwnerPlayer()==1-e:GetHandlerPlayer() and te:IsActivated()re:GetOwnerPlayer()~=e:GetHandlerPlayer()
+	return te:GetOwnerPlayer()==1-e:GetHandlerPlayer() and te:IsActivated()
 end
 
 function s.sumcon(e,tp,eg,ep,ev,re,r,rp)
