@@ -97,7 +97,7 @@ function s.splimit(e,se,sp,st)
 	return e:GetHandler():GetLocation()~=LOCATION_EXTRA
 end
 function s.contactfil(tp)
-	return Duel.GetMatchingGroup(Card.IsAbleToDeckOrExtraAsCost,tp,LOCATION_HAND|LOCATION_GRAVE|LOCATION_REMOVED,0,nil)
+	return Duel.GetMatchingGroup(Card.IsAbleToDeckOrExtraAsCost,tp,LOCATION_HAND|LOCATION_GRAVE|LOCATION_GRAVE,0,nil)
 end
 function s.contactop(g,tp)
 	local fu,fd=g:Split(Card.IsFaceup,nil)
@@ -112,10 +112,10 @@ end
 function s.selfspcon(e,c)
 	if c==nil then return true end
 	local tp=c:GetControler()
-	return Duel.IsExistingMatchingCard(s.selfspfilter,tp,LOCATION_HAND|LOCATION_MZONE|LOCATION_GRAVE|LOCATION_REMOVED,0,1,nil)
+	return Duel.IsExistingMatchingCard(s.selfspfilter,tp,LOCATION_HAND|LOCATION_MZONE|LOCATION_GRAVE|LOCATION_GRAVE,0,1,nil)
 end
 function s.selfsptg(e,tp,eg,ep,ev,re,r,rp,chk,c)
-	local g=Duel.SelectMatchingCard(tp,s.selfspfilter,tp,LOCATION_HAND|LOCATION_MZONE|LOCATION_GRAVE|LOCATION_REMOVED,0,1,1,nil)
+	local g=Duel.SelectMatchingCard(tp,s.selfspfilter,tp,LOCATION_HAND|LOCATION_MZONE|LOCATION_GRAVE|LOCATION_GRAVE,0,1,1,nil)
 	if g then
 		g:KeepAlive()
 		e:SetLabelObject(g)
@@ -155,13 +155,13 @@ function s.remcon(e,tp,eg,ep,ev,re,r,rp)
 	return mg and e:GetHandler():IsSummonLocation(LOCATION_EXTRA) and mg:IsExists(Card.IsType,1,nil,TYPE_NORMAL)
 end
 function s.remtg(e,tp,eg,ep,ev,re,r,rp,chk)
-	local g=Duel.GetMatchingGroup(Card.IsAbleToRemove,tp,LOCATION_ONFIELD|LOCATION_REMOVED,LOCATION_ONFIELD|LOCATION_REMOVED,nil)
+	local g=Duel.GetMatchingGroup(Card.IsAbleToRemove,tp,LOCATION_ONFIELD|LOCATION_GRAVE,LOCATION_ONFIELD|LOCATION_GRAVE,nil)
 	if chk==0 then return #g>0 end
-	Duel.SetOperationInfo(0,CATEGORY_REMOVE,g,1,0,LOCATION_ONFIELD|LOCATION_REMOVED)
+	Duel.SetOperationInfo(0,CATEGORY_REMOVE,g,1,0,LOCATION_ONFIELD|LOCATION_GRAVE)
 end
 function s.remop(e,tp,eg,ep,ev,re,r,rp)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_REMOVE)
-	local g=Duel.SelectMatchingCard(tp,Card.IsAbleToRemove,tp,LOCATION_ONFIELD|LOCATION_REMOVED,LOCATION_ONFIELD|LOCATION_REMOVED,1,1,nil)
+	local g=Duel.SelectMatchingCard(tp,Card.IsAbleToRemove,tp,LOCATION_ONFIELD|LOCATION_GRAVE,LOCATION_ONFIELD|LOCATION_GRAVE,1,1,nil)
 	if #g>0 then
 		Duel.Remove(g,POS_FACEUP,REASON_EFFECT)
 	end
