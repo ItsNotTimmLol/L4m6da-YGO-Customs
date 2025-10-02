@@ -16,13 +16,12 @@ function s.initial_effect(c)
 	e2:SetType(EFFECT_TYPE_FIELD)
 	e2:SetRange(LOCATION_SZONE)
 	e2:SetTargetRange(0,LOCATION_HAND|LOCATION_GRAVE)
-	e2:SetCondition(function(e) return Duel.IsTurnPlayer(e:GetHandlerPlayer()) end)
 	e2:SetCode(EFFECT_CHANGE_ATTRIBUTE)
 	e2:SetValue(ATTRIBUTE_LIGHT)
 	c:RegisterEffect(e2)
 	local e3=e2:Clone()
 	e3:SetTargetRange(LOCATION_GRAVE,0)
-	e3:SetTarget(s.tg)
+	e3:SetTarget(s.changegytg)
 	c:RegisterEffect(e3)
 	--Code check LIGHT
 	local e6=Effect.CreateEffect(c)
@@ -95,7 +94,7 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 end
 
 --Fix stats
-function s.tg(e,c)
+function s.changegytg(e,c)
 	if c:GetFlagEffect(1)==0 then
 		c:RegisterFlagEffect(1,0,0,0)
 		local eff={c:GetCardEffect(EFFECT_NECRO_VALLEY)}

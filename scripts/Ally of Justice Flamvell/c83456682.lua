@@ -7,19 +7,28 @@ function s.initial_effect(c)
 	e0:SetType(EFFECT_TYPE_ACTIVATE)
 	e0:SetCode(EVENT_FREE_CHAIN)
 	c:RegisterEffect(e0)
-	--Flamvell monsters are Pyro
-	local e1=Effect.CreateEffect(c)
-	e1:SetType(EFFECT_TYPE_FIELD)
-	e1:SetCode(EFFECT_CHANGE_RACE)
-	e1:SetRange(LOCATION_FZONE)
-	e1:SetTargetRange(LOCATION_MZONE,0)
-	--e1:SetTarget(aux.TargetBoolFunction(Card.IsSetCard,SET_FLAMVELL))
-	e1:SetValue(RACE_PYRO)
-	c:RegisterEffect(e1)
-	local e2=e1:Clone()
-	e2:SetTargetRange(LOCATION_GRAVE,0)
-	e2:SetTarget(s.tg)
+	--LIGHT Lock during Main Phase
+	local e2=Effect.CreateEffect(c)
+	e2:SetType(EFFECT_TYPE_FIELD)
+	e2:SetRange(LOCATION_FZONE)
+	e2:SetTargetRange(LOCATION_GRAVE,LOCATION_ONFIELD|LOCATION_GRAVE)
+	e2:SetCondition(function(e) return Duel.IsBattlePhase() end)
+	e2:SetCode(EFFECT_CHANGE_ATTRIBUTE)
+	e2:SetValue(ATTRIBUTE_LIGHT)
 	c:RegisterEffect(e2)
+	local e3=e2:Clone()
+	e3:SetTargetRange(LOCATION_GRAVE,LOCATION_GRAVE)
+	e3:SetTarget(s.changegytg)
+	c:RegisterEffect(e3)
+	--Code check LIGHT
+	local e6=Effect.CreateEffect(c)
+	e6:SetType(EFFECT_TYPE_FIELD)
+	e6:SetProperty(EFFECT_FLAG_PLAYER_TARGET)
+	e6:SetCode(id)
+	e6:SetRange(LOCATION_SZONE)
+	e6:SetTargetRange(0,1)
+	e6:SetValue(s.attval)
+	c:RegisterEffect(e6)
 	--extra material
 	local e3=Effect.CreateEffect(c)
 	e3:SetType(EFFECT_TYPE_SINGLE)
@@ -31,7 +40,6 @@ function s.initial_effect(c)
 	e3:SetValue(POS_FACEUP)
 	local e4=Effect.CreateEffect(c)
 	e4:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_GRANT)
-	e4:SetRange(LOCATION_MZONE)
 	e4:SetRange(LOCATION_FZONE)
 	e4:SetTargetRange(LOCATION_HAND,0)
 	e4:SetTarget(function(e,tp,eg,ep,ev,re,r,rp) return c:IsMonster() and (c:IsCode(40155554)  or c:IsSetCard(SET_ALLY_OF_JUSTICE)) end)
@@ -139,7 +147,7 @@ end
 s.listed_names={40155554,59482302}
 s.listed_series={SET_ALLY_OF_JUSTICE,SET_FLAMVELL}
 --Fix stats
-function s.tg(e,c)
+function s.changegytg(e,c)
 	if c:GetFlagEffect(1)==0 then
 		c:RegisterFlagEffect(1,0,0,0)
 		local eff={c:GetCardEffect(EFFECT_NECRO_VALLEY)}
@@ -149,7 +157,7 @@ function s.tg(e,c)
 			if not op or op(e,c) then return false end
 		end
 	end
-	return c:IsSetCard(SET_FLAMVELL) and c:IsMonster()
+	return c:IsMonster()
 end
 function s.raceval(e,c,re,chk)
 	if chk==0 then return true end
@@ -157,7 +165,7 @@ function s.raceval(e,c,re,chk)
 end
 function s.attval(e,c,re,chk)
 	if chk==0 then return true end
-	return ATTRIBUTE_FIRE
+	return ATTRIBUTE_LIGHT
 end
 
 --Spam

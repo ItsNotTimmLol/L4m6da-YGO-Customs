@@ -7,15 +7,16 @@ function s.initial_effect(c)
 	e0:SetType(EFFECT_TYPE_ACTIVATE)
 	e0:SetCode(EVENT_FREE_CHAIN)
 	c:RegisterEffect(e0)
-	--Set 1 "Rekindling" or "Descending Lost Star" from your Deck during End Phase
+	--Shuffle card to Deck
 	local e1=Effect.CreateEffect(c)
 	e1:SetDescription(aux.Stringid(id,0))
-	e1:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
+	e1:SetCategory(CATEGORY_TODECK)
+	e1:SetType(EFFECT_TYPE_IGNITION)
 	e1:SetRange(LOCATION_SZONE)
-	e1:SetCode(EVENT_PHASE+PHASE_END)
 	e1:SetCountLimit(1)
-	e1:SetTarget(s.settg)
-	e1:SetOperation(s.setop)
+	e1:SetCondition(function(e,c) return Duel.IsExistingMatchingCard(s.tdconfilter,c:GetControler(),LOCATION_MZONE,0,1,nil) end)
+	e1:SetTarget(s.tdtg)
+	e1:SetOperation(s.tdop)
 	c:RegisterEffect(e1)
 	--Extender
 		--Sent
@@ -115,12 +116,12 @@ function s.initial_effect(c)
 		end)
 	end)
 end
-s.listed_names={40155554,59482302,42079445,74845897}
+s.listed_names={40155554,59482302}
 s.listed_series={SET_ALLY_OF_JUSTICE,SET_FLAMVELL}
 
 --Fix stats
 function s.setcodetg(e,c)
-	return (c:IsCode(40155554) or c:IsCode(59482302) or c:GetOriginalSetCard()==SET_ALLY_OF_JUSTICE or c:GetOriginalSetCard()==SET_FLAMVELL) and c:IsMonster()
+	return (c:IsCode(s.listed_names) or c:GetOriginalSetCard()==SET_ALLY_OF_JUSTICE or c:GetOriginalSetCard()==SET_FLAMVELL) and c:IsMonster()
 end
 function s.changegytg(e,c)
 	if c:GetFlagEffect(1)==0 then
@@ -148,19 +149,21 @@ function s.attval(e,c,re,chk)
 end
 
 
---Set
-function s.setfilter(c)
-	return (c:IsCode(42079445) or c:IsCode(74845897))
-		and c:IsSpellTrap() and c:IsSSetable()
+--To Deck
+function s.tdconfilter(c)
+	return c:IsFaceup() and c:IsSetCard(SET_FLAMVELL) and (c:IsAttackAbove(1800) or c:IsDefenseAbove(1800))
 end
-function s.settg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.IsExistingMatchingCard(s.setfilter,tp,LOCATION_HAND|LOCATION_DECK,0,1,nil) end
+function s.tdtg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return Duel.IsExistingMatchingCard(Card.IsAbleToDeck,tp,LOCATION_REMOVED,LOCATION_REMOVED,1,nil) end
+	local g=Duel.GetMatchingGroup(Card.IsAbleToDeck,tp,LOCATION_REMOVED,LOCATION_REMOVED,nil)
+	Duel.SetOperationInfo(0,CATEGORY_TODECK,g,1,0,0)
 end
-function s.setop(e,tp,eg,ep,ev,re,r,rp)
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SET)
-	local g=Duel.SelectMatchingCard(tp,s.setfilter,tp,LOCATION_HAND|LOCATION_DECK,0,1,1,nil)
-	if #g>0 then
-		Duel.SSet(tp,g)
+function s.tdop(e,tp,eg,ep,ev,re,r,rp)
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TODECK)
+	local sg=Duel.SelectMatchingCard(tp,Card.IsAbleToDeck,tp,LOCATION_REMOVED,LOCATION_REMOVED,1,1,nil)
+	if #sg>0 then
+		Duel.HintSelection(sg)
+		Duel.SendtoDeck(sg,nil,SEQ_DECKSHUFFLE,REASON_EFFECT)
 	end
 end
 

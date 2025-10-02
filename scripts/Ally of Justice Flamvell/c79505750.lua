@@ -155,24 +155,14 @@ function s.remcon(e,tp,eg,ep,ev,re,r,rp)
 	return mg and e:GetHandler():IsSummonLocation(LOCATION_EXTRA) and mg:IsExists(Card.IsType,1,nil,TYPE_NORMAL)
 end
 function s.remtg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.IsExistingTarget(nil,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,1,nil,tp) end
-	Duel.SetOperationInfo(0,CATEGORY_REMOVE,nil,1,LOCATION_ONFIELD,LOCATION_ONFIELD)
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TARGET)
-	local g=Duel.SelectTarget(tp,nil,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,1,1,nil)
-	--Duel.SetPossibleOperationInfo(0,CATEGORY_DESTROY,g,1,tp,0)
-	Duel.SetOperationInfo(0,CATEGORY_REMOVE,g,1,tp,0)
+	local g=Duel.GetMatchingGroup(Card.IsAbleToRemove,tp,LOCATION_ONFIELD|LOCATION_REMOVED,LOCATION_ONFIELD|LOCATION_REMOVED,nil)
+	if chk==0 then return #g>0 end
+	Duel.SetOperationInfo(0,CATEGORY_REMOVE,g,1,0,LOCATION_ONFIELD|LOCATION_REMOVED)
 end
 function s.remop(e,tp,eg,ep,ev,re,r,rp)
-	local tc=Duel.GetFirstTarget()
-	if tc:IsRelateToEffect(e) then
-		Duel.Remove(tc,POS_FACEUP,REASON_EFFECT)
-		--[[local op=Duel.SelectEffect(tp,
-			{tc:IsLocation(LOCATION_ONFIELD),aux.Stringid(id,2)},
-			{tc:IsAbleToRemove(),aux.Stringid(id,3)})
-		if op==1 then
-			Duel.Destroy(tc,REASON_EFFECT)
-		else
-			Duel.Remove(tc,POS_FACEUP,REASON_EFFECT)
-		end]]--
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_REMOVE)
+	local g=Duel.SelectMatchingCard(tp,Card.IsAbleToRemove,tp,LOCATION_ONFIELD|LOCATION_REMOVED,LOCATION_ONFIELD|LOCATION_REMOVED,1,1,nil)
+	if #g>0 then
+		Duel.Remove(g,POS_FACEUP,REASON_EFFECT)
 	end
 end
