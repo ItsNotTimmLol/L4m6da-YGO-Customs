@@ -20,7 +20,7 @@ function s.initial_effect(c)
 	e2:SetValue(ATTRIBUTE_LIGHT)
 	c:RegisterEffect(e2)
 	local e3=e2:Clone()
-	e3:SetTargetRange(LOCATION_GRAVE,0)
+	e3:SetTargetRange(0,LOCATION_GRAVE)
 	e3:SetTarget(s.changegytg)
 	c:RegisterEffect(e3)
 	--Code check LIGHT
