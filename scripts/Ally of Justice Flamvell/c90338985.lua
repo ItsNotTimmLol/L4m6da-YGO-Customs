@@ -138,7 +138,8 @@ function s.sp2op(e,tp,eg,ep,ev,re,r,rp)
 	if ft<=0 then return end
 	if ft>3 then ft=3 end
 	if Duel.IsPlayerAffectedByEffect(tp,CARD_BLUEEYES_SPIRIT) then ft=1 end
-	local g=Duel.SelectMatchingCard(tp,s.sp3filter,tp,LOCATION_DECK,0,ft,ft,nil,e,tp)
+	local sg=Duel.GetMatchingGroup(s.sp3filter,tp,LOCATION_DECK,0,nil,e,tp)
+	local g=aux.SelectUnselectGroup(sg,e,tp,1,ft,nil,1,tp,HINTMSG_SPSUMMON)
 	if #g>0 then
 		local tc=g:GetFirst()
 		for tc in aux.Next(g) do
