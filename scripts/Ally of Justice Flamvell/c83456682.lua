@@ -42,7 +42,7 @@ function s.initial_effect(c)
 	e4:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_GRANT)
 	e4:SetRange(LOCATION_FZONE)
 	e4:SetTargetRange(LOCATION_HAND,0)
-	e4:SetTarget(function(e,tp,eg,ep,ev,re,r,rp) return c:IsMonster() and (c:IsCode(40155554)  or c:IsSetCard(SET_ALLY_OF_JUSTICE)) end)
+	e4:SetTarget(function(e,c) return c:IsMonster() and (c:IsCode(40155554)  or c:IsSetCard(SET_ALLY_OF_JUSTICE)) end)
 	e4:SetLabelObject(e3)
 	c:RegisterEffect(e4)
 	--SS if monster leaves opponent's field
