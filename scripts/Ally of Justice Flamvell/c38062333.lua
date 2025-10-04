@@ -22,7 +22,7 @@ function s.initial_effect(c)
 		--Sent
 	local e2=Effect.CreateEffect(c)
 	e2:SetDescription(aux.Stringid(id,1))
-	e2:SetCategory(CATEGORY_SPECIAL_SUMMON)
+	e2:SetCategory(CATEGORY_TOHAND+CATEGORY_SPECIAL_SUMMON)
 	e2:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
 	e2:SetProperty(EFFECT_FLAG_CARD_TARGET+EFFECT_FLAG_DELAY+EFFECT_FLAG_DAMAGE_STEP)
 	e2:SetCode(EVENT_TO_GRAVE)
@@ -35,76 +35,6 @@ function s.initial_effect(c)
 	local e3=e2:Clone()
 	e3:SetCode(EVENT_REMOVE)
 	c:RegisterEffect(e3)
-	--Also treated as Ally of Justice
-	local e3=Effect.CreateEffect(c)
-	e3:SetType(EFFECT_TYPE_FIELD)
-	e3:SetRange(LOCATION_SZONE)
-	e3:SetCode(EFFECT_ADD_SETCODE)
-	e3:SetTargetRange(LOCATION_MZONE|LOCATION_GRAVE|LOCATION_REMOVED,0)
-	e3:SetTarget(s.setcodetg)
-	e3:SetValue(SET_ALLY_OF_JUSTICE)
-	c:RegisterEffect(e3)
-	local e4=e3:Clone()
-	e4:SetTargetRange(LOCATION_GRAVE,0)
-	e4:SetTarget(s.changegytg)
-	c:RegisterEffect(e4)
-	--Also treated as Flamvell
-	local e5=Effect.CreateEffect(c)
-	e5:SetType(EFFECT_TYPE_FIELD)
-	e5:SetRange(LOCATION_SZONE)
-	e5:SetCode(EFFECT_ADD_SETCODE)
-	e5:SetTargetRange(LOCATION_MZONE|LOCATION_GRAVE|LOCATION_REMOVED,0)
-	e5:SetTarget(s.setcodetg)
-	e5:SetValue(SET_FLAMVELL)
-	c:RegisterEffect(e5)
-	local e6=e5:Clone()
-	e6:SetTargetRange(LOCATION_GRAVE,0)
-	e6:SetTarget(s.changegytg)
-	c:RegisterEffect(e6)
-	--Ally Monsters are Pyro
-	local e7=Effect.CreateEffect(c)
-	e7:SetType(EFFECT_TYPE_FIELD)
-	e7:SetCode(EFFECT_CHANGE_RACE)
-	e7:SetRange(LOCATION_SZONE)
-	e7:SetTargetRange(LOCATION_MZONE,0)
-	e7:SetTarget(s.setcodetg)
-	e7:SetValue(RACE_PYRO)
-	c:RegisterEffect(e7)
-	local e8=e7:Clone()
-	e8:SetTargetRange(LOCATION_GRAVE,0)
-	e8:SetTarget(s.changegytg)
-	c:RegisterEffect(e8)
-	--Allied monsters are Fire
-	local e9=Effect.CreateEffect(c)
-	e9:SetType(EFFECT_TYPE_FIELD)
-	e9:SetCode(EFFECT_CHANGE_ATTRIBUTE)
-	e9:SetRange(LOCATION_SZONE)
-	e9:SetTargetRange(LOCATION_MZONE,0)
-	e9:SetTarget(aux.TargetBoolFunction(Card.IsSetCard,SET_FLAMVELL))
-	e9:SetValue(ATTRIBUTE_FIRE)
-	c:RegisterEffect(e9)
-	local e10=e9:Clone()
-	e10:SetTargetRange(LOCATION_GRAVE,0)
-	e10:SetTarget(s.changegytg)
-	c:RegisterEffect(e10)
-	--Code check Pyro
-	local e13=Effect.CreateEffect(c)
-	e13:SetType(EFFECT_TYPE_FIELD)
-	e13:SetProperty(EFFECT_FLAG_PLAYER_TARGET)
-	e13:SetCode(id)
-	e13:SetRange(LOCATION_SZONE)
-	e13:SetTargetRange(1,0)
-	e13:SetValue(s.raceval)
-	c:RegisterEffect(e13)
-	--Code check Fire
-	local e14=Effect.CreateEffect(c)
-	e14:SetType(EFFECT_TYPE_FIELD)
-	e14:SetProperty(EFFECT_FLAG_PLAYER_TARGET)
-	e14:SetCode(id)
-	e14:SetRange(LOCATION_SZONE)
-	e14:SetTargetRange(1,0)
-	e14:SetValue(s.attval)
-	c:RegisterEffect(e14)
 	--register names
 	aux.GlobalCheck(s,function()
 		s.name_list={}
@@ -115,6 +45,67 @@ function s.initial_effect(c)
 			s.name_list[1]={}
 		end)
 	end)
+	--Also treated as Ally of Justice
+	local e5=Effect.CreateEffect(c)
+	e5:SetType(EFFECT_TYPE_FIELD)
+	e5:SetRange(LOCATION_SZONE)
+	e5:SetCode(EFFECT_ADD_SETCODE)
+	e5:SetTargetRange(LOCATION_MZONE|LOCATION_GRAVE|LOCATION_REMOVED,0)
+	e5:SetTarget(s.setcodetg)
+	e5:SetValue(SET_ALLY_OF_JUSTICE)
+	c:RegisterEffect(e5)
+	local e6=e5:Clone()
+	e6:SetTargetRange(LOCATION_GRAVE,0)
+	e6:SetTarget(s.changegytg)
+	c:RegisterEffect(e6)
+	--Also treated as Flamvell
+	local e7=Effect.CreateEffect(c)
+	e7:SetType(EFFECT_TYPE_FIELD)
+	e7:SetRange(LOCATION_SZONE)
+	e7:SetCode(EFFECT_ADD_SETCODE)
+	e7:SetTargetRange(LOCATION_MZONE|LOCATION_GRAVE|LOCATION_REMOVED,0)
+	e7:SetTarget(s.setcodetg)
+	e7:SetValue(SET_FLAMVELL)
+	c:RegisterEffect(e7)
+	local e8=e7:Clone()
+	e8:SetTargetRange(LOCATION_GRAVE,0)
+	e8:SetTarget(s.changegytg)
+	c:RegisterEffect(e8)
+	--Ally Monsters are Pyro
+	local e9=Effect.CreateEffect(c)
+	e9:SetType(EFFECT_TYPE_FIELD)
+	e9:SetCode(EFFECT_CHANGE_RACE)
+	e9:SetRange(LOCATION_SZONE)
+	e9:SetTargetRange(LOCATION_MZONE,0)
+	e9:SetTarget(s.setcodetg)
+	e9:SetValue(RACE_PYRO)
+	c:RegisterEffect(e9)
+	local e10=e9:Clone()
+	e10:SetTargetRange(LOCATION_GRAVE,0)
+	e10:SetTarget(s.changegytg)
+	c:RegisterEffect(e10)
+	--Allied monsters are Fire
+	local e11=Effect.CreateEffect(c)
+	e11:SetType(EFFECT_TYPE_FIELD)
+	e11:SetCode(EFFECT_CHANGE_ATTRIBUTE)
+	e11:SetRange(LOCATION_SZONE)
+	e11:SetTargetRange(LOCATION_MZONE,0)
+	e11:SetTarget(aux.TargetBoolFunction(Card.IsSetCard,SET_FLAMVELL))
+	e11:SetValue(ATTRIBUTE_FIRE)
+	c:RegisterEffect(e11)
+	local e12=e11:Clone()
+	e12:SetTargetRange(LOCATION_GRAVE,0)
+	e12:SetTarget(s.changegytg)
+	c:RegisterEffect(e12)
+	--Code check stats
+	local e13=Effect.CreateEffect(c)
+	e13:SetType(EFFECT_TYPE_FIELD)
+	e13:SetProperty(EFFECT_FLAG_PLAYER_TARGET)
+	e13:SetCode(id)
+	e13:SetRange(LOCATION_SZONE)
+	e13:SetTargetRange(1,0)
+	e13:SetValue(s.statval)
+	c:RegisterEffect(e13)
 end
 s.listed_names={40155554,59482302}
 s.listed_series={SET_ALLY_OF_JUSTICE,SET_FLAMVELL}
@@ -135,17 +126,9 @@ function s.changegytg(e,c)
 	end
 	return (c:IsCode(40155554) or c:IsCode(59482302) or c:GetOriginalSetCard()==SET_ALLY_OF_JUSTICE or c:GetOriginalSetCard()==SET_FLAMVELL) and c:IsMonster()
 end
-function s.setval(e,c,re,chk)
+function s.statval(e,c,re,chk)
 	if chk==0 then return true end
-	return SET_ALLY_OF_JUSTICE and SET_FLAMVELL
-end
-function s.raceval(e,c,re,chk)
-	if chk==0 then return true end
-	return RACE_PYRO
-end
-function s.attval(e,c,re,chk)
-	if chk==0 then return true end
-	return ATTRIBUTE_FIRE
+	return SET_ALLY_OF_JUSTICE and SET_FLAMVELL and RACE_PYRO and ATTRIBUTE_FIRE
 end
 
 
@@ -180,9 +163,9 @@ function s.sp2con(e,tp,eg,ep,ev,re,r,rp)
 end
 
 function s.sp2filter(c,e,tp,ev)
-	if c:GetReasonCard() and not (c:GetReasonCard():IsSetCard(SET_FLAMVELL)) then return end
-	if c:GetReasonEffect() and not (c:GetReasonEffect():GetHandler():IsSetCard(SET_FLAMVELL)) then return end
-	if c:GetReasonEffect()==REASON_COST and c:GetReasonEffect():IsActivated() and not (Duel.GetChainInfo(ev,CHAININFO_TRIGGERING_SETCODES)==SET_FLAMVELL) then return end
+	if c:GetReasonCard() and not ((c:GetReasonCard():IsSetCard(SET_ALLY_OF_JUSTICE)) or (c:GetReasonCard():IsSetCard(SET_FLAMVELL))) then return end
+	if c:GetReasonEffect() and not ((c:GetReasonEffect():GetHandler():IsSetCard(SET_ALLY_OF_JUSTICE)) or (c:GetReasonEffect():GetHandler():IsSetCard(SET_FLAMVELL))) then return end
+	if c:GetReasonEffect()==REASON_COST and c:GetReasonEffect():IsActivated() and not ((Duel.GetChainInfo(ev,CHAININFO_TRIGGERING_SETCODES)==SET_ALLY_OF_JUSTICE) or (Duel.GetChainInfo(ev,CHAININFO_TRIGGERING_SETCODES)==SET_FLAMVELL)) then return end
 	return s.cfilter(c,tp) and c:IsMonster() and c:IsCanBeEffectTarget(e) and c:IsFaceup() 
 		and (c:IsAbleToHand()
 			or (Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and c:IsCanBeSpecialSummoned(e,0,tp,true,false,POS_FACEUP,tp))

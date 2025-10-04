@@ -40,18 +40,25 @@ function s.initial_effect(c)
 	e7:SetProperty(EFFECT_FLAG_PLAYER_TARGET)
 	e7:SetTargetRange(1,0)
 	c:RegisterEffect(e7)
-	--Add to hand to shuffle into Deck and bounce to hand
+	--All your opponent's monsters must attack
 	local e8=Effect.CreateEffect(c)
-	e8:SetDescription(aux.Stringid(id,1))
-	e8:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
-	e8:SetCategory(CATEGORY_TODECK)
-	e8:SetProperty(EFFECT_FLAG_DELAY)
-	e8:SetCode(EVENT_CHAINING)
-	e8:SetRange(LOCATION_GRAVE|LOCATION_REMOVED)
-	e8:SetCondition(function(e,tp,eg,ep,ev,re,r,rp) return rp==tp and re:IsMonsterEffect() and re:GetHandler():IsSetCard(s.listed_series) and not re:GetHandler():IsType(TYPE_FUSION) end)
-	e8:SetTarget(s.returntg)
-	e8:SetOperation(s.returnop)
+	e8:SetType(EFFECT_TYPE_FIELD)
+	e8:SetCode(EFFECT_MUST_ATTACK)
+	e8:SetRange(LOCATION_MZONE)
+	e8:SetTargetRange(0,LOCATION_MZONE)
 	c:RegisterEffect(e8)
+	--Add to hand to shuffle into Deck and bounce to hand
+	local e9=Effect.CreateEffect(c)
+	e9:SetDescription(aux.Stringid(id,1))
+	e9:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
+	e9:SetCategory(CATEGORY_TOHAND)
+	e9:SetProperty(EFFECT_FLAG_DELAY)
+	e9:SetCode(EVENT_CHAINING)
+	e9:SetRange(LOCATION_GRAVE|LOCATION_REMOVED)
+	e9:SetCondition(function(e,tp,eg,ep,ev,re,r,rp) return rp==tp and re:IsMonsterEffect() and re:GetHandler():IsSetCard(s.listed_series) and not re:GetHandler():IsType(TYPE_FUSION) end)
+	e9:SetTarget(s.returntg)
+	e9:SetOperation(s.returnop)
+	c:RegisterEffect(e9)
 	--[[Flamvell banish & LP Ex
 	local e8=Effect.CreateEffect(c)
 	e8:SetDescription(aux.Stringid(id,0))
@@ -121,25 +128,23 @@ function s.returnfilter(c)
 end
 function s.returntg(e,tp,eg,ep,ev,re,r,rp,chk)
 	local c=e:GetHandler()
-	if chk==0 then return c:IsAbleToHand() and Duel.IsExistingMatchingCard(Card.IsAbleToDeck,tp,LOCATION_GRAVE|LOCATION_REMOVED,LOCATION_REMOVED,1,nil) end
-	Duel.SetOperationInfo(0,CATEGORY_TODECK,nil,1,tp,LOCATION_GRAVE|LOCATION_REMOVED)
+	if chk==0 then return c:IsAbleToHand() end --[[and Duel.IsExistingMatchingCard(Card.IsAbleToDeck,tp,LOCATION_GRAVE|LOCATION_REMOVED,LOCATION_REMOVED,1,nil)]]--
+	Duel.SetOperationInfo(0,CATEGORY_TOHAND,e:GetHandler(),1,0,0)
+	--Duel.SetOperationInfo(0,CATEGORY_TODECK,nil,1,tp,LOCATION_GRAVE|LOCATION_REMOVED)
 end
 function s.returnop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 	if not (c:IsRelateToEffect(e) and Duel.SendtoHand(c,nil,REASON_EFFECT)>0 and c:IsLocation(LOCATION_HAND)) then return end
 	Duel.ShuffleHand(tp)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TODECK)
-	local g1=Duel.SelectMatchingCard(tp,Card.IsAbleToDeck,tp,LOCATION_GRAVE|LOCATION_REMOVED,0,1,1,nil)
-	if #g1>0 then
-		Duel.HintSelection(g1,true)
-		local g2=Duel.GetMatchingGroup(Card.IsAbleToHand,tp,0,LOCATION_ONFIELD,nil)
-		if Duel.SendtoDeck(g1,nil,SEQ_DECKSHUFFLE,REASON_EFFECT) and #g2>0 and Duel.SelectYesNo(tp,aux.Stringid(id,2)) then
-			Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_RTOHAND)
-			local hg=g2:Select(tp,1,1,nil)
-			Duel.HintSelection(hg,true)
-			Duel.BreakEffect()
-			Duel.SendtoHand(hg,nil,REASON_EFFECT)
-		end	
+	--local g1=Duel.SelectMatchingCard(tp,Card.IsAbleToDeck,tp,LOCATION_GRAVE|LOCATION_REMOVED,0,1,1,nil)
+	local g2=Duel.GetMatchingGroup(Card.IsAbleToHand,tp,0,LOCATION_ONFIELD,nil)
+	if #g2>0 and Duel.SelectYesNo(tp,aux.Stringid(id,2)) then
+		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_RTOHAND)
+		local hg=g2:Select(tp,1,1,nil)
+		Duel.HintSelection(hg,true)
+		Duel.BreakEffect()
+		Duel.SendtoHand(hg,nil,REASON_EFFECT)
 	end
 end
 
