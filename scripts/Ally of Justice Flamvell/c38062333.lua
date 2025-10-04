@@ -183,15 +183,19 @@ function s.sp2tg(e,tp,eg,ep,ev,re,r,rp,chk)
 		c=g:GetFirst()
 	end
 	Duel.SetTargetCard(c)
+	local code=c:GetCode()
+	s.name_list[tp][code]=true
 	Duel.SetPossibleOperationInfo(0,CATEGORY_TOHAND,c,1,tp,0)
 	Duel.SetPossibleOperationInfo(0,CATEGORY_SPECIAL_SUMMON,c,1,tp,0)
 	if c:IsLocation(LOCATION_GRAVE) then
 		Duel.SetOperationInfo(0,CATEGORY_LEAVE_GRAVE,c,1,0,0)
 	end
 end
+function s.tgval(e,re,rp)
+	return rc:GetHandler():IsCode(id)
+end
 function s.sp2op(e,tp,eg,ep,ev,re,r,rp)
 	local tc=Duel.GetFirstTarget()
-	s.name_list[tp][tc:GetCode()]=true
 	if not tc:IsRelateToEffect(e) then return end
 	local b1=true
 	local b2=Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and tc:IsCanBeSpecialSummoned(e,0,tp,true,false)
