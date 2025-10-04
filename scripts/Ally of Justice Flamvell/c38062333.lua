@@ -185,13 +185,13 @@ function s.sp2filter(c,e,tp,ev)
 	if c:GetReasonEffect()==REASON_COST and c:GetReasonEffect():IsActivated() and not (Duel.GetChainInfo(ev,CHAININFO_TRIGGERING_SETCODES)==SET_FLAMVELL) then return end
 	return s.cfilter(c,tp) and c:IsMonster() and c:IsCanBeEffectTarget(e) and c:IsFaceup() 
 		and (c:IsAbleToHand()
-		or (Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and c:IsCanBeSpecialSummoned(e,0,tp,true,false,POS_FACEUP,tp))
-		or (Duel.GetLocationCount(1-tp,LOCATION_MZONE)>0 and c:IsCanBeSpecialSummoned(e,0,tp,true,false,POS_FACEUP,1-tp)))
+			or (Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and c:IsCanBeSpecialSummoned(e,0,tp,true,false,POS_FACEUP,tp))
+			or (Duel.GetLocationCount(1-tp,LOCATION_MZONE)>0 and c:IsCanBeSpecialSummoned(e,0,tp,true,false,POS_FACEUP,1-tp)))
 end
 	--Activation legality
 function s.sp2tg(e,tp,eg,ep,ev,re,r,rp,chk)
-	local g=eg:Filter(s.sp2filter,nil,e,tp)
-	if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and #g>0 end
+	local g=eg:Filter(aux.NecroValleyFilter(s.sp2filter),nil,e,tp)
+	if chk==0 then return #g>0 end
 	local c=nil
 	if #g>1 then
 		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)

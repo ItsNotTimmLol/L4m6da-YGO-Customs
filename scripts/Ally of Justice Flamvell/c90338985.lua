@@ -70,7 +70,7 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	local fid=e:GetHandler():GetFieldID()
 	local g1=Duel.GetMatchingGroup(s.sp1filter,tp,LOCATION_DECK,0,nil,e,tp)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
-	local ft1=Duel.GetLocationCount(1-tp,LOCATION_MZONE)
+	local ft1=1--Duel.GetLocationCount(1-tp,LOCATION_MZONE)
 	local sg1=aux.SelectUnselectGroup(g1,e,tp,1,ft1,s.rescon1,1,tp,HINTMSG_SPSUMMON)
 	local tc=sg1:GetFirst()
 	if Duel.IsPlayerAffectedByEffect(tp,CARD_BLUEEYES_SPIRIT) then ft1=1 end
