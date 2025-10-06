@@ -2,7 +2,7 @@
 Custom card repository. Useable in EDOPro engine.
 
 ## Installation
-To add the repository in EDOPro, add the following code to your (edopro-sim)\config\configs.json file, in the "repos" section:  
+To add the repository in EDOPro, add the following code to your (edopro-sim)\config\configs.json file, in the "repos" section, then restart the client.  
 
 ```
 		{  
