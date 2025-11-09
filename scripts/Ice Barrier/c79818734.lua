@@ -29,6 +29,7 @@ function s.initial_effect(c)
 	e3:SetProperty(EFFECT_FLAG_DELAY)
 	e3:SetCode(EVENT_FREE_CHAIN)
 	e3:SetRange(LOCATION_SZONE)
+	e3:SetCondition(function(e,tp) return Duel.IsExistingMatchingCard(aux.FaceupFilter(Card.IsCode,92065772),tp,LOCATION_ONFIELD,0,1,nil) end)
 	e3:SetCountLimit(1)
 	e3:SetTarget(s.ztg)
 	e3:SetOperation(s.zop)
@@ -43,7 +44,7 @@ function s.initial_effect(c)
 	c:RegisterEffect(e4)
 end
 s.listed_series={SET_ICE_BARRIER}
-s.listed_names={06075533}
+s.listed_names={06075533,92065772}
 function s.spfilter(c,e,tp)
 	return c:IsSetCard(SET_ICE_BARRIER) and (c:IsLevel(8) or c:IsLevelBelow(4) or c:IsType(TYPE_SYNCHRO))
 	and (c:IsLocation(LOCATION_HAND|LOCATION_DECK) or c:IsFaceup())
@@ -97,7 +98,7 @@ function s.tgtg(e,c)
 end
 --need to remove targeting
 function s.zexfilter(c)
-	return c:IsSetCard(SET_ICE_BARRIER) and c:IsRace(RACE_INSECT)
+	return c:IsCode(92065772)
 end
 function s.ztg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE,PLAYER_NONE,0)
@@ -105,7 +106,7 @@ function s.ztg(e,tp,eg,ep,ev,re,r,rp,chk)
 		+Duel.GetLocationCount(1-tp,LOCATION_MZONE,PLAYER_NONE,0)
 		+Duel.GetLocationCount(1-tp,LOCATION_SZONE,PLAYER_NONE,0)>0 end
 	local ct=1
-	if Duel.IsExistingMatchingCard(s.zexfilter,tp,LOCATION_MZONE,0,1,nil) then ct=2 end
+	if not Duel.IsExistingMatchingCard(s.zexfilter,tp,LOCATION_MZONE,0,1,nil) then return end
 	local dis=Duel.SelectDisableField(tp,ct,LOCATION_ONFIELD,LOCATION_ONFIELD,0)
 	Duel.Hint(HINT_ZONE,tp,dis)
 	e:SetLabel(dis)
