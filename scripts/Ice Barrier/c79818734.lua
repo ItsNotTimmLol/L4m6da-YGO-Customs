@@ -45,21 +45,23 @@ end
 s.listed_series={SET_ICE_BARRIER}
 s.listed_names={06075533}
 function s.spfilter(c,e,tp)
-	return c:IsSetCard(SET_ICE_BARRIER) and c:IsCanBeSpecialSummoned(e,0,tp,false,false) and (c:IsLevelBelow(4) or (c:IsLocation(LOCATION_GRAVE) and c:IsType(TYPE_SYNCHRO)))
+	return c:IsSetCard(SET_ICE_BARRIER) and (c:IsLevel(8) or c:IsLevelBelow(4) or c:IsType(TYPE_SYNCHRO))
+	and (c:IsLocation(LOCATION_HAND|LOCATION_DECK) or c:IsFaceup())
+	and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
 end
 function s.setfilter(c)
 	return c:IsCode(06075533) and c:IsSSetable() and (c:IsLocation(LOCATION_DECK) or c:IsFaceup())
 end
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
-		and Duel.IsExistingMatchingCard(s.spfilter,tp,LOCATION_DECK+LOCATION_GRAVE,0,1,nil,e,tp) end
-	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_DECK+LOCATION_GRAVE+LOCATION_REMOVED)
+		and Duel.IsExistingMatchingCard(s.spfilter,tp,LOCATION_HAND+LOCATION_DECK+LOCATION_GRAVE+LOCATION_REMOVED,0,1,nil,e,tp) end
+	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_HAND+LOCATION_DECK+LOCATION_GRAVE+LOCATION_REMOVED)
 end
 function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	if Duel.GetLocationCount(tp,LOCATION_MZONE)<=0 then return end
 	local c=e:GetHandler()
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
-	local g=Duel.SelectMatchingCard(tp,s.spfilter,tp,LOCATION_DECK+LOCATION_GRAVE,0,1,1,nil,e,tp)
+	local g=Duel.SelectMatchingCard(tp,s.spfilter,tp,LOCATION_HAND+LOCATION_DECK+LOCATION_GRAVE+LOCATION_REMOVED,0,1,1,nil,e,tp)
 	local tc=g:GetFirst()
 	if tc and Duel.SpecialSummonStep(tc,0,tp,tp,false,false,POS_FACEUP) then
 		Duel.Equip(tp,c,tc)
