@@ -1,4 +1,4 @@
---Ally of Justice Field
+--Genex Field
 --Scripted by WolfSif
 local s,id=GetID()
 function s.initial_effect(c)
@@ -67,12 +67,12 @@ function s.initial_effect(c)
 	e4:SetOperation(s.rmop)
 	c:RegisterEffect(e4)]]
 end
-s.listed_names={40155554,59482302}
-s.listed_series={SET_ALLY_OF_JUSTICE,SET_FLAMVELL}
+s.listed_series={SET_ALLY_OF_JUSTICE,SET_FLAMVELL,SET_GENEX}
+s.ally_names={40155554,59482302}
 
 --activate from hand
 function s.actcostfilter(c)
-	return (c:IsCode(s.listed_names) or c:IsSetCard(s.listed_series)) 
+	return (c:IsCode(s.ally_names) or c:IsSetCard(s.listed_series)) 
 		and c:IsMonster() and c:IsDiscardable()
 end
 function s.actcon(e,c)
@@ -136,7 +136,7 @@ end
 
 --immune
 function s.immtg(e,c)
-	return (c:IsCode(s.listed_names) or c:IsSetCard(s.listed_series)) and c:IsMonster() and not c:IsAttack(c:GetBaseAttack())
+	return (c:IsCode(s.ally_names) or c:IsSetCard(s.listed_series)) and c:IsMonster() and not c:IsAttack(c:GetBaseAttack())
 end
 function s.immval(e,te)
 	return te:GetOwnerPlayer()==1-e:GetHandlerPlayer() and te:IsActivated()
@@ -152,7 +152,7 @@ function s.lizfilter(e,c)
 	return not c:IsOriginalSetCard(s.listed_series)
 end
 
---To LIGHT or facedown
+--Change Attribute or to facedown
 function s.posfilter(c)
 	return c:IsFaceup() and (s.pos1filter(c) or s.pos2filter(c))
 end

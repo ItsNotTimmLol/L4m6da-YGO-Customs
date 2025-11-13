@@ -1,10 +1,11 @@
---Ally of Justice Flamvell Contractor
+--Ally of Justice Contractor
 --Scripted by WolfSif
 local s,id=GetID()
 function s.initial_effect(c)
 	--fusion summon
 	c:EnableReviveLimit()
-	Fusion.AddProcMix(c,true,true,s.mfilter1,s.mfilter2)
+	--Fusion.AddProcMix(c,true,true,s.mfilter1,s.mfilter2)
+	Fusion.AddProcMixN(c,true,true,s.mfilter1,2)
 	Fusion.AddContactProc(c,s.contactfil,s.contactop,s.splimit)
 	--Must be either Fusion Summoned or Special Summoned by alternate procedure
 	local e0=Effect.CreateEffect(c)
@@ -33,19 +34,23 @@ function s.initial_effect(c)
 	local e2=e1:Clone()
 	e2:SetCode(EFFECT_CANNOT_BE_FUSION_MATERIAL)
 	c:RegisterEffect(e2)
-	--nontuner
+	--non-tuner
 	local e3=Effect.CreateEffect(c)
 	e3:SetType(EFFECT_TYPE_SINGLE)
 	e3:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
 	e3:SetRange(LOCATION_MZONE)
 	e3:SetCode(EFFECT_NONTUNER)
+	e3:SetValue(function(e,sc) return (sc:IsSetCard(SET_FLAMVELL) or sc:IsSetCard(SET_GENEX)) end)
 	c:RegisterEffect(e3)
+	--pyro
 	local e4=e3:Clone()
 	e4:SetCode(EFFECT_SYNCHRO_CHECK)
-	e4:SetValue(function(_,c) return c:AssumeProperty(ASSUME_RACE,RACE_PYRO) end)
+	e4:SetValue(function(e,sc) local c=e:GetHandler() if not (sc:IsSetCard(SET_FLAMVELL) or sc:IsSetCard(SET_GENEX)) then return end return c:AssumeProperty(ASSUME_RACE,RACE_PYRO) end)
 	c:RegisterEffect(e4)
-	local e5=e4:Clone()
-	e5:SetValue(function(_,c) return c:AssumeProperty(ASSUME_ATTRIBUTE,ATTRIBUTE_FIRE) end)
+	--any attribute (NOT WORKING)
+	local e5=e3:Clone()
+	e5:SetCode(EFFECT_SYNCHRO_CHECK)
+	e5:SetValue(function(e,sc) local c=e:GetHandler() if not (sc:IsSetCard(SET_FLAMVELL) or sc:IsSetCard(SET_GENEX)) then return end return c:AssumeProperty(ASSUME_ATTRIBUTE,ATTRIBUTE_EARTH) end)
 	c:RegisterEffect(e5)
 	--Search
 	local e6=Effect.CreateEffect(c)
@@ -82,15 +87,15 @@ function s.initial_effect(c)
     c:RegisterEffect(e9)
 	
 end
-s.listed_names={40155554,59482302}
-s.listed_series={SET_ALLY_OF_JUSTICE,SET_FLAMVELL}
+s.listed_series={SET_ALLY_OF_JUSTICE,SET_FLAMVELL,SET_GENEX}
+s.ally_names={40155554,59482302}
 function s.mfilter1(c,fc,sumtype,tp,sub,mg,sg)
 	return c:IsMonster() and (c:IsLocation(LOCATION_HAND) or c:IsFaceup())
-		and ((c:IsRace(RACE_MACHINE) and c:IsAttribute(ATTRIBUTE_DARK)) or c:IsSetCard(SET_FLAMVELL,fc,sumtype,tp))
+		and (c:IsCode(s.ally_names) or c:IsSetCard(s.listed_series)) 
 end
 function s.mfilter2(c,fc,sumtype,tp,sub,mg,sg)
 	return c:IsMonster() and (c:IsLocation(LOCATION_HAND) or c:IsFaceup())
-		and (c:IsCode(40155554) or c:IsCode(59482302) or c:IsAttribute(ATTRIBUTE_FIRE) or c:IsSetCard(SET_ALLY_OF_JUSTICE,fc,sumtype,tp))
+		and (c:IsCode(s.ally_names) or c:IsSetCard(s.listed_series)) 
 end
 --Modified Summoning Conditions
 function s.splimit(e,se,sp,st)

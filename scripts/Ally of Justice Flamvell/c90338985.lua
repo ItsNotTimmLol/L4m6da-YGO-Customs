@@ -37,18 +37,19 @@ function s.initial_effect(c)
 	e2:SetOperation(s.sp2op)
 	c:RegisterEffect(e2)]]--
 end
-s.listed_names={40155554,59482302}
-s.listed_series={SET_ALLY_OF_JUSTICE,SET_FLAMVELL}
+s.listed_series={SET_ALLY_OF_JUSTICE,SET_FLAMVELL,SET_GENEX}
+s.ally_names={40155554,59482302}
 --Basically soul charge
 function s.sp1filter(c,e,tp)
-	return (c:IsCode(59482302) or c:IsSetCard(SET_FLAMVELL)) and c:IsMonster() 
+	return (c:IsCode(s.ally_names) or c:IsSetCard(s.listed_series)) 
 		and ((Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and c:IsCanBeSpecialSummoned(e,0,tp,false,false,POS_FACEUP,tp))
-		or (Duel.GetLocationCount(1-tp,LOCATION_MZONE)>0 and c:IsCanBeSpecialSummoned(e,0,tp,false,false,POS_FACEUP,1-tp)))
+			or (Duel.GetLocationCount(1-tp,LOCATION_MZONE)>0 and c:IsCanBeSpecialSummoned(e,0,tp,false,false,POS_FACEUP,1-tp)))
+		and c:IsMonster()
 end
 function s.sp2filter(c,e,tp)
-	return (c:IsCode(40155554) or c:IsCode(59482302) or c:IsSetCard(SET_ALLY_OF_JUSTICE) or c:IsSetCard(SET_FLAMVELL))
+	return (c:IsCode(s.ally_names) or c:IsSetCard(s.listed_series)) 
 		and ((Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and c:IsCanBeSpecialSummoned(e,0,tp,false,false,POS_FACEUP,tp))
-		or (Duel.GetLocationCount(1-tp,LOCATION_MZONE)>0 and c:IsCanBeSpecialSummoned(e,0,tp,false,false,POS_FACEUP,1-tp)))
+			or (Duel.GetLocationCount(1-tp,LOCATION_MZONE)>0 and c:IsCanBeSpecialSummoned(e,0,tp,false,false,POS_FACEUP,1-tp)))
 		and not Duel.IsExistingMatchingCard(s.uniquefilter,tp,LOCATION_MZONE|LOCATION_GRAVE|LOCATION_REMOVED,0,1,nil,c:GetCode())
 		and c:IsMonster() 
 end
@@ -121,7 +122,7 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 end
 --Special Summon during End Phase
 function s.sp3filter(c,e,tp)
-	return c:IsSetCard(SET_FLAMVELL) and c:IsMonster() 
+	return (c:IsCode(s.ally_names) or c:IsSetCard(s.listed_series)) and c:IsMonster() 
 		and Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and c:IsCanBeSpecialSummoned(e,0,tp,false,false,POS_FACEUP,tp)
 end
 function s.sp2con(e,tp,eg,ep,ev,re,r,rp)
