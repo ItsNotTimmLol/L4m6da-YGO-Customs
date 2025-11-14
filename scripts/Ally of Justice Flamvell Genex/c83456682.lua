@@ -7,7 +7,7 @@ function s.initial_effect(c)
 	e0:SetType(EFFECT_TYPE_ACTIVATE)
 	e0:SetCode(EVENT_FREE_CHAIN)
 	c:RegisterEffect(e0)
-	--LIGHT Lock during Main Phase
+	--LIGHT during Battle Phase
 	local e2=Effect.CreateEffect(c)
 	e2:SetType(EFFECT_TYPE_FIELD)
 	e2:SetRange(LOCATION_FZONE)
@@ -29,7 +29,7 @@ function s.initial_effect(c)
 	e6:SetTargetRange(0,1)
 	e6:SetValue(s.attval)
 	c:RegisterEffect(e6)
-	--extra material
+	--extra Tribute material
 	local e3=Effect.CreateEffect(c)
 	e3:SetType(EFFECT_TYPE_SINGLE)
 	e3:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_UNCOPYABLE)
@@ -42,10 +42,10 @@ function s.initial_effect(c)
 	e4:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_GRANT)
 	e4:SetRange(LOCATION_FZONE)
 	e4:SetTargetRange(LOCATION_HAND,0)
-	e4:SetTarget(function(e,c) return c:IsMonster() and (c:IsCode(40155554)  or c:IsSetCard(SET_ALLY_OF_JUSTICE)) end)
+	e4:SetTarget(function(e,c) return c:IsMonster() and (c:IsCode(s.ally_names) or c:IsSetCard(SET_ALLY_OF_JUSTICE) or c:IsSetCard(SET_GENEX_ALLY)) end)
 	e4:SetLabelObject(e3)
 	c:RegisterEffect(e4)
-	--SS if monster leaves opponent's field
+	--SS if opponent Normal or Specials
 	local e5=Effect.CreateEffect(c)
 	e5:SetDescription(aux.Stringid(id,0))
 	e5:SetCategory(CATEGORY_SPECIAL_SUMMON)
@@ -54,8 +54,8 @@ function s.initial_effect(c)
 	e5:SetCode(EVENT_SUMMON_SUCCESS)
 	e5:SetRange(LOCATION_FZONE)
 	e5:SetCondition(function(e,tp,eg,ep,ev,re,r,rp) return eg:IsExists(Card.IsSummonPlayer,1,nil,1-tp) end)
-	e5:SetTarget(s.sptg)
-	e5:SetOperation(s.spop)
+	e5:SetTarget(s.nstg)
+	e5:SetOperation(s.nsop)
 	c:RegisterEffect(e5)
 	local e6=e5:Clone()
 	e6:SetCode(EVENT_SPSUMMON_SUCCESS)
@@ -147,8 +147,8 @@ function s.initial_effect(c)
 	c:RegisterEffect(e10)]]
 	
 end
-s.listed_names={40155554,59482302}
-s.listed_series={SET_ALLY_OF_JUSTICE,SET_FLAMVELL}
+s.listed_series={SET_ALLY_OF_JUSTICE,SET_FLAMVELL,SET_GENEX}
+s.ally_names={40155554,59482302}
 --Fix stats
 function s.changegytg(e,c)
 	if c:GetFlagEffect(1)==0 then
@@ -172,17 +172,17 @@ function s.attval(e,c,re,chk)
 end
 
 --Spam
-function s.spconfilter(c,tp)
+function s.nsconfilter(c,tp)
 	return c:GetSummonPlayer()==1-tp --and c:IsPreviousControler(1-tp) --and c:IsAttributeExcept(ATTRIBUTE_LIGHT) --s.exfilter(c,tp)
 end
 function s.exfilter(c,tp)
 	return not c:IsForbidden() and c:CheckUniqueOnField(tp)
 end
-function s.spcon(e,tp,eg,ep,ev,re,r,rp)
-	return eg:IsExists(s.spconfilter,1,nil,tp)
+function s.nscon(e,tp,eg,ep,ev,re,r,rp)
+	return eg:IsExists(s.nsconfilter,1,nil,tp)
 end
-function s.spfilter(c,e,tp)
-	return (c:IsSetCard(s.listed_series) or c:IsCode(59482302))
+function s.nsfilter(c,e,tp)
+	return (c:IsSetCard(s.listed_series) or c:IsCode(s.ally_names))
 		and ((Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and c:IsCanBeSpecialSummoned(e,0,tp,false,false,nil,tp)) or (Duel.GetLocationCount(1-tp,LOCATION_MZONE)>0 and c:IsCanBeSpecialSummoned(e,0,tp,false,false,POS_FACEUP,1-tp)))
 		and c:IsMonster() and c:IsAttackBelow(1600)
 		--and not Duel.IsExistingMatchingCard(s.uniquefilter,tp,LOCATION_MZONE|LOCATION_GRAVE|LOCATION_REMOVED,0,1,nil,c:GetCode())
@@ -190,10 +190,12 @@ end
 function s.uniquefilter(c,code)
 	return c:IsCode(code) and c:IsFaceup() and c:IsMonster()
 end
-function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.IsExistingMatchingCard(s.spfilter,tp,LOCATION_DECK,0,1,nil,e,tp)
+function s.nstg(e,tp,eg,ep,ev,re,r,rp,chk)
+	local c=e:GetHandler()
+	if chk==0 then return not c:HasFlagEffect(id) Duel.IsExistingMatchingCard(s.nsfilter,tp,LOCATION_DECK,0,1,nil,e,tp)
 		--and not Duel.IsPlayerAffectedByEffect(tp,CARD_BLUEEYES_SPIRIT)
 		and (Duel.GetLocationCount(tp,LOCATION_MZONE)>0 or Duel.GetLocationCount(1-tp,LOCATION_MZONE,tp)>0) end
+	c:RegisterFlagEffect(id,RESET_EVENT|RESETS_STANDARD|RESET_CHAIN,0,1)
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_DECK)
 end
 function s.rescon(sg,e,tp,mg)
@@ -208,10 +210,10 @@ function s.secondsummon(c,e,tp)
 	return c:IsCanBeSpecialSummoned(e,0,tp,false,false,POS_FACEUP,1-tp)
 		and Duel.GetLocationCount(1-tp,LOCATION_MZONE,tp)>0
 end
-function s.spop(e,tp,eg,ep,ev,re,r,rp)
+function s.nsop(e,tp,eg,ep,ev,re,r,rp)
 	if Duel.GetLocationCount(tp,LOCATION_MZONE)>0 or Duel.GetLocationCount(1-tp,LOCATION_MZONE)>0 then
 		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
-		local g=Duel.SelectMatchingCard(tp,s.spfilter,tp,LOCATION_DECK,0,1,1,nil,e,tp)
+		local g=Duel.SelectMatchingCard(tp,s.nsfilter,tp,LOCATION_DECK,0,1,1,nil,e,tp)
 		local b1=Duel.GetLocationCount(tp,LOCATION_MZONE)>0
 		local b2=Duel.GetLocationCount(1-tp,LOCATION_MZONE)>0
 		if not g then return end
@@ -228,7 +230,7 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	if Duel.GetLocationCount(tp,LOCATION_MZONE)<1 or Duel.GetLocationCount(1-tp,LOCATION_MZONE,tp)<1 or Duel.IsPlayerAffectedByEffect(tp,CARD_BLUEEYES_SPIRIT) then return end
 	local c=e:GetHandler()
 	Duel.Hint(HINT_SELECTMSG,tp,aux.Stringid(id,2))
-	local g=Duel.GetMatchingGroup(s.spfilter,tp,LOCATION_DECK,0,nil,e,tp)
+	local g=Duel.GetMatchingGroup(s.nsfilter,tp,LOCATION_DECK,0,nil,e,tp)
 	local sg=aux.SelectUnselectGroup(g,e,tp,2,2,s.rescon,1,tp,HINTMSG_SPSUMMON)
 	if #sg~=2 then return end
 	local sc1=sg:FilterSelect(tp,s.firstsummon,1,1,nil,e,tp,sg):GetFirst()
