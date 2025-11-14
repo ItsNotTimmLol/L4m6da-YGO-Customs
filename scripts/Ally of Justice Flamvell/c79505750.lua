@@ -40,18 +40,12 @@ function s.initial_effect(c)
 	e3:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
 	e3:SetRange(LOCATION_MZONE)
 	e3:SetCode(EFFECT_NONTUNER)
-	e3:SetValue(function(e,sc) return (sc:IsSetCard(SET_FLAMVELL) or sc:IsSetCard(SET_GENEX)) end)
 	c:RegisterEffect(e3)
-	--pyro
+	--treated synchro material
 	local e4=e3:Clone()
 	e4:SetCode(EFFECT_SYNCHRO_CHECK)
-	e4:SetValue(function(e,sc) local c=e:GetHandler() if not (sc:IsSetCard(SET_FLAMVELL) or sc:IsSetCard(SET_GENEX)) then return end return c:AssumeProperty(ASSUME_RACE,RACE_PYRO) end)
+	e4:SetValue(s.syncheck)
 	c:RegisterEffect(e4)
-	--any attribute (NOT WORKING)
-	local e5=e3:Clone()
-	e5:SetCode(EFFECT_SYNCHRO_CHECK)
-	e5:SetValue(function(e,sc) local c=e:GetHandler() if not (sc:IsSetCard(SET_FLAMVELL) or sc:IsSetCard(SET_GENEX)) then return end return c:AssumeProperty(ASSUME_ATTRIBUTE,ATTRIBUTE_EARTH) end)
-	c:RegisterEffect(e5)
 	--Search
 	local e6=Effect.CreateEffect(c)
 	e6:SetDescription(aux.Stringid(id,0))
@@ -77,12 +71,13 @@ function s.initial_effect(c)
 	--[[local e8=e7:Clone()
 	e8:SetCondition(function(e) return e:GetHandler():IsFusionSummoned() end)
 	c:RegisterEffect(e8)]]--
+	--Tribute reduction
 	local e9=Effect.CreateEffect(c)
     e9:SetType(EFFECT_TYPE_FIELD)
     e9:SetCode(EFFECT_DECREASE_TRIBUTE)
     e9:SetRange(LOCATION_MZONE)
     e9:SetTargetRange(LOCATION_HAND,0)
-    e9:SetTarget(aux.TargetBoolFunction(Card.IsLevelAbove,7))
+    e9:SetTarget(aux.TargetBoolFunction(Card.IsLevelAbove,5))
     e9:SetValue(0x1)
     c:RegisterEffect(e9)
 	
@@ -134,6 +129,12 @@ function s.selfspop(e,tp,eg,ep,ev,re,r,rp,c)
 	c:SetMaterial(g)
 	Duel.SendtoDeck(g,nil,SEQ_DECKSHUFFLE,REASON_COST|REASON_MATERIAL)
 	g:DeleteGroup()
+end
+--Synchro Material Check
+function s.syncheck(e,c,tp) --v1
+	e:GetHandler():AssumeProperty(ASSUME_RACE,RACE_PYRO)
+	e:GetHandler():AssumeProperty(ASSUME_ATTRIBUTE,ATTRIBUTE_WIND|ATTRIBUTE_WATER|ATTRIBUTE_FIRE|ATTRIBUTE_EARTH)
+	return true
 end
 --Add
 function s.thcon(e,tp,eg,ep,ev,re,r,rp)
