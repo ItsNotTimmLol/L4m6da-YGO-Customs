@@ -46,6 +46,15 @@ function s.initial_effect(c)
 	e4:SetCode(EFFECT_SYNCHRO_CHECK)
 	e4:SetValue(s.syncheck)
 	c:RegisterEffect(e4)
+	--Tribute reduction
+	local e5=Effect.CreateEffect(c)
+    e5:SetType(EFFECT_TYPE_FIELD)
+    e5:SetCode(EFFECT_DECREASE_TRIBUTE)
+    e5:SetRange(LOCATION_MZONE)
+    e5:SetTargetRange(LOCATION_HAND,0)
+    e5:SetTarget(s.allynsfilter)
+    e5:SetValue(0x1)
+    c:RegisterEffect(e5)
 	--Search
 	local e6=Effect.CreateEffect(c)
 	e6:SetDescription(aux.Stringid(id,0))
@@ -71,15 +80,6 @@ function s.initial_effect(c)
 	--[[local e8=e7:Clone()
 	e8:SetCondition(function(e) return e:GetHandler():IsFusionSummoned() end)
 	c:RegisterEffect(e8)]]--
-	--Tribute reduction
-	local e9=Effect.CreateEffect(c)
-    e9:SetType(EFFECT_TYPE_FIELD)
-    e9:SetCode(EFFECT_DECREASE_TRIBUTE)
-    e9:SetRange(LOCATION_MZONE)
-    e9:SetTargetRange(LOCATION_HAND,0)
-    e9:SetTarget(aux.TargetBoolFunction(Card.IsLevelAbove,5))
-    e9:SetValue(0x1)
-    c:RegisterEffect(e9)
 	
 end
 s.listed_series={SET_ALLY_OF_JUSTICE,SET_FLAMVELL,SET_GENEX}
@@ -135,6 +135,10 @@ function s.syncheck(e,c,tp) --v1
 	e:GetHandler():AssumeProperty(ASSUME_RACE,RACE_PYRO)
 	e:GetHandler():AssumeProperty(ASSUME_ATTRIBUTE,ATTRIBUTE_WIND|ATTRIBUTE_WATER|ATTRIBUTE_FIRE|ATTRIBUTE_EARTH)
 	return true
+end
+--Ally Machine Normal Summon reduction
+function s.allynsfilter(c) --v1
+	return c:IsRace(RACE_MACHINE) and (c:IsSetCard(SET_ALLY_OF_JUSTICE) or c:IsSetCard(SET_GENEX_ALLY) or c:IsCode(s.ally_names))
 end
 --Add
 function s.thcon(e,tp,eg,ep,ev,re,r,rp)
