@@ -7,7 +7,7 @@ function s.initial_effect(c)
 	e0:SetType(EFFECT_TYPE_ACTIVATE)
 	e0:SetCode(EVENT_FREE_CHAIN)
 	c:RegisterEffect(e0)
-	--Shuffle card to Deck
+	--[[Shuffle card to Deck
 	local e1=Effect.CreateEffect(c)
 	e1:SetDescription(aux.Stringid(id,0))
 	e1:SetCategory(CATEGORY_TODECK)
@@ -17,6 +17,15 @@ function s.initial_effect(c)
 	e1:SetCondition(function(e,c) return Duel.IsExistingMatchingCard(s.tdconfilter,e:GetHandlerPlayer(),LOCATION_MZONE,0,1,nil) end)
 	e1:SetTarget(s.tdtg)
 	e1:SetOperation(s.tdop)
+	c:RegisterEffect(e1)]]--
+	--To Deck top
+	local e1=Effect.CreateEffect(c)
+	e1:SetDescription(aux.Stringid(id,3))
+	e1:SetType(EFFECT_TYPE_IGNITION)
+	e1:SetRange(LOCATION_FZONE)
+	e1:SetCountLimit(1)
+	e1:SetTarget(s.dttg)
+	e1:SetOperation(s.dtop)
 	c:RegisterEffect(e1)
 	--Extender
 		--Sent
@@ -27,7 +36,7 @@ function s.initial_effect(c)
 	e2:SetProperty(EFFECT_FLAG_CARD_TARGET+EFFECT_FLAG_DELAY+EFFECT_FLAG_DAMAGE_STEP)
 	e2:SetCode(EVENT_TO_GRAVE)
 	e2:SetRange(LOCATION_SZONE)
-	e2:SetCondition(s.sp2con)
+	--e2:SetCondition(s.sp2con)
 	e2:SetTarget(s.sp2tg)
 	e2:SetOperation(s.sp2op)
 	c:RegisterEffect(e2)
@@ -107,8 +116,8 @@ function s.initial_effect(c)
 	e13:SetValue(s.statval)
 	c:RegisterEffect(e13)
 end
-s.listed_names={40155554,59482302}
 s.listed_series={SET_ALLY_OF_JUSTICE,SET_FLAMVELL}
+s.ally_names={40155554,59482302}
 
 --Fix stats
 function s.setcodetg(e,c)
@@ -131,6 +140,23 @@ function s.statval(e,c,re,chk)
 	return SET_ALLY_OF_JUSTICE and SET_FLAMVELL and RACE_PYRO and ATTRIBUTE_FIRE
 end
 
+--Decktop
+function s.dttfilter(c)
+	return (c:IsSetCard(s.listed_series) or c:IsCode(s.ally_names))
+		and c:IsMonster()
+end
+function s.dttg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return Duel.IsExistingMatchingCard(s.dttfilter,tp,LOCATION_DECK,0,1,nil) end
+end
+function s.dtop(e,tp,eg,ep,ev,re,r,rp)
+	Duel.Hint(HINT_SELECTMSG,tp,aux.Stringid(id,1))
+	local g=Duel.SelectMatchingCard(tp,s.dttfilter,tp,LOCATION_DECK,0,1,1,nil)
+	if #g>0 then
+		Duel.ShuffleDeck(tp)
+		Duel.MoveSequence(g:GetFirst(),0)
+		Duel.ConfirmDecktop(tp,1)
+	end
+end
 
 --To Deck
 function s.tdconfilter(c)
@@ -152,8 +178,13 @@ end
 
 --Extender
 function s.cfilter(c,tp)
-	return c:IsSetCard(SET_FLAMVELL) and c:IsControler(tp)
-		and not s.name_list[tp][c:GetCode()]
+	return 
+end
+function s.confilter(c)
+	return c:IsFaceup() and c:IsSetCard(SET_FLAMVELL) and c:HasLevel()
+end
+function s.chkfilter(c,lvl)
+	return c:GetLevel()>lvl
 end
 function s.sp2con(e,tp,eg,ep,ev,re,r,rp)
 	for rc in aux.Next(eg) do
@@ -162,17 +193,24 @@ function s.sp2con(e,tp,eg,ep,ev,re,r,rp)
 	return false
 end
 
-function s.sp2filter(c,e,tp,ev)
-	if c:GetReasonCard() and not ((c:GetReasonCard():IsSetCard(SET_ALLY_OF_JUSTICE)) or (c:GetReasonCard():IsSetCard(SET_FLAMVELL))) then return end
-	if c:GetReasonEffect() and not ((c:GetReasonEffect():GetHandler():IsSetCard(SET_ALLY_OF_JUSTICE)) or (c:GetReasonEffect():GetHandler():IsSetCard(SET_FLAMVELL))) then return end
-	if c:GetReasonEffect()==REASON_COST and c:GetReasonEffect():IsActivated() and not ((Duel.GetChainInfo(ev,CHAININFO_TRIGGERING_SETCODES)==SET_ALLY_OF_JUSTICE) or (Duel.GetChainInfo(ev,CHAININFO_TRIGGERING_SETCODES)==SET_FLAMVELL)) then return end
-	return s.cfilter(c,tp) and c:IsMonster() and c:IsCanBeEffectTarget(e) and c:IsFaceup() 
+function s.sp2filter(c,e,tp,eg)
+	--if c:GetReasonCard() and not ((c:GetReasonCard():IsSetCard(SET_ALLY_OF_JUSTICE)) or (c:GetReasonCard():IsSetCard(SET_FLAMVELL))) then return end
+	--if c:GetReasonEffect() and not ((c:GetReasonEffect():GetHandler():IsSetCard(SET_ALLY_OF_JUSTICE)) or (c:GetReasonEffect():GetHandler():IsSetCard(SET_FLAMVELL))) then return end
+	--if c:GetReasonEffect()==REASON_COST and c:GetReasonEffect():IsActivated() and not ((Duel.GetChainInfo(ev,CHAININFO_TRIGGERING_SETCODES)==SET_ALLY_OF_JUSTICE) or (Duel.GetChainInfo(ev,CHAININFO_TRIGGERING_SETCODES)==SET_FLAMVELL)) then return end
+	return c:IsSetCard(SET_FLAMVELL) and c:IsControler(tp)
+		and not s.name_list[tp][c:GetCode()]
+		and c:IsMonster() and c:IsCanBeEffectTarget(e) and c:IsFaceup() 
 		and (c:IsAbleToHand()
 			or (Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and c:IsCanBeSpecialSummoned(e,0,tp,true,false,POS_FACEUP,tp))
 			or (Duel.GetLocationCount(1-tp,LOCATION_MZONE)>0 and c:IsCanBeSpecialSummoned(e,0,tp,true,false,POS_FACEUP,1-tp)))
+		
+		and eg:IsExists(s.chkfilter,1,nil,c:GetLevel())
 end
 	--Activation legality
-function s.sp2tg(e,tp,eg,ep,ev,re,r,rp,chk)
+function s.sp2tg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
+	local g=Duel.GetMatchingGroup(s.confilter,tp,LOCATION_MZONE,0,nil)
+	if chkc then return s.sp2filter(chkc,e,tp,g) and eg:IsContains(chkc) end
+	if chk==0 then return eg and eg:IsExists(s.sp2filter,1,nil,e,tp,g) end
 	local g=eg:Filter(aux.NecroValleyFilter(s.sp2filter),nil,e,tp)
 	if chk==0 then return #g>0 end
 	local c=nil

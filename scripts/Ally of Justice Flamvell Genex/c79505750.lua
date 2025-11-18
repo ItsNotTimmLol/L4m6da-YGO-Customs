@@ -52,7 +52,7 @@ function s.initial_effect(c)
     e5:SetCode(EFFECT_DECREASE_TRIBUTE)
     e5:SetRange(LOCATION_MZONE)
     e5:SetTargetRange(LOCATION_HAND,0)
-    e5:SetTarget(s.allynsfilter)
+    e5:SetTarget(aux.TargetBoolFunction(s.allynsfilter))
     e5:SetValue(0x1)
     c:RegisterEffect(e5)
 	--Search
@@ -138,7 +138,8 @@ function s.syncheck(e,c,tp) --v1
 end
 --Ally Machine Normal Summon reduction
 function s.allynsfilter(c) --v1
-	return c:IsRace(RACE_MACHINE) and (c:IsSetCard(SET_ALLY_OF_JUSTICE) or c:IsSetCard(SET_GENEX_ALLY) or c:IsCode(s.ally_names))
+	return (c:IsSetCard(SET_ALLY_OF_JUSTICE) or c:IsSetCard(SET_GENEX_ALLY))
+	and c:IsRace(RACE_MACHINE)
 end
 --Add
 function s.thcon(e,tp,eg,ep,ev,re,r,rp)

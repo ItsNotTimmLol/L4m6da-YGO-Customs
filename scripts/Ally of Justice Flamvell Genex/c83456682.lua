@@ -48,7 +48,7 @@ function s.initial_effect(c)
 	--SS if opponent Normal or Specials
 	local e5=Effect.CreateEffect(c)
 	e5:SetDescription(aux.Stringid(id,0))
-	e5:SetCategory(CATEGORY_SPECIAL_SUMMON)
+	e5:SetCategory(CATEGORY_TOHAND+CATEGORY_SEARCH+CATEGORY_SUMMON)
 	e5:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
 	e5:SetProperty(EFFECT_FLAG_DAMAGE_STEP+EFFECT_FLAG_DELAY)
 	e5:SetCode(EVENT_SUMMON_SUCCESS)
@@ -60,15 +60,6 @@ function s.initial_effect(c)
 	local e6=e5:Clone()
 	e6:SetCode(EVENT_SPSUMMON_SUCCESS)
 	c:RegisterEffect(e6)
-	--Decktop
-	local e7=Effect.CreateEffect(c)
-	e7:SetDescription(aux.Stringid(id,3))
-	e7:SetType(EFFECT_TYPE_IGNITION)
-	e7:SetRange(LOCATION_FZONE)
-	e7:SetCountLimit(1)
-	e7:SetTarget(s.dttg)
-	e7:SetOperation(s.dtop)
-	c:RegisterEffect(e7)
 	--[[avoid battle damage
 	local e3=Effect.CreateEffect(c)
 	e3:SetDescription(aux.Stringid(id,0))
@@ -181,10 +172,11 @@ end
 function s.nscon(e,tp,eg,ep,ev,re,r,rp)
 	return eg:IsExists(s.nsconfilter,1,nil,tp)
 end
-function s.nsfilter(c,e,tp)
+function s.thfilter(c,e,tp)
 	return (c:IsSetCard(s.listed_series) or c:IsCode(s.ally_names))
-		and ((Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and c:IsCanBeSpecialSummoned(e,0,tp,false,false,nil,tp)) or (Duel.GetLocationCount(1-tp,LOCATION_MZONE)>0 and c:IsCanBeSpecialSummoned(e,0,tp,false,false,POS_FACEUP,1-tp)))
-		and c:IsMonster() and c:IsAttackBelow(1600)
+		--and ((Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and c:IsCanBeSpecialSummoned(e,0,tp,false,false,nil,tp)) or (Duel.GetLocationCount(1-tp,LOCATION_MZONE)>0 and c:IsCanBeSpecialSummoned(e,0,tp,false,false,POS_FACEUP,1-tp)))
+		and c:IsAbleToHand()
+		and c:IsMonster()
 		--and not Duel.IsExistingMatchingCard(s.uniquefilter,tp,LOCATION_MZONE|LOCATION_GRAVE|LOCATION_REMOVED,0,1,nil,c:GetCode())
 end
 function s.uniquefilter(c,code)
@@ -192,11 +184,11 @@ function s.uniquefilter(c,code)
 end
 function s.nstg(e,tp,eg,ep,ev,re,r,rp,chk)
 	local c=e:GetHandler()
-	if chk==0 then return not c:HasFlagEffect(id) Duel.IsExistingMatchingCard(s.nsfilter,tp,LOCATION_DECK,0,1,nil,e,tp)
+	if chk==0 then return Duel.IsExistingMatchingCard(s.thfilter,tp,LOCATION_DECK,0,1,nil,e,tp)
 		--and not Duel.IsPlayerAffectedByEffect(tp,CARD_BLUEEYES_SPIRIT)
-		and (Duel.GetLocationCount(tp,LOCATION_MZONE)>0 or Duel.GetLocationCount(1-tp,LOCATION_MZONE,tp)>0) end
-	c:RegisterFlagEffect(id,RESET_EVENT|RESETS_STANDARD|RESET_CHAIN,0,1)
-	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_DECK)
+		--and (Duel.GetLocationCount(tp,LOCATION_MZONE)>0 or Duel.GetLocationCount(1-tp,LOCATION_MZONE,tp)>0) 
+		end
+	Duel.SetOperationInfo(0,CATEGORY_TOHAND,nil,1,tp,LOCATION_DECK)
 end
 function s.rescon(sg,e,tp,mg)
 	return sg:IsExists(s.firstsummon,1,nil,e,tp,sg)
@@ -210,54 +202,30 @@ function s.secondsummon(c,e,tp)
 	return c:IsCanBeSpecialSummoned(e,0,tp,false,false,POS_FACEUP,1-tp)
 		and Duel.GetLocationCount(1-tp,LOCATION_MZONE,tp)>0
 end
+function s.nsfilter(c)
+	return (c:IsSetCard(s.listed_series) or c:IsCode(s.ally_names))
+		and c:IsSummonable(true,nil)
+end
 function s.nsop(e,tp,eg,ep,ev,re,r,rp)
-	if Duel.GetLocationCount(tp,LOCATION_MZONE)>0 or Duel.GetLocationCount(1-tp,LOCATION_MZONE)>0 then
-		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
-		local g=Duel.SelectMatchingCard(tp,s.nsfilter,tp,LOCATION_DECK,0,1,1,nil,e,tp)
-		local b1=Duel.GetLocationCount(tp,LOCATION_MZONE)>0
-		local b2=Duel.GetLocationCount(1-tp,LOCATION_MZONE)>0
-		if not g then return end
-		if not (b1 or b2) then return end
-		local op=Duel.SelectEffect(tp,
-		{b1,aux.Stringid(id,1)},
-		{b2,aux.Stringid(id,2)})
-		if op==1 or op==2 then
-			local target_player=op==1 and tp or 1-tp
-			if Duel.SpecialSummon(g,0,tp,target_player,true,false,POS_FACEUP)==0 then return end
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_ATOHAND)
+	local tc=Duel.SelectMatchingCard(tp,s.thfilter,tp,LOCATION_DECK,0,1,1,nil,e,tp):GetFirst()
+	if tc and Duel.SendtoHand(tc,nil,REASON_EFFECT)>0 and tc:IsLocation(LOCATION_HAND) then
+		Duel.ConfirmCards(1-tp,tc)
+		Duel.ShuffleHand(tp)
+		if Duel.IsExistingMatchingCard(s.nsfilter,tp,LOCATION_HAND|LOCATION_MZONE,0,1,nil)
+			and Duel.SelectYesNo(tp,aux.Stringid(id,2)) then
+			Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SUMMON)
+			local sc=Duel.SelectMatchingCard(tp,s.nsfilter,tp,LOCATION_HAND|LOCATION_MZONE,0,1,1,nil):GetFirst()
+			if sc then
+				Duel.BreakEffect()
+				Duel.Summon(tp,sc,true,nil)
+			end
 		end
 	end
-	--[[--to both fields
-	if Duel.GetLocationCount(tp,LOCATION_MZONE)<1 or Duel.GetLocationCount(1-tp,LOCATION_MZONE,tp)<1 or Duel.IsPlayerAffectedByEffect(tp,CARD_BLUEEYES_SPIRIT) then return end
-	local c=e:GetHandler()
-	Duel.Hint(HINT_SELECTMSG,tp,aux.Stringid(id,2))
-	local g=Duel.GetMatchingGroup(s.nsfilter,tp,LOCATION_DECK,0,nil,e,tp)
-	local sg=aux.SelectUnselectGroup(g,e,tp,2,2,s.rescon,1,tp,HINTMSG_SPSUMMON)
-	if #sg~=2 then return end
-	local sc1=sg:FilterSelect(tp,s.firstsummon,1,1,nil,e,tp,sg):GetFirst()
-	local sc2=sg:RemoveCard(sc1):GetFirst()
-	Duel.SpecialSummonStep(sc1,0,tp,tp,false,false,POS_FACEUP)
-	Duel.SpecialSummonStep(sc2,0,tp,1-tp,false,false,POS_FACEUP)
-	Duel.SpecialSummonComplete]]
 end
 
 
---Decktop
-function s.dttfilter(c)
-	return (c:IsSetCard(s.listed_series) or c:IsCode(59482302))
-		and c:IsMonster() and c:IsLevelBelow(4)
-end
-function s.dttg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.IsExistingMatchingCard(s.dttfilter,tp,LOCATION_DECK,0,1,nil) end
-end
-function s.dtop(e,tp,eg,ep,ev,re,r,rp)
-	Duel.Hint(HINT_SELECTMSG,tp,aux.Stringid(id,1))
-	local g=Duel.SelectMatchingCard(tp,s.dttfilter,tp,LOCATION_DECK,0,1,1,nil)
-	if #g>0 then
-		Duel.ShuffleDeck(tp)
-		Duel.MoveSequence(g:GetFirst(),0)
-		Duel.ConfirmDecktop(tp,1)
-	end
-end
+
 
 
 --[[Deprecated
