@@ -45,9 +45,9 @@ function s.initial_effect(c)
 	e4:SetTarget(function(e,c) return c:IsMonster() and (c:IsCode(s.ally_names) or c:IsSetCard(SET_ALLY_OF_JUSTICE) or c:IsSetCard(SET_GENEX_ALLY)) end)
 	e4:SetLabelObject(e3)
 	c:RegisterEffect(e4)
-	--SS if opponent Normal or Specials
+	--Add to hand then can Normal Summon
 	local e5=Effect.CreateEffect(c)
-	e5:SetDescription(aux.Stringid(id,0))
+	e5:SetDescription(aux.Stringid(id,3))
 	e5:SetCategory(CATEGORY_TOHAND+CATEGORY_SEARCH+CATEGORY_SUMMON)
 	e5:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
 	e5:SetProperty(EFFECT_FLAG_DAMAGE_STEP+EFFECT_FLAG_DELAY)
@@ -177,7 +177,7 @@ function s.thfilter(c,e,tp)
 		--and ((Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and c:IsCanBeSpecialSummoned(e,0,tp,false,false,nil,tp)) or (Duel.GetLocationCount(1-tp,LOCATION_MZONE)>0 and c:IsCanBeSpecialSummoned(e,0,tp,false,false,POS_FACEUP,1-tp)))
 		and c:IsAbleToHand()
 		and c:IsMonster()
-		--and not Duel.IsExistingMatchingCard(s.uniquefilter,tp,LOCATION_MZONE|LOCATION_GRAVE|LOCATION_REMOVED,0,1,nil,c:GetCode())
+		and not Duel.IsExistingMatchingCard(s.uniquefilter,tp,LOCATION_MZONE|LOCATION_GRAVE|LOCATION_REMOVED,0,1,nil,c:GetCode())
 end
 function s.uniquefilter(c,code)
 	return c:IsCode(code) and c:IsFaceup() and c:IsMonster()
@@ -213,7 +213,7 @@ function s.nsop(e,tp,eg,ep,ev,re,r,rp)
 		Duel.ConfirmCards(1-tp,tc)
 		Duel.ShuffleHand(tp)
 		if Duel.IsExistingMatchingCard(s.nsfilter,tp,LOCATION_HAND|LOCATION_MZONE,0,1,nil)
-			and Duel.SelectYesNo(tp,aux.Stringid(id,2)) then
+			and Duel.SelectYesNo(tp,aux.Stringid(id,0)) then
 			Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SUMMON)
 			local sc=Duel.SelectMatchingCard(tp,s.nsfilter,tp,LOCATION_HAND|LOCATION_MZONE,0,1,1,nil):GetFirst()
 			if sc then

@@ -44,7 +44,7 @@ function s.initial_effect(c)
 	c:RegisterEffect(e2)
 	--Change to LIGHT or face-down
 	local e6=Effect.CreateEffect(c)
-	e6:SetDescription(aux.Stringid(id,0))
+	e6:SetDescription(aux.Stringid(id,2))
 	e6:SetCategory(CATEGORY_POSITION)
 	e6:SetType(EFFECT_TYPE_QUICK_O)
 	e6:SetProperty(EFFECT_FLAG_CARD_TARGET)
@@ -123,7 +123,7 @@ end
 function s.actop(e,tp,eg,ep,ev,re,r,rp)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOFIELD)
 	local g=Duel.GetMatchingGroup(s.actfilter,tp,LOCATION_DECK|LOCATION_HAND,0,nil,tp) 
-	if #g>0 and Duel.SelectYesNo(tp,aux.Stringid(id,5)) then
+	if #g>0 and Duel.SelectYesNo(tp,aux.Stringid(id,1)) then
 		if Duel.GetLocationCount(tp,LOCATION_SZONE)<=0 and Duel.GetLocationCount(tp,LOCATION_FZONE)<=0 then return end
 		local sc=Duel.SelectMatchingCard(tp,s.actfilter,tp,LOCATION_DECK|LOCATION_HAND|LOCATION_GRAVE,0,1,1,nil,tp):GetFirst()
 		local loc=LOCATION_SZONE
