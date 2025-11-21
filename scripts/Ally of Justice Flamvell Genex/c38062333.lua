@@ -177,14 +177,8 @@ function s.tdop(e,tp,eg,ep,ev,re,r,rp)
 end
 
 --Extender
-function s.cfilter(c,tp)
-	return 
-end
 function s.confilter(c)
-	return c:IsFaceup() and c:IsSetCard(SET_FLAMVELL) and c:HasLevel()
-end
-function s.chkfilter(c,lvl)
-	return c:GetLevel()>lvl
+	return c:IsFaceup() and c:IsSetCard(SET_FLAMVELL)
 end
 function s.sp2con(e,tp,eg,ep,ev,re,r,rp)
 	for rc in aux.Next(eg) do
@@ -192,7 +186,6 @@ function s.sp2con(e,tp,eg,ep,ev,re,r,rp)
 	end
 	return false
 end
-
 function s.sp2filter(c,e,tp,eg)
 	--if c:GetReasonCard() and not ((c:GetReasonCard():IsSetCard(SET_ALLY_OF_JUSTICE)) or (c:GetReasonCard():IsSetCard(SET_FLAMVELL))) then return end
 	--if c:GetReasonEffect() and not ((c:GetReasonEffect():GetHandler():IsSetCard(SET_ALLY_OF_JUSTICE)) or (c:GetReasonEffect():GetHandler():IsSetCard(SET_FLAMVELL))) then return end
@@ -203,15 +196,17 @@ function s.sp2filter(c,e,tp,eg)
 		and (c:IsAbleToHand()
 			or (Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and c:IsCanBeSpecialSummoned(e,0,tp,true,false,POS_FACEUP,tp))
 			or (Duel.GetLocationCount(1-tp,LOCATION_MZONE)>0 and c:IsCanBeSpecialSummoned(e,0,tp,true,false,POS_FACEUP,1-tp)))
-		
 		and eg:IsExists(s.chkfilter,1,nil,c:GetLevel())
+end
+function s.chkfilter(c,lvl)
+	return c:GetLevel()>lvl
 end
 	--Activation legality
 function s.sp2tg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	local g=Duel.GetMatchingGroup(s.confilter,tp,LOCATION_MZONE,0,nil)
 	if chkc then return s.sp2filter(chkc,e,tp,g) and eg:IsContains(chkc) end
 	if chk==0 then return eg and eg:IsExists(s.sp2filter,1,nil,e,tp,g) end
-	local g=eg:Filter(aux.NecroValleyFilter(s.sp2filter),nil,e,tp)
+	local g=eg:Filter(aux.NecroValleyFilter(s.sp2filter),nil,e,tp,g)
 	if chk==0 then return #g>0 end
 	local c=nil
 	if #g>1 then
