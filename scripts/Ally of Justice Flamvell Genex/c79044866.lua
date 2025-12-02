@@ -73,30 +73,55 @@ function s.initial_effect(c)
 end
 s.listed_names={40155554,59482302}
 s.listed_series={SET_ALLY_OF_JUSTICE,SET_FLAMVELL}
-function s.spfilter(c,e,tp)
-	return (c:IsCode(s.listed_names) or (c:IsSetCard(s.listed_series) and c:IsLevelAbove(5))) and c:IsCanBeSpecialSummoned(e,0,tp,true,false)
+function s.spfilter(c,e,tp,ct)
+	return (c:IsCode(s.listed_names) or c:IsSetCard(s.listed_series)) 
+		and c:IsType(TYPE_SYNCHRO)
+		and Duel.GetLocationCountFromEx(tp,tp,nil,c)>0
+		and c:IsCanBeSpecialSummoned(e,SUMMON_TYPE_SYNCHRO,tp,false,false)
+		and c:IsLevelBelow(ct)
+		and not c:IsPublic()
+end
+function s.spcostfilter(c,e,tp)
+	return (c:IsCode(s.listed_names) or c:IsSetCard(s.listed_series))
+		and not c:IsPublic()
+end
+function s.spcost(e,tp,eg,ep,ev,re,r,rp,chk)
+	local ct=Duel.GetMatchingGroup(s.spcostfilter,tp,LOCATION_HAND|LOCATION_DECK,0,nil):GetClassCount(Card.GetCode)
+	if chk==0 then return ct>0 and Duel.IsExistingMatchingCard(s.spfilter,tp,LOCATION_EXTRA,0,1,nil,e,tp,ct) end
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_CONFIRM)
+	local rc=Duel.SelectMatchingCard(tp,s.spfilter,tp,LOCATION_EXTRA,0,1,1,nil,e,tp,ct):GetFirst()
+	e:SetLabel(rc:GetLevel())
+	Duel.ConfirmCards(1-tp,rc)
+	Duel.ShuffleExtra(tp)
 end
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
-	if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
-		and Duel.IsExistingMatchingCard(s.spfilter,tp,LOCATION_DECK|LOCATION_GRAVE,0,1,nil,e,tp) end
-	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_DECK|LOCATION_GRAVE)
+	if chk==0 then return true end
+	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_EXTRA)
 	Duel.SetOperationInfo(0,CATEGORY_EQUIP,e:GetHandler(),1,tp,0)
 end
 function s.spop(e,tp,eg,ep,ev,re,r,rp)
-	if Duel.GetLocationCount(tp,LOCATION_MZONE)==0 then return end
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
-	local tc=Duel.SelectMatchingCard(tp,aux.NecroValleyFilter(s.spfilter),tp,LOCATION_DECK|LOCATION_GRAVE,0,1,1,nil,e,tp):GetFirst()
-	if not tc then return end
-	local c=e:GetHandler()
-	if c:IsRelateToEffect(e) and Duel.SpecialSummon(tc,0,tp,tp,true,false,POS_FACEUP)>0 and Duel.Equip(tp,c,tc) then
-		--Equip limit
-		local e1=Effect.CreateEffect(c)
-		e1:SetType(EFFECT_TYPE_SINGLE)
-		e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE)
-		e1:SetCode(EFFECT_EQUIP_LIMIT)
-		e1:SetValue(function(e,c) return c==tc end)
-		e1:SetReset(RESET_EVENT|RESETS_STANDARD)
-		c:RegisterEffect(e1)
+local c=e:GetHandler()
+	local ct=e:GetLabel()
+	local g=Duel.GetMatchingGroup(s.spcostfilter,tp,LOCATION_HAND|LOCATION_DECK,0,nil)
+	local rg=aux.SelectUnselectGroup(g,e,tp,ct,ct,aux.dncheck,1,tp,HINTMSG_CONFIRM)
+	Duel.ConfirmCards(1-tp,rg)
+	local td=rg:FilterCount(Card.IsLocation,nil,LOCATION_HAND)
+	Debug.Message("td count: "..td)
+	Duel.SendtoDeck(rg,nil,ct,REASON_EFFECT)
+	if #rg>0 then
+		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
+		local g=Duel.SelectMatchingCard(tp,s.spfilter,tp,LOCATION_EXTRA,0,1,1,nil,e,tp,ct)
+		if c:IsRelateToEffect(e) and Duel.SpecialSummon(g,SUMMON_TYPE_SYNCHRO,tp,tp,false,false,POS_FACEUP) and Duel.Equip(tp,c,g) then
+			--Equip limit
+			local e1=Effect.CreateEffect(c)
+			e1:SetType(EFFECT_TYPE_SINGLE)
+			e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE)
+			e1:SetCode(EFFECT_EQUIP_LIMIT)
+			e1:SetValue(function(e,c) return c==g end)
+			e1:SetReset(RESET_EVENT|RESETS_STANDARD)
+			c:RegisterEffect(e1)
+		end
+		g:GetFirst():CompleteProcedure()
 	end
 end
 
