@@ -8,6 +8,7 @@ function s.initial_effect(c)
 	e1:SetCategory(CATEGORY_SPECIAL_SUMMON+CATEGORY_EQUIP)
 	e1:SetType(EFFECT_TYPE_ACTIVATE)
 	e1:SetCode(EVENT_FREE_CHAIN)
+	e1:SetCost(s.spcost)
 	e1:SetTarget(s.sptg)
 	e1:SetOperation(s.spop)
 	c:RegisterEffect(e1)
@@ -83,6 +84,7 @@ function s.spfilter(c,e,tp,ct)
 end
 function s.spcostfilter(c,e,tp)
 	return (c:IsCode(s.listed_names) or c:IsSetCard(s.listed_series))
+		and c:IsMonster()
 		and not c:IsPublic()
 end
 function s.spcost(e,tp,eg,ep,ev,re,r,rp,chk)
@@ -90,8 +92,8 @@ function s.spcost(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return ct>0 and Duel.IsExistingMatchingCard(s.spfilter,tp,LOCATION_EXTRA,0,1,nil,e,tp,ct) end
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_CONFIRM)
 	local rc=Duel.SelectMatchingCard(tp,s.spfilter,tp,LOCATION_EXTRA,0,1,1,nil,e,tp,ct):GetFirst()
+	Duel.SetTargetCard(rc)
 	e:SetLabel(rc:GetLevel())
-	Debug.Message("Level: "..e:SetLabel())
 	Duel.ConfirmCards(1-tp,rc)
 	Duel.ShuffleExtra(tp)
 end
@@ -101,30 +103,26 @@ function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	Duel.SetOperationInfo(0,CATEGORY_EQUIP,e:GetHandler(),1,tp,0)
 end
 function s.spop(e,tp,eg,ep,ev,re,r,rp)
-local c=e:GetHandler()
+	local c=e:GetHandler()
 	local ct=e:GetLabel()
 	local g=Duel.GetMatchingGroup(s.spcostfilter,tp,LOCATION_HAND|LOCATION_DECK,0,nil)
 	local rg=aux.SelectUnselectGroup(g,e,tp,ct,ct,aux.dncheck,1,tp,HINTMSG_CONFIRM)
 	Duel.ConfirmCards(1-tp,rg)
 	local td=rg:FilterCount(Card.IsLocation,nil,LOCATION_HAND)
-	Debug.Message("td count: "..td)
-	Debug.Message("ct: "..ct)
 	Duel.SendtoDeck(rg,nil,ct,REASON_EFFECT)
-	if #rg>0 then
-		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
-		local g=Duel.SelectMatchingCard(tp,s.spfilter,tp,LOCATION_EXTRA,0,1,1,nil,e,tp,ct)
-		if c:IsRelateToEffect(e) and Duel.SpecialSummon(g,SUMMON_TYPE_SYNCHRO,tp,tp,false,false,POS_FACEUP) and Duel.Equip(tp,c,g) then
-			--Equip limit
-			local e1=Effect.CreateEffect(c)
-			e1:SetType(EFFECT_TYPE_SINGLE)
-			e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE)
-			e1:SetCode(EFFECT_EQUIP_LIMIT)
-			e1:SetValue(function(e,c) return c==g end)
-			e1:SetReset(RESET_EVENT|RESETS_STANDARD)
-			c:RegisterEffect(e1)
-		end
-		g:GetFirst():CompleteProcedure()
+	local tc=Duel.GetFirstTarget()
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
+	if tc and #rg>0 and Duel.SpecialSummon(tc,SUMMON_TYPE_SYNCHRO,tp,tp,false,false,POS_FACEUP) and Duel.Equip(tp,c,tc) then
+		--Equip limit
+		local e1=Effect.CreateEffect(c)
+		e1:SetType(EFFECT_TYPE_SINGLE)
+		e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE)
+		e1:SetCode(EFFECT_EQUIP_LIMIT)
+		e1:SetValue(function(e,c) return c==tc end)
+		e1:SetReset(RESET_EVENT|RESETS_STANDARD)
+		c:RegisterEffect(e1)
 	end
+	tc:CompleteProcedure()
 end
 
 --Fix stats
