@@ -33,7 +33,7 @@ function s.initial_effect(c)
 	e6:SetTargetRange(0,1)
 	e6:SetValue(s.attval)
 	c:RegisterEffect(e6)
-	--avoid battle damage
+	--[[avoid battle damage
 	local e7=Effect.CreateEffect(c)
 	e7:SetType(EFFECT_TYPE_FIELD)
 	e7:SetCode(EFFECT_AVOID_BATTLE_DAMAGE)
@@ -60,7 +60,7 @@ function s.initial_effect(c)
 	e9:SetTarget(s.returntg)
 	e9:SetOperation(s.returnop)
 	c:RegisterEffect(e9)
-	--[[Flamvell banish & LP Ex
+	--Flamvell banish & LP Ex
 	local e8=Effect.CreateEffect(c)
 	e8:SetDescription(aux.Stringid(id,0))
 	e8:SetCategory(CATEGORY_REMOVE)
