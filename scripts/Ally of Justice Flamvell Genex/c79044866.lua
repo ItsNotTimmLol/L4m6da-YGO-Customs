@@ -90,6 +90,12 @@ end
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	local ct=Duel.GetMatchingGroup(s.spcostfilter,tp,LOCATION_HAND|LOCATION_DECK,0,nil):GetClassCount(Card.GetCode)
 	if chk==0 then return ct>0 and Duel.IsExistingMatchingCard(s.spfilter,tp,LOCATION_EXTRA,0,1,nil,e,tp,ct) end
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_CONFIRM)
+	local tc=Duel.SelectMatchingCard(tp,s.spfilter,tp,LOCATION_EXTRA,0,1,1,nil,e,tp,ct):GetFirst()
+	Duel.SetTargetCard(tc)
+	e:SetLabel(tc:GetLevel())
+	Duel.ConfirmCards(1-tp,tc)
+	Duel.ShuffleExtra(tp)
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_EXTRA)
 	Duel.SetOperationInfo(0,CATEGORY_EQUIP,e:GetHandler(),1,tp,0)
 end
@@ -97,17 +103,22 @@ function s.rthfilter(c,tp)
 	return c:IsOwner(1-tp) and c:IsAbleToHand()
 end
 function s.spop(e,tp,eg,ep,ev,re,r,rp)
-	local ct=Duel.GetMatchingGroup(s.spcostfilter,tp,LOCATION_HAND|LOCATION_DECK,0,nil):GetClassCount(Card.GetCode)
-	if chk==0 then return ct>0 and Duel.IsExistingMatchingCard(s.spfilter,tp,LOCATION_EXTRA,0,1,nil,e,tp,ct) end
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_CONFIRM)
-	local tc=Duel.SelectMatchingCard(tp,s.spfilter,tp,LOCATION_EXTRA,0,1,1,nil,e,tp,ct):GetFirst()
-	lvl=tc:GetLevel()
-	Duel.ConfirmCards(1-tp,tc)
-	Duel.ShuffleExtra(tp)
 	local c=e:GetHandler()
+	local lvl=e:GetLabel()
+	local tc=Duel.GetFirstTarget()
 	local g=Duel.GetMatchingGroup(s.spcostfilter,tp,LOCATION_HAND|LOCATION_DECK,0,nil)
-	local rg=aux.SelectUnselectGroup(g,e,tp,lvl,lvl,aux.dncheck,1,tp,HINTMSG_CONFIRM)
-	Duel.ConfirmCards(1-tp,rg)
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_CONFIRM)
+	local rg=g:Select(tp,1,1,nil)
+	g:RemoveCard(rg)
+	Duel.ConfirmCards(1-tp,rg)		--Seems to work for some reason?
+	for i = 2,lvl do
+		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_CONFIRM)
+		local sg=g:Select(tp,1,1,nil)
+		g:RemoveCard(sg)
+		Duel.ConfirmCards(1-tp,sg)		--Seems to work for some reason?
+		rg:Merge(sg)
+	end
+	--Duel.ConfirmCards(1-tp,rg)
 	local td=rg:FilterCount(Card.IsLocation,nil,LOCATION_HAND)
 	Duel.SendtoDeck(rg,nil,td,REASON_EFFECT)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
