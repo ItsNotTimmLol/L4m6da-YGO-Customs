@@ -5,10 +5,10 @@ function s.initial_effect(c)
 	--Special Summon 1 'Ally' monster from your hand or GY, and if you do, equip it with this card
 	local e1=Effect.CreateEffect(c)
 	e1:SetDescription(aux.Stringid(id,0))
-	e1:SetCategory(CATEGORY_SPECIAL_SUMMON+CATEGORY_EQUIP)
+	e1:SetCategory(CATEGORY_SPECIAL_SUMMON+CATEGORY_EQUIP+CATEGORY_TOHAND)
 	e1:SetType(EFFECT_TYPE_ACTIVATE)
 	e1:SetCode(EVENT_FREE_CHAIN)
-	e1:SetCost(s.spcost)
+	--e1:SetCost(s.spcost)
 	e1:SetTarget(s.sptg)
 	e1:SetOperation(s.spop)
 	c:RegisterEffect(e1)
@@ -87,30 +87,29 @@ function s.spcostfilter(c,e,tp)
 		and c:IsMonster()
 		and not c:IsPublic()
 end
-function s.spcost(e,tp,eg,ep,ev,re,r,rp,chk)
+function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	local ct=Duel.GetMatchingGroup(s.spcostfilter,tp,LOCATION_HAND|LOCATION_DECK,0,nil):GetClassCount(Card.GetCode)
 	if chk==0 then return ct>0 and Duel.IsExistingMatchingCard(s.spfilter,tp,LOCATION_EXTRA,0,1,nil,e,tp,ct) end
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_CONFIRM)
-	local rc=Duel.SelectMatchingCard(tp,s.spfilter,tp,LOCATION_EXTRA,0,1,1,nil,e,tp,ct):GetFirst()
-	Duel.SetTargetCard(rc)
-	e:SetLabel(rc:GetLevel())
-	Duel.ConfirmCards(1-tp,rc)
-	Duel.ShuffleExtra(tp)
-end
-function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
-	if chk==0 then return true end
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_EXTRA)
 	Duel.SetOperationInfo(0,CATEGORY_EQUIP,e:GetHandler(),1,tp,0)
 end
+function s.rthfilter(c,tp)
+	return c:IsOwner(1-tp) and c:IsAbleToHand()
+end
 function s.spop(e,tp,eg,ep,ev,re,r,rp)
+	local ct=Duel.GetMatchingGroup(s.spcostfilter,tp,LOCATION_HAND|LOCATION_DECK,0,nil):GetClassCount(Card.GetCode)
+	if chk==0 then return ct>0 and Duel.IsExistingMatchingCard(s.spfilter,tp,LOCATION_EXTRA,0,1,nil,e,tp,ct) end
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_CONFIRM)
+	local tc=Duel.SelectMatchingCard(tp,s.spfilter,tp,LOCATION_EXTRA,0,1,1,nil,e,tp,ct):GetFirst()
+	lvl=tc:GetLevel()
+	Duel.ConfirmCards(1-tp,tc)
+	Duel.ShuffleExtra(tp)
 	local c=e:GetHandler()
-	local ct=e:GetLabel()
 	local g=Duel.GetMatchingGroup(s.spcostfilter,tp,LOCATION_HAND|LOCATION_DECK,0,nil)
-	local rg=aux.SelectUnselectGroup(g,e,tp,ct,ct,aux.dncheck,1,tp,HINTMSG_CONFIRM)
+	local rg=aux.SelectUnselectGroup(g,e,tp,lvl,lvl,aux.dncheck,1,tp,HINTMSG_CONFIRM)
 	Duel.ConfirmCards(1-tp,rg)
 	local td=rg:FilterCount(Card.IsLocation,nil,LOCATION_HAND)
-	Duel.SendtoDeck(rg,nil,ct,REASON_EFFECT)
-	local tc=Duel.GetFirstTarget()
+	Duel.SendtoDeck(rg,nil,td,REASON_EFFECT)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
 	if tc and #rg>0 and Duel.SpecialSummon(tc,SUMMON_TYPE_SYNCHRO,tp,tp,false,false,POS_FACEUP) and Duel.Equip(tp,c,tc) then
 		--Equip limit
@@ -122,7 +121,17 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 		e1:SetReset(RESET_EVENT|RESETS_STANDARD)
 		c:RegisterEffect(e1)
 	end
-	tc:CompleteProcedure()
+	tc:CompleteProcedure() 
+	if Duel.IsExistingMatchingCard(s.rthfilter,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,1,nil,tp)
+		and Duel.SelectYesNo(tp,aux.Stringid(id,2)) then
+		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_RTOHAND)
+		local g=Duel.SelectMatchingCard(tp,s.rthfilter,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,1,td,nil,tp)
+		if #g>0 then
+			Duel.HintSelection(g)
+			Duel.BreakEffect()
+			Duel.SendtoHand(g,nil,REASON_EFFECT)
+		end
+	end
 end
 
 --Fix stats
