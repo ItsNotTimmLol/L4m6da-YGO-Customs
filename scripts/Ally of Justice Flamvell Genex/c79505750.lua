@@ -138,7 +138,7 @@ function s.syncheck(e,c,tp) --v1
 end
 --Ally Machine Normal Summon reduction
 function s.allynsfilter(c) --v1
-	return (c:IsSetCard(SET_ALLY_OF_JUSTICE) or c:IsSetCard(SET_GENEX_ALLY))
+	return (c:IsCode(s.ally_names) or c:IsSetCard(SET_ALLY_OF_JUSTICE) or c:IsSetCard(SET_GENEX_ALLY))
 	and c:IsRace(RACE_MACHINE)
 end
 --Add

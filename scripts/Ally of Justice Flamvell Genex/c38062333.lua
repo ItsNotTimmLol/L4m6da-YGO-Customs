@@ -142,8 +142,7 @@ end
 
 --Decktop
 function s.dttfilter(c)
-	return (c:IsSetCard(s.listed_series) or c:IsCode(s.ally_names))
-		and c:IsMonster()
+	return (c:IsSetCard(s.listed_series))
 end
 function s.dttg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return Duel.IsExistingMatchingCard(s.dttfilter,tp,LOCATION_DECK,0,1,nil) end
