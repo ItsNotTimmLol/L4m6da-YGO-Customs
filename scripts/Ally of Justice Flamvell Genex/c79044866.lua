@@ -109,12 +109,12 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	local g=Duel.GetMatchingGroup(s.spcostfilter,tp,LOCATION_HAND|LOCATION_DECK,0,nil)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_CONFIRM)
 	local rg=g:Select(tp,1,1,nil)
-	g:RemoveCard(rg)
+	g:Remove(Card.IsCode,nil,rg:GetFirst():GetCode())
 	Duel.ConfirmCards(1-tp,rg)		--Seems to work for some reason?
 	for i = 2,lvl do
 		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_CONFIRM)
 		local sg=g:Select(tp,1,1,nil)
-		g:RemoveCard(sg)
+		g:Remove(Card.IsCode,nil,sg:GetFirst():GetCode())
 		Duel.ConfirmCards(1-tp,sg)		--Seems to work for some reason?
 		rg:Merge(sg)
 	end
