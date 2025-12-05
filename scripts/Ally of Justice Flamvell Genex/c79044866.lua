@@ -73,7 +73,7 @@ function s.initial_effect(c)
 	c:RegisterEffect(e8]]
 end
 s.listed_names={40155554,59482302}
-s.listed_series={SET_ALLY_OF_JUSTICE,SET_FLAMVELL}
+s.listed_series={SET_ALLY_OF_JUSTICE,SET_FLAMVELL,SET_GENEX}
 function s.spfilter(c,e,tp,ct)
 	return (c:IsCode(s.listed_names) or c:IsSetCard(s.listed_series)) 
 		and c:IsType(TYPE_SYNCHRO)

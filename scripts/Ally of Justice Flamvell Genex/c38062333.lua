@@ -116,7 +116,7 @@ function s.initial_effect(c)
 	e13:SetValue(s.statval)
 	c:RegisterEffect(e13)
 end
-s.listed_series={SET_ALLY_OF_JUSTICE,SET_FLAMVELL}
+s.listed_series={SET_ALLY_OF_JUSTICE,SET_FLAMVELL,SET_GENEX}
 s.ally_names={40155554,59482302}
 
 --Fix stats
