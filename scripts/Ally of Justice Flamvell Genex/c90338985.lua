@@ -1,4 +1,4 @@
---Flamvell Kindling
+--Genex Spark
 --Scripted by WolfSif
 local s,id=GetID()
 function s.initial_effect(c)
@@ -8,7 +8,6 @@ function s.initial_effect(c)
 	e1:SetCategory(CATEGORY_SPECIAL_SUMMON)
 	e1:SetCode(EVENT_FREE_CHAIN)
 	e1:SetDescription(aux.Stringid(id,0))
-	e1:SetCountLimit(1,id)
 	e1:SetTarget(s.sptg)
 	e1:SetOperation(s.spop)
 	c:RegisterEffect(e1)
@@ -87,14 +86,17 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	if ft2<ct2 then ct2=ft2 end
 	if Duel.IsPlayerAffectedByEffect(tp,CARD_BLUEEYES_SPIRIT) then ct2=1 end
 	local g2=Duel.GetMatchingGroup(s.sp2filter,tp,LOCATION_DECK,0,nil,e,tp)
-	local sg2=aux.SelectUnselectGroup(g2,e,tp,1,ct2,aux.dncheck,1,tp,HINTMSG_SPSUMMON)
+	if Duel.GetFlagEffect(tp,id)==0 then
+		local sg2=aux.SelectUnselectGroup(g2,e,tp,0,ct2,aux.dncheck,1,tp,HINTMSG_SPSUMMON)
 	tc=sg2:GetFirst()
-	for tc in aux.Next(sg2) do
-		Duel.SpecialSummonStep(tc,0,tp,tp,false,false,POS_FACEUP)
-		tc:RegisterFlagEffect(id,RESET_EVENT|RESETS_STANDARD,0,1,fid)
+		for tc in aux.Next(sg2) do
+			Duel.SpecialSummonStep(tc,0,tp,tp,false,false,POS_FACEUP)
+			tc:RegisterFlagEffect(id,RESET_EVENT|RESETS_STANDARD,0,1,fid)Duel.RegisterFlagEffect(tp,id,RESET_PHASE|PHASE_END,0,1)
+			sg1:Merge(sg2)
+		end
+		Duel.SpecialSummonComplete()
+		
 	end
-	Duel.SpecialSummonComplete()
-	sg1:Merge(sg2)
 	sg1:KeepAlive()
 	local e0=Effect.CreateEffect(e:GetHandler())
 	e0:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
@@ -112,7 +114,7 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	local e1=Effect.CreateEffect(e:GetHandler())
 	e1:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
 	e1:SetCode(EVENT_PHASE|PHASE_END)
-	e1:SetCountLimit(1)
+	e1:SetCountLimit(1,id)
 	e1:SetReset(RESET_PHASE|PHASE_END)
 	e1:SetDescription(aux.Stringid(id,0))
 	e1:SetCondition(s.sp2con)
