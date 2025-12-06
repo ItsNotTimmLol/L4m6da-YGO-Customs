@@ -112,6 +112,7 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	--Duel.ConfirmCards(1-tp,rg)
 	local rg=g:Select(tp,1,1,nil)
 	g:Remove(Card.IsCode,nil,rg:GetFirst():GetCode())
+	Duel.ConfirmCards(1-tp,g)			--Seems to work for some reason?
 	for i = 2,lvl do
 		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_CONFIRM)
 		local sg=g:Select(tp,1,1,nil)
