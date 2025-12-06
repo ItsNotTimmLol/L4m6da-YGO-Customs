@@ -106,11 +106,13 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 	local lvl=e:GetLabel()
 	local tc=Duel.GetFirstTarget()
-	local g=Duel.GetMatchingGroup(s.spcostfilter,tp,LOCATION_HAND|LOCATION_DECK,0,nil)
+	local g=Duel.GetMatchingGroup(s.spcostfilter,tp,LOCATION_DECK+LOCATION_HAND,0,nil)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_CONFIRM)
+	--local rg=aux.SelectUnselectGroup(g,e,tp,lvl,lvl,aux.dncheck,1,tp,HINTMSG_CONFIRM)
+	--Duel.ConfirmCards(1-tp,rg)
 	local rg=g:Select(tp,1,1,nil)
 	g:Remove(Card.IsCode,nil,rg:GetFirst():GetCode())
-	Duel.ConfirmCards(1-tp,rg)		--Seems to work for some reason?
+	Duel.ConfirmCards(1-tp,rg)			--Seems to work for some reason?
 	for i = 2,lvl do
 		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_CONFIRM)
 		local sg=g:Select(tp,1,1,nil)
@@ -118,7 +120,6 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 		Duel.ConfirmCards(1-tp,sg)		--Seems to work for some reason?
 		rg:Merge(sg)
 	end
-	--Duel.ConfirmCards(1-tp,rg)
 	local td=rg:FilterCount(Card.IsLocation,nil,LOCATION_HAND)
 	Duel.SendtoDeck(rg,nil,td,REASON_EFFECT)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
