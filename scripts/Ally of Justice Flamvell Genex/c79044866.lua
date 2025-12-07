@@ -79,7 +79,7 @@ function s.spfilter(c,e,tp,ct)
 		and c:IsType(TYPE_SYNCHRO)
 		and Duel.GetLocationCountFromEx(tp,tp,nil,c)>0
 		and c:IsCanBeSpecialSummoned(e,SUMMON_TYPE_SYNCHRO,tp,false,false)
-		and c:IsLevelBelow(ct)
+		and c:IsLevelBelow(2*ct)
 		and not c:IsPublic()
 end
 function s.spcostfilter(c,e,tp)
