@@ -121,7 +121,7 @@ s.ally_names={40155554,59482302}
 
 --Fix stats
 function s.setcodetg(e,c)
-	return (c:IsCode(s.listed_names) or c:GetOriginalSetCard()==SET_ALLY_OF_JUSTICE or c:GetOriginalSetCard()==SET_FLAMVELL or c:GetOriginalSetCard()==SET_GENEX) and c:IsMonster()
+	return (c:IsCode(s.ally_names) or c:GetOriginalSetCard()==SET_ALLY_OF_JUSTICE or c:GetOriginalSetCard()==SET_FLAMVELL or c:GetOriginalSetCard()==SET_GENEX) and c:IsMonster()
 end
 function s.changegytg(e,c)
 	if c:GetFlagEffect(1)==0 then
