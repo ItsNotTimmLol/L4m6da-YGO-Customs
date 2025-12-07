@@ -74,12 +74,12 @@ function s.initial_effect(c)
 end
 s.listed_names={40155554,59482302}
 s.listed_series={SET_ALLY_OF_JUSTICE,SET_FLAMVELL,SET_GENEX}
-function s.spfilter(c,e,tp,ct)
+function s.spfilter(c,e,tp,lvl)
 	return (c:IsCode(s.listed_names) or c:IsSetCard(s.listed_series)) 
 		and c:IsType(TYPE_SYNCHRO)
 		and Duel.GetLocationCountFromEx(tp,tp,nil,c)>0
 		and c:IsCanBeSpecialSummoned(e,SUMMON_TYPE_SYNCHRO,tp,false,false)
-		and c:IsLevelBelow(2*ct)
+		and c:IsLevelBelow(lvl)
 		and not c:IsPublic()
 end
 function s.spcostfilter(c,e,tp)
@@ -89,9 +89,10 @@ function s.spcostfilter(c,e,tp)
 end
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	local ct=Duel.GetMatchingGroup(s.spcostfilter,tp,LOCATION_HAND|LOCATION_DECK,0,nil):GetClassCount(Card.GetCode)
-	if chk==0 then return ct>0 and Duel.IsExistingMatchingCard(s.spfilter,tp,LOCATION_EXTRA,0,1,nil,e,tp,ct) end
+	local lvl=ct/2
+	if chk==0 then return ct>0 and Duel.IsExistingMatchingCard(s.spfilter,tp,LOCATION_EXTRA,0,1,nil,e,tp,lvl) end
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_CONFIRM)
-	local tc=Duel.SelectMatchingCard(tp,s.spfilter,tp,LOCATION_EXTRA,0,1,1,nil,e,tp,ct):GetFirst()
+	local tc=Duel.SelectMatchingCard(tp,s.spfilter,tp,LOCATION_EXTRA,0,1,1,nil,e,tp,lvl):GetFirst()
 	Duel.SetTargetCard(tc)
 	e:SetLabel(2*tc:GetLevel())
 	Duel.ConfirmCards(1-tp,tc)
@@ -109,11 +110,12 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	local g=Duel.GetMatchingGroup(s.spcostfilter,tp,LOCATION_DECK+LOCATION_HAND,0,nil)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_CONFIRM)
 	--local rg=aux.SelectUnselectGroup(g,e,tp,lvl,lvl,aux.dncheck,1,tp,HINTMSG_CONFIRM)
-	--Duel.ConfirmCards(1-tp,rg)
+	--[[Duel.ConfirmCards(1-tp,rg)
 	local rg=g:Select(tp,1,1,nil)
 	g:Remove(Card.IsCode,nil,rg:GetFirst():GetCode())
-	Duel.ConfirmCards(1-tp,rg)			--Seems to work for some reason?
-	for i = 2,lvl do
+	Duel.ConfirmCards(1-tp,rg)	]]		--Seems to work for some reason?
+	local rg=Group.CreateGroup()
+	for i = 1,lvl do
 		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_CONFIRM)
 		local sg=g:Select(tp,1,1,nil)
 		g:Remove(Card.IsCode,nil,sg:GetFirst():GetCode())
