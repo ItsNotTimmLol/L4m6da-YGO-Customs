@@ -164,7 +164,7 @@ function s.dtop(e,tp,eg,ep,ev,re,r,rp)
 	if #g==0 then return end
 	Duel.ConfirmCards(tp,g)
 	local tc=g:GetFirst()
-	local opt=Duel.SelectOption(tp,aux.Stringid(id,1),aux.Stringid(id,2))
+	local opt=Duel.SelectOption(tp,aux.Stringid(id,6),aux.Stringid(id,7))
 	if opt==1 then
 		Duel.MoveSequence(tc,opt)
 	end
