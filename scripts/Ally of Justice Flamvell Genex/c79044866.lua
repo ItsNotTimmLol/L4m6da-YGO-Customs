@@ -88,14 +88,20 @@ function s.spfilter(c,e,tp,lvl)
 		and c:IsLevelBelow(lvl)
 		and not c:IsPublic()
 end
-function s.spcostfilter(c,e,tp)
+function s.spcostfilter1(c,e,tp)
 	return (c:IsCode(s.listed_names) or c:IsSetCard(s.listed_series))
 		and c:IsMonster()
 		and not c:IsPublic()
 end
+function s.spcostfilter2(c,e,tp,tc)
+	return (c:IsCode(s.listed_names) or c:IsSetCard(s.listed_series))
+		and c:IsMonster()
+		and not c:IsCode(tc:GetCode())
+		and not c:IsPublic()
+end
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
-	local ct=Duel.GetMatchingGroup(s.spcostfilter,tp,LOCATION_HAND|LOCATION_DECK,0,nil):GetClassCount(Card.GetCode)
-	local lvl=ct/2
+	local ct=Duel.GetMatchingGroup(s.spcostfilter1,tp,LOCATION_HAND+LOCATION_DECK+LOCATION_EXTRA,0,nil):GetClassCount(Card.GetCode)
+	local lvl=math.floor((ct-1)/2)
 	if chk==0 then return ct>0 and Duel.IsExistingMatchingCard(s.spfilter,tp,LOCATION_EXTRA,0,1,nil,e,tp,lvl) end
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_CONFIRM)
 	local tc=Duel.SelectMatchingCard(tp,s.spfilter,tp,LOCATION_EXTRA,0,1,1,nil,e,tp,lvl):GetFirst()
@@ -113,7 +119,7 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 	local lvl=e:GetLabel()
 	local tc=Duel.GetFirstTarget()
-	local g=Duel.GetMatchingGroup(s.spcostfilter,tp,LOCATION_DECK+LOCATION_HAND,0,nil)
+	local g=Duel.GetMatchingGroup(s.spcostfilter2,tp,LOCATION_HAND+LOCATION_DECK+LOCATION_EXTRA,0,nil,e,tp,tc)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_CONFIRM)
 	if #g>lvl then 
 		--local rg=aux.SelectUnselectGroup(g,e,tp,lvl,lvl,aux.dncheck,1,tp,HINTMSG_CONFIRM)
