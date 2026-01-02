@@ -7,15 +7,28 @@ function s.initial_effect(c)
 	e0:SetType(EFFECT_TYPE_ACTIVATE)
 	e0:SetCode(EVENT_FREE_CHAIN)
 	c:RegisterEffect(e0)
-	--Change Attribute at start of Battle Phase
+	--LIGHT during Battle Phase
 	local e2=Effect.CreateEffect(c)
-	e2:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_F)
+	e2:SetType(EFFECT_TYPE_FIELD)
 	e2:SetRange(LOCATION_FZONE)
-	e2:SetCode(EVENT_PHASE|PHASE_BATTLE_START)
-	e2:SetCountLimit(1)
-	e2:SetTarget(s.attg)
-	e2:SetOperation(s.attop)
+	e2:SetTargetRange(LOCATION_GRAVE,LOCATION_ONFIELD|LOCATION_GRAVE)
+	e2:SetCondition(function(e) return Duel.IsBattlePhase() end)
+	e2:SetCode(EFFECT_ADD_ATTRIBUTE)
+	e2:SetValue(ATTRIBUTE_LIGHT)
 	c:RegisterEffect(e2)
+	local e3=e2:Clone()
+	e3:SetTargetRange(LOCATION_GRAVE,LOCATION_GRAVE)
+	e3:SetTarget(s.changegytg)
+	c:RegisterEffect(e3)
+	--Code check LIGHT
+	local e6=Effect.CreateEffect(c)
+	e6:SetType(EFFECT_TYPE_FIELD)
+	e6:SetProperty(EFFECT_FLAG_PLAYER_TARGET)
+	e6:SetCode(id)
+	e6:SetRange(LOCATION_SZONE)
+	e6:SetTargetRange(0,1)
+	e6:SetValue(s.attval)
+	c:RegisterEffect(e6)
 	--extra Tribute material
 	local e3=Effect.CreateEffect(c)
 	e3:SetType(EFFECT_TYPE_SINGLE)
@@ -127,37 +140,6 @@ function s.initial_effect(c)
 end
 s.listed_series={SET_ALLY_OF_JUSTICE,SET_FLAMVELL,SET_GENEX}
 s.ally_names={40155554,59482302}
---Attribute change
-function s.attg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return true end
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_ATTRIBUTE)
-	local rc=Duel.AnnounceAttribute(tp,1,ATTRIBUTE_FIRE|ATTRIBUTE_LIGHT)
-	Duel.SetTargetParam(rc)
-end
-function s.attop(e,tp,eg,ep,ev,re,r,rp)
-	local c=e:GetHandler()
-	local rc=Duel.GetChainInfo(0,CHAININFO_TARGET_PARAM)
-	local e1=Effect.CreateEffect(c)
-	e1:SetType(EFFECT_TYPE_FIELD)
-	e1:SetCode(EFFECT_CHANGE_ATTRIBUTE)
-	e1:SetTargetRange(LOCATION_ONFIELD|LOCATION_GRAVE,LOCATION_ONFIELD|LOCATION_GRAVE)
-	e1:SetValue(rc)
-	e1:SetReset(RESET_PHASE|PHASE_END)
-	Duel.RegisterEffect(e1,tp)
-	local e2=e1:Clone()
-	e2:SetTargetRange(LOCATION_GRAVE,LOCATION_GRAVE)
-	e2:SetTarget(s.changegytg)
-	c:RegisterEffect(e2)
-	--Code check LIGHT
-	local e3=Effect.CreateEffect(c)
-	e3:SetType(EFFECT_TYPE_FIELD)
-	e3:SetProperty(EFFECT_FLAG_PLAYER_TARGET)
-	e3:SetCode(id)
-	e3:SetRange(LOCATION_SZONE)
-	e3:SetTargetRange(0,1)
-	e3:SetValue(s.attval)
-	c:RegisterEffect(e3)
-end
 --Fix stats
 function s.changegytg(e,c)
 	if c:GetFlagEffect(1)==0 then

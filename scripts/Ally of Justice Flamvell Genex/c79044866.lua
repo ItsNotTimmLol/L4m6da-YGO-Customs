@@ -109,42 +109,44 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	local tc=Duel.GetFirstTarget()
 	local g=Duel.GetMatchingGroup(s.spcostfilter,tp,LOCATION_DECK+LOCATION_HAND,0,nil)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_CONFIRM)
-	--local rg=aux.SelectUnselectGroup(g,e,tp,lvl,lvl,aux.dncheck,1,tp,HINTMSG_CONFIRM)
-	--[[Duel.ConfirmCards(1-tp,rg)
-	local rg=g:Select(tp,1,1,nil)
-	g:Remove(Card.IsCode,nil,rg:GetFirst():GetCode())
-	Duel.ConfirmCards(1-tp,rg)	]]		--Seems to work for some reason?
-	local rg=Group.CreateGroup()
-	for i = 1,lvl do
-		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_CONFIRM)
-		local sg=g:Select(tp,1,1,nil)
-		g:Remove(Card.IsCode,nil,sg:GetFirst():GetCode())
-		Duel.ConfirmCards(1-tp,sg)		--Seems to work for some reason?
-		rg:Merge(sg)
-	end
-	--Duel.ConfirmCards(1-tp,rg)
-	local td=rg:FilterCount(Card.IsLocation,nil,LOCATION_HAND)
-	Duel.SendtoDeck(rg,nil,td,REASON_EFFECT)
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
-	if tc and #rg>0 and Duel.SpecialSummon(tc,SUMMON_TYPE_SYNCHRO,tp,tp,false,false,POS_FACEUP) and Duel.Equip(tp,c,tc) then
-		--Equip limit
-		local e1=Effect.CreateEffect(c)
-		e1:SetType(EFFECT_TYPE_SINGLE)
-		e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE)
-		e1:SetCode(EFFECT_EQUIP_LIMIT)
-		e1:SetValue(function(e,c) return c==tc end)
-		e1:SetReset(RESET_EVENT|RESETS_STANDARD)
-		c:RegisterEffect(e1)
-	end
-	tc:CompleteProcedure() 
-	if Duel.IsExistingMatchingCard(s.rthfilter,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,1,nil,tp)
-		and Duel.SelectYesNo(tp,aux.Stringid(id,2)) then
-		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_RTOHAND)
-		local g=Duel.SelectMatchingCard(tp,s.rthfilter,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,1,td,nil,tp)
-		if #g>0 then
-			Duel.HintSelection(g)
-			Duel.BreakEffect()
-			Duel.SendtoHand(g,nil,REASON_EFFECT)
+	if #g>lvl then 
+		--local rg=aux.SelectUnselectGroup(g,e,tp,lvl,lvl,aux.dncheck,1,tp,HINTMSG_CONFIRM)
+		--[[Duel.ConfirmCards(1-tp,rg)
+		local rg=g:Select(tp,1,1,nil)
+		g:Remove(Card.IsCode,nil,rg:GetFirst():GetCode())
+		Duel.ConfirmCards(1-tp,rg)	]]		--Seems to work for some reason?
+		local rg=Group.CreateGroup()
+		for i = 1,lvl do
+			Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_CONFIRM)
+			local sg=g:Select(tp,1,1,nil)
+			g:Remove(Card.IsCode,nil,sg:GetFirst():GetCode())
+			Duel.ConfirmCards(1-tp,sg)		--Seems to work for some reason?
+			rg:Merge(sg)
+		end
+		--Duel.ConfirmCards(1-tp,rg)
+		local td=rg:FilterCount(Card.IsLocation,nil,LOCATION_HAND)
+		Duel.SendtoDeck(rg,nil,td,REASON_EFFECT)
+		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
+		if tc and #rg>0 and Duel.SpecialSummon(tc,SUMMON_TYPE_SYNCHRO,tp,tp,false,false,POS_FACEUP) and Duel.Equip(tp,c,tc) then
+			--Equip limit
+			local e1=Effect.CreateEffect(c)
+			e1:SetType(EFFECT_TYPE_SINGLE)
+			e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE)
+			e1:SetCode(EFFECT_EQUIP_LIMIT)
+			e1:SetValue(function(e,c) return c==tc end)
+			e1:SetReset(RESET_EVENT|RESETS_STANDARD)
+			c:RegisterEffect(e1)
+		end
+		tc:CompleteProcedure() 
+		if Duel.IsExistingMatchingCard(s.rthfilter,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,1,nil,tp)
+			and Duel.SelectYesNo(tp,aux.Stringid(id,2)) then
+			Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_RTOHAND)
+			local g=Duel.SelectMatchingCard(tp,s.rthfilter,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,1,td,nil,tp)
+			if #g>0 then
+				Duel.HintSelection(g)
+				Duel.BreakEffect()
+				Duel.SendtoHand(g,nil,REASON_EFFECT)
+			end
 		end
 	end
 end
