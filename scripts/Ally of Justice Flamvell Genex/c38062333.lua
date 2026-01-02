@@ -134,7 +134,7 @@ s.ally_names={40155554,59482302}
 
 --Fix stats
 function s.setcodetg(e,c)
-	return (c:IsCode(s.ally_names) or c:GetOriginalSetCard()==SET_ALLY_OF_JUSTICE or c:GetOriginalSetCard()==SET_FLAMVELL or c:GetOriginalSetCard()==SET_GENEX) and c:IsMonster()
+	return (c:IsCode(s.ally_names) or c:GetOriginalSetCard()==SET_ALLY_OF_JUSTICE or c:GetOriginalSetCard()==SET_FLAMVELL or c:GetOriginalSetCard()==SET_GENEX or c:GetOriginalSetCard()==SET_R_GENEX or c:GetOriginalSetCard()==SET_GENEX_ALLY) and c:IsMonster()
 end
 function s.changegytg(e,c)
 	if c:GetFlagEffect(1)==0 then
@@ -146,7 +146,7 @@ function s.changegytg(e,c)
 			if not op or op(e,c) then return false end
 		end
 	end
-	return (c:IsCode(40155554) or c:IsCode(59482302) or c:GetOriginalSetCard()==SET_ALLY_OF_JUSTICE or c:GetOriginalSetCard()==SET_FLAMVELL or c:GetOriginalSetCard()==SET_GENEX) and c:IsMonster()
+	return (c:IsCode(40155554) or c:IsCode(59482302) or c:GetOriginalSetCard()==SET_ALLY_OF_JUSTICE or c:GetOriginalSetCard()==SET_FLAMVELL or c:GetOriginalSetCard()==SET_GENEX or c:GetOriginalSetCard()==SET_R_GENEX or c:GetOriginalSetCard()==SET_GENEX_ALLY) and c:IsMonster()
 end
 function s.statval(e,c,re,chk)
 	if chk==0 then return true end

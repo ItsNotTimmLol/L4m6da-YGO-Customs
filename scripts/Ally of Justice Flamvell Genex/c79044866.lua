@@ -5,7 +5,7 @@ function s.initial_effect(c)
 	--Special Summon 1 'Ally' monster from your hand or GY, and if you do, equip it with this card
 	local e0=Effect.CreateEffect(c)
 	e0:SetDescription(aux.Stringid(id,0))
-	e0:SetCategory(CATEGORY_SPECIAL_SUMMON+CATEGORY_EQUIP+CATEGORY_TOHAND)
+	e0:SetCategory(CATEGORY_SPECIAL_SUMMON+CATEGORY_EQUIP)
 	e0:SetType(EFFECT_TYPE_ACTIVATE)
 	e0:SetCode(EVENT_FREE_CHAIN)
 	--e0:SetCost(s.spcost)
@@ -131,7 +131,6 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 		end
 		--Duel.ConfirmCards(1-tp,rg)
 		local td=rg:FilterCount(Card.IsLocation,nil,LOCATION_HAND)
-		Duel.SendtoDeck(rg,nil,td,REASON_EFFECT)
 		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
 		if tc and #rg>0 and Duel.SpecialSummon(tc,SUMMON_TYPE_SYNCHRO,tp,tp,false,false,POS_FACEUP) and Duel.Equip(tp,c,tc) then
 			--Equip limit
