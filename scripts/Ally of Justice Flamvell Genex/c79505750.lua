@@ -7,6 +7,8 @@ function s.initial_effect(c)
 	--Fusion.AddProcMix(c,true,true,s.mfilter1,s.mfilter2)
 	Fusion.AddProcMixN(c,true,true,s.mfilter1,2)
 	Fusion.AddContactProc(c,s.contactfil,s.contactop,s.splimit)
+	--Only control 1
+	c:SetUniqueOnField(1,0,id)
 	--Must be either Fusion Summoned or Special Summoned by alternate procedure
 	local e0=Effect.CreateEffect(c)
 	e0:SetType(EFFECT_TYPE_SINGLE)
@@ -41,11 +43,11 @@ function s.initial_effect(c)
 	e3:SetRange(LOCATION_MZONE)
 	e3:SetCode(EFFECT_NONTUNER)
 	c:RegisterEffect(e3)
-	--treated synchro material
+	--[[treated synchro material
 	local e4=e3:Clone()
 	e4:SetCode(EFFECT_SYNCHRO_CHECK)
 	e4:SetValue(s.syncheck)
-	c:RegisterEffect(e4)
+	c:RegisterEffect(e4)]]--
 	--Tribute reduction
 	local e5=Effect.CreateEffect(c)
     e5:SetType(EFFECT_TYPE_FIELD)
@@ -58,7 +60,7 @@ function s.initial_effect(c)
 	--Search
 	local e6=Effect.CreateEffect(c)
 	e6:SetDescription(aux.Stringid(id,0))
-	e6:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
+	e6:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_F)
 	e6:SetCategory(CATEGORY_TOHAND+CATEGORY_SEARCH)
 	e6:SetProperty(EFFECT_FLAG_DELAY+EFFECT_FLAG_DAMAGE_STEP)
 	e6:SetCode(EVENT_LEAVE_FIELD)
@@ -66,9 +68,9 @@ function s.initial_effect(c)
 	e6:SetTarget(s.thtg)
 	e6:SetOperation(s.thop)
 	c:RegisterEffect(e6)
-	--banish face-down
+	--banish
 	local e7=Effect.CreateEffect(c)
-	e7:SetDescription(aux.Stringid(id,0))
+	e7:SetDescription(aux.Stringid(id,1))
 	e7:SetCategory(CATEGORY_REMOVE)
 	e7:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
 	e7:SetProperty(EFFECT_FLAG_DELAY)
