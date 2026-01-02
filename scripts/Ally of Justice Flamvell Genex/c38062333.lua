@@ -18,7 +18,7 @@ function s.initial_effect(c)
 	e1:SetTarget(s.tdtg)
 	e1:SetOperation(s.tdop)
 	c:RegisterEffect(e1)]]--
-	--Fix topdeck
+	--Fix top deck
 	local e1=Effect.CreateEffect(c)
 	e1:SetDescription(aux.Stringid(id,0))
 	e1:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_F)
@@ -172,13 +172,11 @@ end]]--
 
 --Fix topdeck
 function s.dtop(e,tp,eg,ep,ev,re,r,rp)
-	local g=Duel.GetDecktopGroup(tp,1)
-	if #g==0 then return end
+	local g=Duel.GetDeckbottomGroup(tp,1):GetFirst()
 	Duel.ConfirmCards(tp,g)
-	local tc=g:GetFirst()
 	local opt=Duel.SelectOption(tp,aux.Stringid(id,1),aux.Stringid(id,2))
-	if opt==1 then
-		Duel.MoveSequence(tc,opt)
+	if opt==0 then
+		Duel.MoveSequence(g,opt)
 	end
 end
 --To Deck
