@@ -11,9 +11,10 @@ function s.initial_effect(c)
 	local e1=Effect.CreateEffect(c)
 	e1:SetDescription(aux.Stringid(id,0))
 	e1:SetCategory(CATEGORY_DRAW)
-	e1:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_F)
+	e1:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
 	e1:SetRange(LOCATION_SZONE)
 	e1:SetCode(EVENT_ATTACK_ANNOUNCE)
+	e1:SetCountLimit(1)
 	e1:SetTarget(s.drtg)
 	e1:SetOperation(s.drop)
 	c:RegisterEffect(e1)
@@ -22,11 +23,10 @@ function s.initial_effect(c)
 	local e2=Effect.CreateEffect(c)
 	e2:SetDescription(aux.Stringid(id,3))
 	e2:SetCategory(CATEGORY_TOHAND+CATEGORY_SPECIAL_SUMMON)
-	e2:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
+	e2:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_F)
 	e2:SetProperty(EFFECT_FLAG_CARD_TARGET+EFFECT_FLAG_DELAY+EFFECT_FLAG_DAMAGE_STEP)
 	e2:SetCode(EVENT_TO_GRAVE)
 	e2:SetRange(LOCATION_SZONE)
-	e2:SetCountLimit(1,0,EFFECT_COUNT_CODE_CHAIN)
 	--e2:SetCondition(s.sp2con)
 	e2:SetTarget(s.sp2tg)
 	e2:SetOperation(s.sp2op)
@@ -89,7 +89,7 @@ function s.initial_effect(c)
 	e11:SetType(EFFECT_TYPE_FIELD)
 	e11:SetCode(EFFECT_ADD_RACE)
 	e11:SetRange(LOCATION_SZONE)
-	e11:SetTargetRange(LOCATION_MZONE,0)
+	e11:SetTargetRange(LOCATION_HAND|LOCATION_MZONE|LOCATION_GRAVE|LOCATION_REMOVED,0)
 	e11:SetTarget(s.setcodetg)
 	e11:SetValue(RACE_PYRO)
 	c:RegisterEffect(e11)
@@ -102,7 +102,7 @@ function s.initial_effect(c)
 	e13:SetType(EFFECT_TYPE_FIELD)
 	e13:SetCode(EFFECT_ADD_ATTRIBUTE)
 	e13:SetRange(LOCATION_SZONE)
-	e13:SetTargetRange(LOCATION_MZONE,0)
+	e13:SetTargetRange(LOCATION_HAND|LOCATION_MZONE|LOCATION_GRAVE|LOCATION_REMOVED,0)
 	e13:SetTarget(aux.TargetBoolFunction(Card.IsSetCard,SET_FLAMVELL))
 	e13:SetValue(ATTRIBUTE_FIRE)
 	c:RegisterEffect(e13)
@@ -209,7 +209,7 @@ function s.sp2filter(c,e,tp,eg)
 		and (c:IsAbleToHand()
 			or (Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and c:IsCanBeSpecialSummoned(e,0,tp,true,false,POS_FACEUP,tp))
 			or (Duel.GetLocationCount(1-tp,LOCATION_MZONE)>0 and c:IsCanBeSpecialSummoned(e,0,tp,true,false,POS_FACEUP,1-tp)))
-		and eg:IsExists(s.chkfilter,1,nil,c:GetLevel())
+		--and eg:IsExists(s.chkfilter,1,nil,c:GetLevel())
 end
 function s.chkfilter(c,lvl)
 	return c:GetLevel()>lvl
@@ -217,13 +217,13 @@ end
 	--Activation legality
 function s.sp2tg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	local g=Duel.GetMatchingGroup(s.confilter,tp,LOCATION_MZONE,0,nil)
-	if chkc then return s.sp2filter(chkc,e,tp,g) and eg:IsContains(chkc) end
+	if chkc then return s.sp2filter(chkc,e,tp,g) end--and eg:IsContains(chkc) end
 	if chk==0 then return eg and eg:IsExists(s.sp2filter,1,nil,e,tp,g) end
 	local g=eg:Filter(aux.NecroValleyFilter(s.sp2filter),nil,e,tp,g)
 	if chk==0 then return #g>0 end
 	local c=nil
 	if #g>1 then
-		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
+		Duel.Hint(HINT_SELECTMSG,tp,aux.Stringid(id,3))
 		c=g:Select(tp,1,1,nil):GetFirst()
 	else
 		c=g:GetFirst()
@@ -240,13 +240,18 @@ end
 function s.tgval(e,re,rp)
 	return rc:GetHandler():IsCode(id)
 end
+function s.higherfilter(c,lv)
+	return c:IsMonster() and c:IsSetCard(SET_FLAMVELL) and c:GetLevel()>lv
+end
 function s.sp2op(e,tp,eg,ep,ev,re,r,rp)
 	local tc=Duel.GetFirstTarget()
 	if not tc:IsRelateToEffect(e) then return end
-	local b1=true
-	local b2=Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and tc:IsCanBeSpecialSummoned(e,0,tp,true,false)
+	local btrue=Duel.IsExistingMatchingCard(s.higherfilter,tp,LOCATION_MZONE,0,1,nil,tc:GetLevel())
+	local b1=btrue
+	local b2=Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and tc:IsCanBeSpecialSummoned(e,0,tp,true,false) and btrue
 	local b3=Duel.GetLocationCount(1-tp,LOCATION_MZONE)>0 and tc:IsCanBeSpecialSummoned(e,0,tp,true,false,POS_FACEUP,1-tp)
 	if not (b1 or b2 or b3) then return end
+	if b3 and not btrue then return Duel.SpecialSummon(tc,0,tp,1-tp,true,false,POS_FACEUP) end
 	local op=Duel.SelectEffect(tp,
 		{b1,aux.Stringid(id,4)},
 		{b2,aux.Stringid(id,5)},
@@ -254,7 +259,7 @@ function s.sp2op(e,tp,eg,ep,ev,re,r,rp)
 	if op==1 then
 		Duel.SendtoHand(tc,nil,REASON_EFFECT)
 		Duel.ConfirmCards(1-tp,tc)
-	elseif op==2 or op==3 then
+	elseif op==2 or op==3 or not (b1 and b2) then
 		local target_player=op==2 and tp or 1-tp
 		if Duel.SpecialSummon(tc,0,tp,target_player,true,false,POS_FACEUP)==0 then return end
 	end
