@@ -75,7 +75,7 @@ function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	Duel.SetOperationInfo(0,CATEGORY_EQUIP,e:GetHandler(),1,tp,0)
 end
 function s.rthfilter(c,tp)
-	return c:IsOwner(1-tp) and c:IsAbleToHand()
+	return c:IsAbleToHand() and not c:IsCode(id)
 end
 function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
@@ -105,10 +105,10 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 			c:RegisterEffect(e1)
 		end
 		tc:CompleteProcedure() 
-		if Duel.IsExistingMatchingCard(Card.IsAbleToHand,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,1,nil,tp)
+		if Duel.IsExistingMatchingCard(s.rthfilter,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,1,nil,tp)
 			and td>0 and Duel.SelectYesNo(tp,aux.Stringid(id,1)) then
 			Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_RTOHAND)
-			local g=Duel.SelectMatchingCard(tp,Card.IsAbleToHand,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,1,td,nil,tp)
+			local g=Duel.SelectMatchingCard(tp,s.rthfilter,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,1,td,nil,tp)
 			if #g>0 then
 				Duel.HintSelection(g)
 				Duel.BreakEffect()
@@ -138,48 +138,4 @@ end
 function s.attval(e,c,re,chk)
 	if chk==0 then return true end
 	return ATTRIBUTE_LIGHT
-end
-
---Shuffle to bounce
-function s.returnfilter(c)
-	return (c:IsLocation(LOCATION_GRAVE) or c:IsFaceup()) and c:IsAbleToDeck()
-end
-function s.returntg(e,tp,eg,ep,ev,re,r,rp,chk)
-	local c=e:GetHandler()
-	if chk==0 then return c:IsAbleToHand() end 
-	Duel.SetOperationInfo(0,CATEGORY_TOHAND,e:GetHandler(),1,0,0)
-end
-function s.returnop(e,tp,eg,ep,ev,re,r,rp)
-	local c=e:GetHandler()
-	if not (c:IsRelateToEffect(e) and Duel.SendtoHand(c,nil,REASON_EFFECT)>0 and c:IsLocation(LOCATION_HAND)) then return end
-	Duel.ShuffleHand(tp)
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TODECK)
-	local g2=Duel.GetMatchingGroup(Card.IsAbleToHand,tp,0,LOCATION_ONFIELD,nil)
-	if #g2>0 and Duel.SelectYesNo(tp,aux.Stringid(id,2)) then
-		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_RTOHAND)
-		local hg=g2:Select(tp,1,1,nil)
-		Duel.HintSelection(hg,true)
-		Duel.BreakEffect()
-		Duel.SendtoHand(hg,nil,REASON_EFFECT)
-	end
-end
-
---LP & Banish Ex
-function s.rmcon(e,tp,eg,ep,ev,re,r,rp)
-	local c=e:GetHandler()
-	local rc=re:GetHandler()
-	return re:IsActiveType(TYPE_MONSTER) and rc~=c
-		and rc:IsSetCard(SET_FLAMVELL) and rc:IsControler(tp)
-end
-function s.rmtg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return true end
-	Duel.SetOperationInfo(0,CATEGORY_REMOVE,nil,1,1-tp,LOCATION_DECK)
-end
-function s.rmop(e,tp,eg,ep,ev,re,r,rp)
-	local rc=re:GetHandler()
-	Duel.Recover(tp,rc:GetLevel()*200,REASON_EFFECT)
-	Duel.BreakEffect()
-	local g=Duel.GetDecktopGroup(1-tp,1)
-	Duel.DisableShuffleCheck()
-	Duel.Remove(g,POS_FACEUP,REASON_EFFECT)
 end
