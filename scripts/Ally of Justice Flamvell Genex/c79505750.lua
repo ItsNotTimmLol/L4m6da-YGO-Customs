@@ -16,16 +16,6 @@ function s.initial_effect(c)
 	e0:SetCode(EFFECT_SPSUMMON_CONDITION)
 	e0:SetValue(s.splimit)
 	c:RegisterEffect(e0)
-	--[[Alternate Summon
-	local e1=Effect.CreateEffect(c)
-	e1:SetType(EFFECT_TYPE_FIELD)
-	e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_UNCOPYABLE)
-	e1:SetCode(EFFECT_SPSUMMON_PROC)
-	e1:SetRange(LOCATION_EXTRA)
-	e1:SetCondition(s.selfspcon)
-	e1:SetTarget(s.selfsptg)
-	e1:SetOperation(s.selfspop)
-	c:RegisterEffect(e1)]]
 	--Cannot be used as Link Material
 	local e1=Effect.CreateEffect(c)
 	e1:SetType(EFFECT_TYPE_SINGLE)
@@ -79,10 +69,6 @@ function s.initial_effect(c)
 	e7:SetTarget(s.remtg)
 	e7:SetOperation(s.remop)
 	c:RegisterEffect(e7)
-	--[[local e8=e7:Clone()
-	e8:SetCondition(function(e) return e:GetHandler():IsFusionSummoned() end)
-	c:RegisterEffect(e8)]]--
-	
 end
 s.listed_series={SET_ALLY_OF_JUSTICE,SET_FLAMVELL,SET_GENEX}
 s.ally_names={40155554,59482302}

@@ -60,83 +60,6 @@ function s.initial_effect(c)
 	local e6=e5:Clone()
 	e6:SetCode(EVENT_SPSUMMON_SUCCESS)
 	c:RegisterEffect(e6)
-	--[[avoid battle damage
-	local e3=Effect.CreateEffect(c)
-	e3:SetDescription(aux.Stringid(id,0))
-	e3:SetType(EFFECT_TYPE_FIELD)
-	e3:SetCode(EFFECT_AVOID_BATTLE_DAMAGE)
-	e3:SetProperty(EFFECT_FLAG_IGNORE_IMMUNE)
-	e3:SetRange(LOCATION_FZONE)
-	e3:SetTargetRange(LOCATION_MZONE,0)
-	e3:SetTarget(function(e,c) return c:IsSetCard(SET_FLAMVELL) end)
-	e3:SetValue(1)
-	c:RegisterEffect(e3)]]
-	--[[Flamvell banish mill
-	local e4=Effect.CreateEffect(c)
-	e4:SetDescription(aux.Stringid(id,2))
-	e4:SetCategory(CATEGORY_REMOVE)
-	e4:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
-	e4:SetCode(EVENT_CHAINING)
-	e4:SetProperty(EFFECT_FLAG_DELAY)
-	e4:SetRange(LOCATION_FZONE)
-	e4:SetCondition(s.rmcon)
-	e4:SetTarget(s.rmtg)
-	e4:SetOperation(s.rmop)
-	c:RegisterEffect(e4)
-	--Change damage
-	local e4=Effect.CreateEffect(c)
-	e4:SetType(EFFECT_TYPE_FIELD)
-	e4:SetRange(LOCATION_FZONE)
-	e4:SetCode(EFFECT_CHANGE_DAMAGE)
-	e4:SetProperty(EFFECT_FLAG_PLAYER_TARGET)
-	e4:SetTargetRange(0,1)
-	e4:SetValue(s.val)
-	c:RegisterEffect(e4)]]
-	--[[Flamvell monsters are Pyro
-	local e5=Effect.CreateEffect(c)
-	e5:SetType(EFFECT_TYPE_FIELD)
-	e5:SetCode(EFFECT_CHANGE_RACE)
-	e5:SetRange(LOCATION_FZONE)
-	e5:SetTargetRange(LOCATION_MZONE,0)
-	e5:SetTarget(aux.TargetBoolFunction(Card.IsSetCard,SET_FLAMVELL))
-	e5:SetValue(RACE_PYRO)
-	c:RegisterEffect(e5)
-	local e6=e5:Clone()
-	e6:SetTargetRange(LOCATION_GRAVE,0)
-	e6:SetTarget(s.tg)
-	c:RegisterEffect(e6)
-	--Flamvell monsters are Fire
-	local e6=Effect.CreateEffect(c)
-	e6:SetType(EFFECT_TYPE_FIELD)
-	e6:SetCode(EFFECT_CHANGE_ATTRIBUTE)
-	e6:SetRange(LOCATION_FZONE)
-	e6:SetTargetRange(LOCATION_MZONE,0)
-	e6:SetTarget(aux.TargetBoolFunction(Card.IsSetCard,SET_FLAMVELL))
-	e6:SetValue(ATTRIBUTE_FIRE)
-	c:RegisterEffect(e6)
-	local e8=e6:Clone()
-	e8:SetTargetRange(LOCATION_GRAVE,0)
-	e8:SetTarget(s.tg)
-	c:RegisterEffect(e8)
-	--Code check Pyro
-	local e9=Effect.CreateEffect(c)
-	e9:SetType(EFFECT_TYPE_FIELD)
-	e9:SetProperty(EFFECT_FLAG_PLAYER_TARGET)
-	e9:SetCode(id)
-	e9:SetRange(LOCATION_FZONE)
-	e9:SetTargetRange(1,0)
-	e9:SetValue(s.raceval)
-	c:RegisterEffect(e9)
-	--Code check Fire
-	local e10=Effect.CreateEffect(c)
-	e10:SetType(EFFECT_TYPE_FIELD)
-	e10:SetProperty(EFFECT_FLAG_PLAYER_TARGET)
-	e10:SetCode(id)
-	e10:SetRange(LOCATION_FZONE)
-	e10:SetTargetRange(1,0)
-	e10:SetValue(s.attval)
-	c:RegisterEffect(e10)]]
-	
 end
 s.listed_series={SET_ALLY_OF_JUSTICE,SET_FLAMVELL,SET_GENEX}
 s.ally_names={40155554,59482302}
@@ -166,22 +89,8 @@ end
 function s.tributetarget(e,c)
 	return c:IsAttribute(ATTRIBUTE_LIGHT) or not c:IsFaceup()
 end
-
---Spam
---[[
-function s.nsconfilter(c,tp)
-	return c:GetSummonPlayer()==1-tp --and c:IsPreviousControler(1-tp) --and c:IsAttributeExcept(ATTRIBUTE_LIGHT) --s.exfilter(c,tp)
-end
-function s.exfilter(c,tp)
-	return not c:IsForbidden() and c:CheckUniqueOnField(tp)
-end
-function s.nscon(e,tp,eg,ep,ev,re,r,rp)
-	return eg:IsExists(s.nsconfilter,1,nil,tp)
-end
-]]--
 function s.thfilter(c,e,tp)
 	return (c:IsSetCard(s.listed_series) or c:IsCode(s.ally_names))
-		--and ((Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and c:IsCanBeSpecialSummoned(e,0,tp,false,false,nil,tp)) or (Duel.GetLocationCount(1-tp,LOCATION_MZONE)>0 and c:IsCanBeSpecialSummoned(e,0,tp,false,false,POS_FACEUP,1-tp)))
 		and c:IsAbleToHand()
 		and c:IsMonster()
 		and not Duel.IsExistingMatchingCard(s.uniquefilter,tp,LOCATION_MZONE|LOCATION_GRAVE|LOCATION_REMOVED,0,1,nil,c:GetCode())
@@ -192,25 +101,9 @@ end
 function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk)
 	local c=e:GetHandler()
 	if chk==0 then return Duel.IsExistingMatchingCard(s.thfilter,tp,LOCATION_DECK,0,1,nil,e,tp)
-		--and not Duel.IsPlayerAffectedByEffect(tp,CARD_BLUEEYES_SPIRIT)
-		--and (Duel.GetLocationCount(tp,LOCATION_MZONE)>0 or Duel.GetLocationCount(1-tp,LOCATION_MZONE,tp)>0) 
 		end
 	Duel.SetOperationInfo(0,CATEGORY_TOHAND,nil,1,tp,LOCATION_DECK)
 end
---[[
-function s.rescon(sg,e,tp,mg)
-	return sg:IsExists(s.firstsummon,1,nil,e,tp,sg)
-end
-function s.firstsummon(c,e,tp,sg)
-	return c:IsCanBeSpecialSummoned(e,0,tp,false,false)
-		and Duel.GetLocationCount(tp,LOCATION_MZONE)>0
-		and sg:IsExists(s.secondsummon,1,c,e,tp) --exclude 'c'
-end
-function s.secondsummon(c,e,tp)
-	return c:IsCanBeSpecialSummoned(e,0,tp,false,false,POS_FACEUP,1-tp)
-		and Duel.GetLocationCount(1-tp,LOCATION_MZONE,tp)>0
-end
---]]
 function s.nsfilter(c)
 	return (c:IsSetCard(s.listed_series) or c:IsCode(s.ally_names))
 		and c:IsSummonable(true,nil)
@@ -232,62 +125,3 @@ function s.thop(e,tp,eg,ep,ev,re,r,rp)
 		end
 	end
 end
-
-
-
-
-
---[[Deprecated
-function s.lightfilter(c)
-	return c:IsSetCard(s.listed_series)
-		and (c:IsType(TYPE_NORMAL) or c:IsLevelAbove(7))
-		and c:IsMonster() and c:IsFaceup()
-end
-
---To hand
-function s.thfilter(c)
-	return c:IsSetCard(SET_FLAMVELL) --[[and c:IsMonster() and c:IsAbleToHand()
-end
-function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.IsExistingMatchingCard(s.thfilter,tp,LOCATION_DECK,0,1,nil) end
-	Duel.SetOperationInfo(0,CATEGORY_TOHAND,nil,1,tp,LOCATION_DECK)
-end
-function s.thop(e,tp,eg,ep,ev,re,r,rp)
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_ATOHAND)
-	local g=Duel.SelectMatchingCard(tp,s.thfilter,tp,LOCATION_DECK,0,1,1,nil)
-	if #g>0 then
-		Duel.SendtoHand(g,nil,REASON_EFFECT)
-		Duel.ConfirmCards(1-tp,g)
-	end
-end
-
---x2 damage test
-function s.val(e,re,val,r,rp)
-	if r&REASON_EFFECT==REASON_EFFECT and re and re:IsMonsterEffect() then
-		local rc=re:GetHandler()
-		if rc:IsFaceup() and rc:IsSetCard(SET_FLAMVELL) then
-			return val*2
-		end
-	end
-	return val
-end
-
-
-
---LP & Banish Ex
-function s.rmcon(e,tp,eg,ep,ev,re,r,rp)
-	return rp==tp and re:IsMonsterEffect() and re:GetHandler():IsSetCard(SET_FLAMVELL) 
-		and re:GetHandler():IsControler(tp)
-end
-function s.rmtg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return true end
-	Duel.SetOperationInfo(0,CATEGORY_REMOVE,nil,1,1-tp,LOCATION_DECK)
-end
-function s.rmop(e,tp,eg,ep,ev,re,r,rp)
-	--[[local rc=re:GetHandler()
-	Duel.Recover(tp,rc:GetLevel()*200,REASON_EFFECT)
-	Duel.BreakEffect()
-	local g=Duel.GetDecktopGroup(1-tp,1)
-	Duel.DisableShuffleCheck()
-	Duel.Remove(g,POS_FACEUP,REASON_EFFECT)
-end]]--

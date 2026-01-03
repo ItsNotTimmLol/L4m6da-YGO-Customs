@@ -20,19 +20,6 @@ function s.initial_effect(c)
 	e1:SetCode(EFFECT_TRAP_ACT_IN_HAND)
 	c:RegisterEffect(e1)
 	e0:SetLabelObject(e1)
-	--Duel.AddCustomActivityCounter(id,ACTIVITY_SPSUMMON,s.counterfilter)
-	--[[Special Summon Limitation if activated from hand
-	local e2=Effect.CreateEffect(c)
-	e2:SetCode(EFFECT_CANNOT_SPECIAL_SUMMON)
-	e2:SetType(EFFECT_TYPE_FIELD)
-	e2:SetRange(LOCATION_SZONE)
-	e2:SetCondition(s.sumcon)
-	e2:SetProperty(EFFECT_FLAG_PLAYER_TARGET)
-	e2:SetTargetRange(1,0)
-	e2:SetTarget(s.sumlimit)
-	c:RegisterEffect(e2)
-	--ClockLizard check
-	aux.addContinuousLizardCheck(c,LOCATION_SZONE,s.lizfilter)]]
 	--Monsters whose ATK is different from their original ATK are unaffected by your opponent's activated effects
 	local e2=Effect.CreateEffect(c)
 	e2:SetType(EFFECT_TYPE_FIELD)
@@ -54,18 +41,6 @@ function s.initial_effect(c)
 	e6:SetTarget(s.nstg)
 	e6:SetOperation(s.nsop)
 	c:RegisterEffect(e6)
-	--[[Flamvell banish mill
-	local e4=Effect.CreateEffect(c)
-	e4:SetDescription(aux.Stringid(id,2))
-	e4:SetCategory(CATEGORY_REMOVE)
-	e4:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
-	e4:SetCode(EVENT_CHAINING)
-	e4:SetProperty(EFFECT_FLAG_DELAY)
-	e4:SetRange(LOCATION_FZONE)
-	e4:SetCondition(s.rmcon)
-	e4:SetTarget(s.rmtg)
-	e4:SetOperation(s.rmop)
-	c:RegisterEffect(e4)]]
 end
 s.listed_series={SET_ALLY_OF_JUSTICE,SET_FLAMVELL,SET_GENEX}
 s.ally_names={40155554,59482302}
@@ -89,26 +64,7 @@ function s.actcost(e,tp,eg,ep,ev,re,r,rp,chk)
 		label_obj:SetLabel(0)
 		Duel.DiscardHand(tp,s.actcostfilter,1,1,REASON_COST|REASON_DISCARD)
 	end
-	--[[--Summon lock
-	if chk==0 then return Duel.GetCustomActivityCount(id,tp,ACTIVITY_SPSUMMON)==0 end
-	--Cannot Special Summon from the Extra Deck, except Ally Monsters
-	local e1=Effect.CreateEffect(c)
-	e1:SetDescription(aux.Stringid(id,4))
-	e1:SetType(EFFECT_TYPE_FIELD)
-	e1:SetProperty(EFFECT_FLAG_PLAYER_TARGET+EFFECT_FLAG_OATH+EFFECT_FLAG_CLIENT_HINT)
-	e1:SetCode(EFFECT_CANNOT_SPECIAL_SUMMON)
-	e1:SetTargetRange(1,0)
-	e1:SetTarget(s.sumlimit)
-	e1:SetReset(RESET_PHASE|PHASE_END,2)
-	Duel.RegisterEffect(e1,tp)
-	--Clock Lizard check
-	aux.addTempLizardCheck(c,tp,s.sumlimit)]]
 end
-
---[[summon lock
-function s.counterfilter(c)
-	return not (c:IsSummonLocation(LOCATION_EXTRA) and not c:IsSetCard(s.listed_series))
-end]]
 
 --place spells
 function s.actfilter(c,tp)
@@ -140,16 +96,6 @@ function s.immtg(e,c)
 end
 function s.immval(e,te)
 	return te:GetOwnerPlayer()==1-e:GetHandlerPlayer() and te:IsActivated()
-end
-
-function s.sumcon(e,tp,eg,ep,ev,re,r,rp)
-	return e:GetHandler():IsPreviousLocation(LOCATION_HAND)
-end
-function s.sumlimit(e,c,sump,sumtype,sumpos,targetp,se)
-	return c:IsLocation(LOCATION_EXTRA) and not c:IsSetCard(s.listed_series)
-end
-function s.lizfilter(e,c)
-	return not c:IsOriginalSetCard(s.listed_series)
 end
 
 --Change Attribute or to facedown
@@ -192,47 +138,5 @@ function s.nsop(e,tp,eg,ep,ev,re,r,rp)
 			Duel.ChangePosition(tc2,POS_FACEDOWN_DEFENSE)
 		end
 	end
-	--[[Normal Summmon after
-	local g3=Duel.GetMatchingGroup(Card.IsSummonable,tp,LOCATION_HAND,0,nil,true,nil)
-	if #g3>0 and Duel.SelectYesNo(tp,aux.Stringid(id,3)) then
-		Duel.BreakEffect()
-		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SUMMON)
-		local sg=g3:Select(tp,1,1,nil):GetFirst()
-		Duel.SummonOrSet(tp,sg,true,nil)
-	end]]
 end
 
---To hand
-function s.thfilter(c)
-	return c:IsSetCard(SET_ALLY_OF_JUSTICE) --[[and c:IsMonster()]] and c:IsAbleToHand()
-end
-function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.IsExistingMatchingCard(s.thfilter,tp,LOCATION_DECK,0,1,nil) end
-	Duel.SetOperationInfo(0,CATEGORY_TOHAND,nil,1,tp,LOCATION_DECK)
-end
-function s.thop(e,tp,eg,ep,ev,re,r,rp)
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_ATOHAND)
-	local g=Duel.SelectMatchingCard(tp,s.thfilter,tp,LOCATION_DECK,0,1,1,nil)
-	if #g>0 then
-		Duel.SendtoHand(g,nil,REASON_EFFECT)
-		Duel.ConfirmCards(1-tp,g)
-	end
-end
-
---LP & Banish Ex
-function s.rmcon(e,tp,eg,ep,ev,re,r,rp)
-	return rp==tp and re:IsMonsterEffect() and re:GetHandler():IsSetCard(SET_ALLY_OF_JUSTICE) 
-		and re:GetHandler():IsControler(tp)
-end
-function s.rmtg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return true end
-	Duel.SetOperationInfo(0,CATEGORY_REMOVE,nil,1,1-tp,LOCATION_DECK)
-end
-function s.rmop(e,tp,eg,ep,ev,re,r,rp)
-	--[[local rc=re:GetHandler()
-	Duel.Recover(tp,rc:GetLevel()*200,REASON_EFFECT)
-	Duel.BreakEffect()]]--
-	local g=Duel.GetDecktopGroup(1-tp,1)
-	Duel.DisableShuffleCheck()
-	Duel.Remove(g,POS_FACEUP,REASON_EFFECT)
-end

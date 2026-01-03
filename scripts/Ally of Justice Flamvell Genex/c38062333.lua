@@ -7,25 +7,15 @@ function s.initial_effect(c)
 	e0:SetType(EFFECT_TYPE_ACTIVATE)
 	e0:SetCode(EVENT_FREE_CHAIN)
 	c:RegisterEffect(e0)
-	--[[Shuffle card to Deck
-	local e1=Effect.CreateEffect(c)
-	e1:SetDescription(aux.Stringid(id,0))
-	e1:SetCategory(CATEGORY_TODECK)
-	e1:SetType(EFFECT_TYPE_IGNITION)
-	e1:SetRange(LOCATION_SZONE)
-	e1:SetCountLimit(1)
-	e1:SetCondition(function(e,c) return Duel.IsExistingMatchingCard(s.tdconfilter,e:GetHandlerPlayer(),LOCATION_MZONE,0,1,nil) end)
-	e1:SetTarget(s.tdtg)
-	e1:SetOperation(s.tdop)
-	c:RegisterEffect(e1)]]--
 	--Fix top deck
 	local e1=Effect.CreateEffect(c)
 	e1:SetDescription(aux.Stringid(id,0))
+	e1:SetCategory(CATEGORY_DRAW)
 	e1:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_F)
 	e1:SetRange(LOCATION_SZONE)
 	e1:SetCode(EVENT_ATTACK_ANNOUNCE)
-	--e1:SetTarget(s.dttg)
-	e1:SetOperation(s.dtop)
+	e1:SetTarget(s.drtg)
+	e1:SetOperation(s.drop)
 	c:RegisterEffect(e1)
 	--Extender
 		--Sent
@@ -153,24 +143,7 @@ function s.statval(e,c,re,chk)
 	return SET_ALLY_OF_JUSTICE and SET_FLAMVELL and SET_GENEX and RACE_PYRO and ATTRIBUTE_FIRE
 end
 
---[[Decktop
-function s.dttfilter(c)
-	return (c:IsSetCard(s.listed_series))
-end
-function s.dttg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.IsExistingMatchingCard(s.dttfilter,tp,LOCATION_DECK,0,1,nil) end
-end
-function s.dtop(e,tp,eg,ep,ev,re,r,rp)
-	Duel.Hint(HINT_SELECTMSG,tp,aux.Stringid(id,1))
-	local g=Duel.SelectMatchingCard(tp,s.dttfilter,tp,LOCATION_DECK,0,1,1,nil)
-	if #g>0 then
-		Duel.ShuffleDeck(tp)
-		Duel.MoveSequence(g:GetFirst(),0)
-		Duel.ConfirmDecktop(tp,1)
-	end
-end]]--
-
---Fix topdeck
+--Draw and place
 function s.dtop(e,tp,eg,ep,ev,re,r,rp)
 	local g=Duel.GetDeckbottomGroup(tp,1):GetFirst()
 	Duel.ConfirmCards(tp,g)
@@ -179,10 +152,28 @@ function s.dtop(e,tp,eg,ep,ev,re,r,rp)
 		Duel.MoveSequence(g,opt)
 	end
 end
---To Deck
---[[function s.tdconfilter(c)
-	return c:IsFaceup() and c:IsSetCard(SET_FLAMVELL) and (c:IsAttackAbove(1800) or c:IsDefenseAbove(1800))
-end]]--
+
+function s.drtg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return Duel.IsPlayerCanDraw(tp,1) end
+	Duel.SetTargetPlayer(tp)
+	Duel.SetTargetParam(1)
+	Duel.SetOperationInfo(0,CATEGORY_DRAW,nil,0,tp,1)
+end
+function s.drop(e,tp,eg,ep,ev,re,r,rp)
+	local p,d=Duel.GetChainInfo(0,CHAININFO_TARGET_PLAYER,CHAININFO_TARGET_PARAM)
+	if Duel.Draw(p,d,REASON_EFFECT)==0 then return end
+	Duel.ShuffleHand(tp)
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TODECK)
+	local g=Duel.SelectMatchingCard(tp,Card.IsAbleToDeck,tp,LOCATION_HAND,0,1,1,nil)
+	if #g>0 then
+		Duel.BreakEffect()
+		if Duel.SelectOption(tp,aux.Stringid(id,1),aux.Stringid(id,2))==0 then
+			Duel.SendtoDeck(g,nil,SEQ_DECKTOP,REASON_EFFECT)
+		else
+			Duel.SendtoDeck(g,nil,SEQ_DECKBOTTOM,REASON_EFFECT)
+		end
+	end
+end
 function s.tdtg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return Duel.IsExistingMatchingCard(Card.IsAbleToDeck,tp,LOCATION_REMOVED,LOCATION_REMOVED,1,nil) end
 	local g=Duel.GetMatchingGroup(Card.IsAbleToDeck,tp,LOCATION_REMOVED,LOCATION_REMOVED,nil)
