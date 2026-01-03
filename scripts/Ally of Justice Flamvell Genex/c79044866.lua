@@ -1,4 +1,4 @@
---Ally of Justice Simulacrum
+--Genex Core
 --Scripted by WolfSif
 local s,id=GetID()
 function s.initial_effect(c)
@@ -18,7 +18,7 @@ function s.initial_effect(c)
 	e1:SetCode(EFFECT_CHANGE_CODE)
 	e1:SetValue(68505803)
 	c:RegisterEffect(e1)
-	--LIGHT Lock during Main Phase
+	--[[LIGHT Lock during Main Phase
 	local e2=Effect.CreateEffect(c)
 	e2:SetType(EFFECT_TYPE_FIELD)
 	e2:SetRange(LOCATION_SZONE)
@@ -38,7 +38,7 @@ function s.initial_effect(c)
 	e3:SetRange(LOCATION_SZONE)
 	e3:SetTargetRange(0,1)
 	e3:SetValue(s.attval)
-	c:RegisterEffect(e3)
+	c:RegisterEffect(e3)]]--
 end
 s.listed_names={68505803}
 s.listed_series={SET_ALLY_OF_JUSTICE,SET_FLAMVELL,SET_GENEX}
