@@ -7,8 +7,18 @@ function s.initial_effect(c)
 	e0:SetType(EFFECT_TYPE_ACTIVATE)
 	e0:SetCode(EVENT_FREE_CHAIN)
 	c:RegisterEffect(e0)
-	--Fix top deck
+	--Recycle banished
 	local e1=Effect.CreateEffect(c)
+	e1:SetDescription(aux.Stringid(id,0))
+	e1:SetCategory(CATEGORY_TODECK)
+	e1:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_F)
+	e1:SetRange(LOCATION_SZONE)
+	e1:SetCode(EVENT_ATTACK_ANNOUNCE)
+	e1:SetTarget(s.dttg)
+	e1:SetOperation(s.dtop)
+	c:RegisterEffect(e1)
+	--draw and fix
+	--[[local e1=Effect.CreateEffect(c)
 	e1:SetDescription(aux.Stringid(id,0))
 	e1:SetCategory(CATEGORY_DRAW)
 	e1:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
@@ -17,7 +27,7 @@ function s.initial_effect(c)
 	e1:SetCountLimit(1)
 	e1:SetTarget(s.drtg)
 	e1:SetOperation(s.drop)
-	c:RegisterEffect(e1)
+	c:RegisterEffect(e1)]]--
 	--Extender
 		--Sent
 	local e2=Effect.CreateEffect(c)
@@ -144,15 +154,34 @@ function s.statval(e,c,re,chk)
 	return SET_ALLY_OF_JUSTICE and SET_FLAMVELL and SET_GENEX and RACE_PYRO and ATTRIBUTE_FIRE
 end
 
---Draw and place
+--Recycle banished
+function s.dtfilter(c)
+	return c:IsSetCard(SET_FLAMVELL) and c:IsAbleToDeck()
+end
+function s.dttg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return Duel.IsExistingMatchingCard(s.dtfilter,tp,LOCATION_REMOVED,0,1,nil) end
+	Duel.SetOperationInfo(0,CATEGORY_TODECK,nil,1,tp,LOCATION_REMOVED)
+end
 function s.dtop(e,tp,eg,ep,ev,re,r,rp)
+	Duel.Hint(HINT_SELECTMSG,tp,aux.Stringid(id,0))
+	local tc=Duel.SelectMatchingCard(tp,s.dtfilter,tp,LOCATION_REMOVED,0,1,1,nil):GetFirst()
+	if tc then
+		Duel.SendtoDeck(tc,nil,SEQ_DECKTOP,REASON_EFFECT)
+		if not tc:IsLocation(LOCATION_EXTRA) then
+			Duel.ConfirmDecktop(tp,1)
+		end
+	end
+end
+
+--Draw and fix
+--[[function s.dtop(e,tp,eg,ep,ev,re,r,rp)
 	local g=Duel.GetDeckbottomGroup(tp,1):GetFirst()
 	Duel.ConfirmCards(tp,g)
 	local opt=Duel.SelectOption(tp,aux.Stringid(id,1),aux.Stringid(id,2))
 	if opt==0 then
 		Duel.MoveSequence(g,opt)
 	end
-end
+end]]--
 
 function s.drtg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return Duel.IsPlayerCanDraw(tp,1) end

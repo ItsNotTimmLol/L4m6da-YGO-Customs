@@ -73,15 +73,15 @@ function s.actfilter(c,tp)
 		and c:IsSpell() and not c:IsForbidden() and c:CheckUniqueOnField(tp)
 end
 function s.acttg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return (Duel.GetLocationCount(tp,LOCATION_SZONE)>0 or Duel.GetLocationCount(tp,	ZONE)>0)
+	if chk==0 then return (Duel.GetLocationCount(tp,LOCATION_SZONE)>0 or Duel.GetLocationCount(tp,LOCATION_FZONE)>0)
 		and Duel.IsExistingMatchingCard(s.actfilter,tp,LOCATION_HAND|LOCATION_DECK,0,1,nil,tp) end
 end
 function s.actop(e,tp,eg,ep,ev,re,r,rp)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOFIELD)
-	local g=Duel.GetMatchingGroup(s.actfilter,tp,LOCATION_DECK|LOCATION_HAND,0,nil,tp) 
+	local g=Duel.GetMatchingGroup(s.actfilter,tp,LOCATION_HAND|LOCATION_DECK,0,nil,tp) 
 	if #g>0 and Duel.SelectYesNo(tp,aux.Stringid(id,1)) then
 		if Duel.GetLocationCount(tp,LOCATION_SZONE)<=0 and Duel.GetLocationCount(tp,LOCATION_FZONE)<=0 then return end
-		local sc=Duel.SelectMatchingCard(tp,s.actfilter,tp,LOCATION_DECK|LOCATION_HAND|LOCATION_GRAVE,0,1,1,nil,tp):GetFirst()
+		local sc=Duel.SelectMatchingCard(tp,s.actfilter,tp,LOCATION_HAND|LOCATION_DECK,0,1,1,nil,tp):GetFirst()
 		local loc=LOCATION_SZONE
 		if sc:IsType(TYPE_FIELD) then loc=LOCATION_FZONE end
 		if sc then
