@@ -25,17 +25,17 @@ function s.tg(e,tp,eg,ep,ev,re,r,rp,chk)
 	local g1=Duel.GetMatchingGroup(s.sp1filter,tp,LOCATION_HAND,0,nil,e,tp)
 	local g2=Duel.GetMatchingGroup(s.sp2filter,tp,LOCATION_DECK,0,nil,e,tp)
 	local g3=Duel.GetMatchingGroup(s.nsfilter,tp,LOCATION_HAND,0,nil,e,tp)
-	local ct1=Duel.GetFieldGroupCount(tp,0,LOCATION_ONFIELD)
-	local ft1=Duel.GetLocationCount(tp,LOCATION_MZONE)
-	if ft1<ct1 then ct1=ft1 end
-	if Duel.IsPlayerAffectedByEffect(tp,CARD_BLUEEYES_SPIRIT) then ct1=1 end
+	local ct=Duel.GetFieldGroupCount(tp,0,LOCATION_ONFIELD)
+	local ft=Duel.GetLocationCount(tp,LOCATION_MZONE)
+	if ft<ct then ct=ft end
+	if Duel.IsPlayerAffectedByEffect(tp,CARD_BLUEEYES_SPIRIT) then ct=1 end
 	local b1=#g1>0
-	local b2=(ct1>0 and #g2>0 and Duel.GetFlagEffect(tp,id)==0)
+	local b2=(ct>0 and #g2>0 and Duel.GetFlagEffect(tp,id)==0)
 	local b3=#g3>0
-	if chk==0 then return b1 or b2 or b3 end
+	if chk==0 then return b1 or (b1 and b2) or b3 end
 	Duel.SetPossibleOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,1-tp,LOCATION_HAND)
 	Duel.SetPossibleOperationInfo(0,CATEGORY_SUMMON,nil,1,tp,LOCATION_HAND)
-	Duel.SetPossibleOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,ct1,tp,LOCATION_DECK)
+	Duel.SetPossibleOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,ct,tp,LOCATION_DECK)
 end
 function s.op(e,tp,eg,ep,ev,re,r,rp)
 	local g1=Duel.GetMatchingGroup(s.sp1filter,tp,LOCATION_HAND,0,nil,e,tp)
@@ -46,12 +46,10 @@ function s.op(e,tp,eg,ep,ev,re,r,rp)
 	local b2=(ct1>0 and #g2>0 and Duel.GetFlagEffect(tp,id)==0)
 	local b3=#g3>0
 	if not (b1 or b2 or b3) then return end
-	if b1 and (not (b2 or b3)) or Duel.SelectYesNo(tp,aux.Stringid(id,1)) then
-		local ft1=1
-		local sg1=aux.SelectUnselectGroup(g1,e,tp,1,ft1,nil,1,tp,HINTMSG_SPSUMMON)
+	if b1 or (not (b2 or b3)) or Duel.SelectYesNo(tp,aux.Stringid(id,1)) then
+		local sg1=aux.SelectUnselectGroup(g1,e,tp,1,1,nil,1,tp,HINTMSG_SPSUMMON)
 		local tc=sg1:GetFirst()
-		if Duel.IsPlayerAffectedByEffect(tp,CARD_BLUEEYES_SPIRIT) then ft1=1 end
-		if ft1>0 then
+		if tc then
 			for tc in aux.Next(sg1) do
 				Duel.SpecialSummonStep(tc,0,tp,1-tp,false,false,POS_FACEDOWN_DEFENSE)
 				tc:RegisterFlagEffect(id,RESET_EVENT|RESETS_STANDARD,EFFECT_FLAG_CLIENT_HINT,1,0,aux.Stringid(id,5))
@@ -60,10 +58,10 @@ function s.op(e,tp,eg,ep,ev,re,r,rp)
 		Duel.SpecialSummonComplete()
 	end
 	local ct2=Duel.GetFieldGroupCount(tp,0,LOCATION_ONFIELD)
-	b2=(ct1>0 and #g2>0 and Duel.GetFlagEffect(tp,id)==0)
+	b2=(ct2>0 and #g2>0 and Duel.GetFlagEffect(tp,id)==0)
 	if b2 and (not b3 or Duel.SelectYesNo(tp,aux.Stringid(id,2))) then
-		local ft2=Duel.GetLocationCount(tp,LOCATION_MZONE)
-		if ft2<ct2 then ct2=ft2 end
+		local ft=Duel.GetLocationCount(tp,LOCATION_MZONE)
+		if ft<ct2 then ct2=ft end
 		if Duel.IsPlayerAffectedByEffect(tp,CARD_BLUEEYES_SPIRIT) then ct2=1 end
 		local sg2=aux.SelectUnselectGroup(g2,e,tp,0,ct2,nil,1,tp,HINTMSG_SPSUMMON)
 		tc=sg2:GetFirst()
@@ -93,6 +91,8 @@ function s.op(e,tp,eg,ep,ev,re,r,rp)
 		e1:SetReset(RESET_PHASE|PHASE_END)
 		Duel.RegisterEffect(e1,tp)
 	end
+	g3=Duel.GetMatchingGroup(s.nsfilter,tp,LOCATION_HAND,0,nil,e,tp)
+	b3=#g3>0
 	if b3 and Duel.SelectYesNo(tp,aux.Stringid(id,3)) then
 		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SUMMON)
 		local sc=Duel.SelectMatchingCard(tp,s.nsfilter,tp,LOCATION_HAND|LOCATION_MZONE,0,1,1,nil):GetFirst()
