@@ -46,7 +46,7 @@ function s.op(e,tp,eg,ep,ev,re,r,rp)
 	local b2=(ct1>0 and #g2>0 and Duel.GetFlagEffect(tp,id)==0)
 	local b3=#g3>0
 	if not (b1 or b2 or b3) then return end
-	if b1 or (not (b2 or b3)) or Duel.SelectYesNo(tp,aux.Stringid(id,1)) then
+	if b1 and (not (b2 and b3)) or Duel.SelectYesNo(tp,aux.Stringid(id,1)) then
 		local sg1=aux.SelectUnselectGroup(g1,e,tp,1,1,nil,1,tp,HINTMSG_SPSUMMON)
 		local tc=sg1:GetFirst()
 		if tc then
@@ -220,11 +220,10 @@ function s.sp2op(e,tp,eg,ep,ev,re,r,rp)
 		for tc in aux.Next(g) do
 			Duel.SpecialSummonStep(tc,0,tp,tp,false,false,POS_FACEUP)
 			--tc:RegisterFlagEffect(id,RESET_EVENT|RESETS_STANDARD,0,1,fid)
-			tc:RegisterFlagEffect(id,RESET_EVENT|RESETS_STANDARD,EFFECT_FLAG_CLIENT_HINT,1,0,aux.Stringid(id,3))
+			tc:RegisterFlagEffect(id,RESET_EVENT|RESETS_STANDARD,EFFECT_FLAG_CLIENT_HINT,1,0,aux.Stringid(id,5))
 		end
 	end
 	Duel.SpecialSummonComplete()
-	Duel.BreakEffect()
 	--Destroy during End Phase
 	--g:KeepAlive()
 	local e0=Effect.CreateEffect(e:GetHandler())
@@ -234,7 +233,7 @@ function s.sp2op(e,tp,eg,ep,ev,re,r,rp)
 	e0:SetReset(RESET_PHASE|PHASE_END)
 	e0:SetDescription(aux.Stringid(id,6))
 	e0:SetCountLimit(1)
-	e0:SetLabel(fid)
+	--e0:SetLabel(fid)
 	--e0:SetLabelObject(g)
 	--e0:SetCondition(s.descon)
 	e0:SetOperation(s.desop)
