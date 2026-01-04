@@ -42,12 +42,13 @@ function s.initial_effect(c)
 	e6:SetOperation(s.nsop)
 	c:RegisterEffect(e6)
 end
-s.listed_series={SET_ALLY_OF_JUSTICE,SET_FLAMVELL,SET_GENEX}
+s.listed_series={SET_FLAMVELL,SET_GENEX}
+s.ally_series={SET_ALLY_OF_JUSTICE,SET_FLAMVELL,SET_GENEX}
 s.ally_names={40155554,59482302}
 
 --activate from hand
 function s.actcostfilter(c)
-	return (c:IsCode(s.ally_names) or c:IsSetCard(s.listed_series)) 
+	return (c:IsCode(s.ally_names) or c:IsSetCard(s.ally_series)) 
 		and c:IsMonster() and c:IsDiscardable()
 end
 function s.actcon(e,c)
@@ -69,7 +70,7 @@ end
 --place spells
 function s.actfilter(c,tp)
 	return (c:IsType(TYPE_FIELD) or c:IsType(TYPE_CONTINUOUS))
-		and c:IsSetCard(s.listed_series) 
+		and c:IsSetCard(s.ally_series) 
 		and c:IsSpell() and not c:IsForbidden() and c:CheckUniqueOnField(tp)
 end
 function s.acttg(e,tp,eg,ep,ev,re,r,rp,chk)
@@ -92,7 +93,7 @@ end
 
 --immune
 function s.immtg(e,c)
-	return (c:IsCode(s.ally_names) or c:IsSetCard(s.listed_series)) and c:IsMonster() and not c:IsAttack(c:GetBaseAttack())
+	return (c:IsCode(s.ally_names) or c:IsSetCard(s.ally_series)) and c:IsMonster() and not c:IsAttack(c:GetBaseAttack())
 end
 function s.immval(e,te)
 	return te:GetOwnerPlayer()==1-e:GetHandlerPlayer() and te:IsActivated()

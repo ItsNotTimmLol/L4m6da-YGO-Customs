@@ -7,7 +7,7 @@ function s.initial_effect(c)
 	e0:SetType(EFFECT_TYPE_ACTIVATE)
 	e0:SetCode(EVENT_FREE_CHAIN)
 	c:RegisterEffect(e0)
-	--Recycle banished
+	--[[Recycle banished
 	local e1=Effect.CreateEffect(c)
 	e1:SetDescription(aux.Stringid(id,0))
 	e1:SetCategory(CATEGORY_TODECK)
@@ -60,7 +60,7 @@ function s.initial_effect(c)
 	e5:SetType(EFFECT_TYPE_FIELD)
 	e5:SetRange(LOCATION_SZONE)
 	e5:SetCode(EFFECT_ADD_SETCODE)
-	e5:SetTargetRange(LOCATION_HAND|LOCATION_MZONE|LOCATION_GRAVE|LOCATION_REMOVED,0)
+	e5:SetTargetRange(LOCATION_GRAVE|LOCATION_REMOVED,0)
 	e5:SetTarget(s.setcodetg)
 	e5:SetValue(SET_ALLY_OF_JUSTICE)
 	c:RegisterEffect(e5)
@@ -154,7 +154,7 @@ function s.statval(e,c,re,chk)
 	return SET_ALLY_OF_JUSTICE and SET_FLAMVELL and SET_GENEX and RACE_PYRO and ATTRIBUTE_FIRE
 end
 
---Recycle banished
+--[[Recycle banished
 function s.dtfilter(c)
 	return c:IsSetCard(SET_FLAMVELL) and c:IsAbleToDeck()
 end
@@ -171,7 +171,7 @@ function s.dtop(e,tp,eg,ep,ev,re,r,rp)
 			Duel.ConfirmDecktop(tp,1)
 		end
 	end
-end
+end]]--
 
 --Draw and fix
 --[[function s.dtop(e,tp,eg,ep,ev,re,r,rp)
@@ -181,7 +181,7 @@ end
 	if opt==0 then
 		Duel.MoveSequence(g,opt)
 	end
-end]]--
+end
 
 function s.drtg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return Duel.IsPlayerCanDraw(tp,1) end
@@ -204,6 +204,7 @@ function s.drop(e,tp,eg,ep,ev,re,r,rp)
 		end
 	end
 end
+
 function s.tdtg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return Duel.IsExistingMatchingCard(Card.IsAbleToDeck,tp,LOCATION_REMOVED,LOCATION_REMOVED,1,nil) end
 	local g=Duel.GetMatchingGroup(Card.IsAbleToDeck,tp,LOCATION_REMOVED,LOCATION_REMOVED,nil)
@@ -216,7 +217,7 @@ function s.tdop(e,tp,eg,ep,ev,re,r,rp)
 		Duel.HintSelection(sg)
 		Duel.SendtoDeck(sg,nil,SEQ_DECKSHUFFLE,REASON_EFFECT)
 	end
-end
+end]]--
 
 --Extender
 function s.confilter(c)
@@ -270,7 +271,7 @@ function s.tgval(e,re,rp)
 	return rc:GetHandler():IsCode(id)
 end
 function s.higherfilter(c,lv)
-	return c:IsMonster() and c:IsSetCard(SET_FLAMVELL) and c:GetLevel()>lv
+	return c:IsMonster() and c:IsSetCard(SET_FLAMVELL) and c:GetLevel()>lv and (c:IsNormalSummoned() or c:IsSynchroSummoned())
 end
 function s.sp2op(e,tp,eg,ep,ev,re,r,rp)
 	local tc=Duel.GetFirstTarget()
