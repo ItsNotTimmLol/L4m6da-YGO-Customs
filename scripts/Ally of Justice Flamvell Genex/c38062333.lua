@@ -37,6 +37,7 @@ function s.initial_effect(c)
 	e2:SetProperty(EFFECT_FLAG_CARD_TARGET+EFFECT_FLAG_DELAY+EFFECT_FLAG_DAMAGE_STEP)
 	e2:SetCode(EVENT_TO_GRAVE)
 	e2:SetRange(LOCATION_SZONE)
+	e2:SetCountLimit(1,0,EFFECT_COUNT_CODE_CHAIN)
 	--e2:SetCondition(s.sp2con)
 	e2:SetTarget(s.sp2tg)
 	e2:SetOperation(s.sp2op)
@@ -94,7 +95,7 @@ function s.initial_effect(c)
 	e10:SetTargetRange(LOCATION_GRAVE,0)
 	e10:SetTarget(s.changegytg)
 	c:RegisterEffect(e10)
-	--Ally Monsters are Pyro
+	--Also treated as Pyro
 	local e11=Effect.CreateEffect(c)
 	e11:SetType(EFFECT_TYPE_FIELD)
 	e11:SetCode(EFFECT_ADD_RACE)
@@ -107,13 +108,13 @@ function s.initial_effect(c)
 	e12:SetTargetRange(LOCATION_GRAVE,0)
 	e12:SetTarget(s.changegytg)
 	c:RegisterEffect(e12)
-	--Allied monsters are Fire
+	--Also treated as Fire
 	local e13=Effect.CreateEffect(c)
 	e13:SetType(EFFECT_TYPE_FIELD)
 	e13:SetCode(EFFECT_ADD_ATTRIBUTE)
 	e13:SetRange(LOCATION_SZONE)
 	e13:SetTargetRange(LOCATION_HAND|LOCATION_MZONE|LOCATION_GRAVE|LOCATION_REMOVED,0)
-	e13:SetTarget(aux.TargetBoolFunction(Card.IsSetCard,SET_FLAMVELL))
+	e13:SetTarget(s.setcodetg)
 	e13:SetValue(ATTRIBUTE_FIRE)
 	c:RegisterEffect(e13)
 	local e14=e13:Clone()
@@ -132,7 +133,6 @@ function s.initial_effect(c)
 end
 s.listed_series={SET_ALLY_OF_JUSTICE,SET_FLAMVELL,SET_GENEX}
 s.ally_names={40155554,59482302}
-
 --Fix stats
 function s.setcodetg(e,c)
 	return (c:IsCode(s.ally_names) or c:GetOriginalSetCard()==SET_ALLY_OF_JUSTICE or c:GetOriginalSetCard()==SET_FLAMVELL or c:GetOriginalSetCard()==SET_GENEX or c:GetOriginalSetCard()==SET_R_GENEX or c:GetOriginalSetCard()==SET_GENEX_ALLY) and c:IsMonster()
@@ -270,13 +270,13 @@ end
 function s.tgval(e,re,rp)
 	return rc:GetHandler():IsCode(id)
 end
-function s.higherfilter(c,lv)
-	return c:IsMonster() and c:IsSetCard(SET_FLAMVELL) and c:GetLevel()>lv and (c:IsNormalSummoned() or c:IsSynchroSummoned())
+function s.higherfilter(c,att,lv)
+	return c:IsMonster() and c:IsSetCard(SET_FLAMVELL) and c:GetLevel()>lv and c:GetOriginalAttribute()==att
 end
 function s.sp2op(e,tp,eg,ep,ev,re,r,rp)
 	local tc=Duel.GetFirstTarget()
 	if not tc:IsRelateToEffect(e) then return end
-	local btrue=Duel.IsExistingMatchingCard(s.higherfilter,tp,LOCATION_MZONE,0,1,nil,tc:GetLevel())
+	local btrue=Duel.IsExistingMatchingCard(s.higherfilter,tp,LOCATION_MZONE,0,1,nil,tc:GetOriginalAttribute(),tc:GetLevel())
 	local b1=btrue
 	local b2=Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and tc:IsCanBeSpecialSummoned(e,0,tp,true,false) and btrue
 	local b3=Duel.GetLocationCount(1-tp,LOCATION_MZONE)>0 and tc:IsCanBeSpecialSummoned(e,0,tp,true,false,POS_FACEUP,1-tp)

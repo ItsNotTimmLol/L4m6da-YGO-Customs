@@ -29,8 +29,8 @@ function s.tg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if ft2<ct2 then ct2=ft2 end
 	if Duel.IsPlayerAffectedByEffect(tp,CARD_BLUEEYES_SPIRIT) then ct2=1 end
 	local b1=#g1>0
-	local b2=Duel.IsExistingMatchingCard(s.nsfilter,tp,LOCATION_HAND|LOCATION_MZONE,0,1,nil)
-	local b3=#g2>0
+	local b2=(#g2>0 and Duel.GetFlagEffect(tp,id)==0)
+	local b3=Duel.IsExistingMatchingCard(s.nsfilter,tp,LOCATION_HAND|LOCATION_MZONE,0,1,nil)
 	if chk==0 then return b1 or b2 or b3 end
 	Duel.SetPossibleOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,1-tp,LOCATION_HAND)
 	Duel.SetPossibleOperationInfo(0,CATEGORY_SUMMON,nil,1,tp,LOCATION_HAND)
@@ -40,14 +40,10 @@ function s.op(e,tp,eg,ep,ev,re,r,rp)
 	local g1=Duel.GetMatchingGroup(s.sp1filter,tp,LOCATION_HAND,0,nil,e,tp)
 	local g2=Duel.GetMatchingGroup(s.sp2filter,tp,LOCATION_DECK,0,nil,e,tp)
 	local b1=#g1>0
-	local b2=Duel.IsExistingMatchingCard(s.nsfilter,tp,LOCATION_HAND|LOCATION_MZONE,0,1,nil)
-	local b3=#g2>0
+	local b2=(#g2>0 and Duel.GetFlagEffect(tp,id)==0)
+	local b3=Duel.IsExistingMatchingCard(s.nsfilter,tp,LOCATION_HAND|LOCATION_MZONE,0,1,nil)
 	if not (b1 or b2 or b3) then return end
-	local op=Duel.SelectEffect(tp,
-		{b1,aux.Stringid(id,1)},
-		{b2,aux.Stringid(id,2)},
-		{b3,aux.Stringid(id,3)})
-	if op==1 then
+	if (b1 and not (b2 or b3) and Duel.SelectYesNo(tp,aux.Stringid(id,1))) then
 		local ft1=1
 		local sg1=aux.SelectUnselectGroup(g1,e,tp,1,ft1,nil,1,tp,HINTMSG_SPSUMMON)
 		local tc=sg1:GetFirst()
@@ -59,13 +55,7 @@ function s.op(e,tp,eg,ep,ev,re,r,rp)
 			end
 		end
 		Duel.SpecialSummonComplete()
-	elseif op==2 then
-		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SUMMON)
-		local sc=Duel.SelectMatchingCard(tp,s.nsfilter,tp,LOCATION_HAND|LOCATION_MZONE,0,1,1,nil):GetFirst()
-		if sc then
-			Duel.SummonOrSet(tp,sc,true,nil)
-		end
-	elseif op==3 and Duel.GetFlagEffect(tp,id)==0 then
+	elseif (b2 and not (b1 or b3) and Duel.SelectYesNo(tp,aux.Stringid(id,2))) then
 		local ct2=Duel.GetFieldGroupCount(tp,0,LOCATION_ONFIELD)
 		local ft2=Duel.GetLocationCount(tp,LOCATION_MZONE)
 		if ft2<ct2 then ct2=ft2 end
@@ -97,6 +87,12 @@ function s.op(e,tp,eg,ep,ev,re,r,rp)
 		e1:SetTargetRange(1,0)
 		e1:SetReset(RESET_PHASE|PHASE_END)
 		Duel.RegisterEffect(e1,tp)
+	elseif (b3 and not (b1 or b2) and Duel.SelectYesNo(tp,aux.Stringid(id,3))) then
+		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SUMMON)
+		local sc=Duel.SelectMatchingCard(tp,s.nsfilter,tp,LOCATION_HAND|LOCATION_MZONE,0,1,1,nil):GetFirst()
+		if sc then
+			Duel.SummonOrSet(tp,sc,true,nil)
+		end
 	end
 end
 

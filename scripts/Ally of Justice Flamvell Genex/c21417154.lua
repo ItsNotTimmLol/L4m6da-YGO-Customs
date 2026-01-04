@@ -104,10 +104,10 @@ function s.posfilter(c)
 	return c:IsFaceup() and (s.pos1filter(c) or s.pos2filter(c))
 end
 function s.pos1filter(c)
-	return c:IsAttributeExcept(ATTRIBUTE_LIGHT)
+	return not c:IsAttribute(ATTRIBUTE_LIGHT)
 end
 function s.pos2filter(c)
-	return c:IsAttribute(ATTRIBUTE_LIGHT) and c:IsCanTurnSet()
+	return (c:IsAttribute(ATTRIBUTE_LIGHT) or c:GetAttribute()==ATTRIBUTE_LIGHT) and c:IsCanTurnSet()
 end
 function s.nstg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	if chkc then return false end

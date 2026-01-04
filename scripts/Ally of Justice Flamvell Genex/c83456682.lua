@@ -6,9 +6,9 @@ function s.initial_effect(c)
 	local e0=Effect.CreateEffect(c)
 	e0:SetType(EFFECT_TYPE_ACTIVATE)
 	e0:SetCode(EVENT_FREE_CHAIN)
-	e0:SetTarget(s.thtg)
 	e0:SetDescription(aux.Stringid(id,0))
-	e0:SetOperation(s.thop)
+	e0:SetTarget(s.thtg)
+	e0:SetOperation(s.actop)
 	c:RegisterEffect(e0)
 	--Add to hand
 	local e1=Effect.CreateEffect(c)
@@ -121,8 +121,25 @@ function s.nsfilter(c)
 	return (c:IsSetCard(s.listed_series) or c:IsCode(s.ally_names))
 		and c:IsSummonable(true,nil)
 end
-function s.thop(e,tp,eg,ep,ev,re,r,rp)
+function s.actop(e,tp,eg,ep,ev,re,r,rp)
 	if not Duel.SelectYesNo(tp,aux.Stringid(id,1)) then return end
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_ATOHAND)
+	local tc=Duel.SelectMatchingCard(tp,s.thfilter,tp,LOCATION_DECK,0,1,1,nil,e,tp):GetFirst()
+	if tc and Duel.SendtoHand(tc,nil,REASON_EFFECT)>0 and tc:IsLocation(LOCATION_HAND) then
+		Duel.ConfirmCards(1-tp,tc)
+		Duel.ShuffleHand(tp)
+		--[[if Duel.IsExistingMatchingCard(s.nsfilter,tp,LOCATION_HAND|LOCATION_MZONE,0,1,nil)
+			and Duel.SelectYesNo(tp,aux.Stringid(id,0)) then
+			Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SUMMON)
+			local sc=Duel.SelectMatchingCard(tp,s.nsfilter,tp,LOCATION_HAND|LOCATION_MZONE,0,1,1,nil):GetFirst()
+			if sc then
+				Duel.BreakEffect()
+				Duel.SummonOrSet(tp,sc,true,nil)
+			end
+		end]]--
+	end
+end
+function s.thop(e,tp,eg,ep,ev,re,r,rp)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_ATOHAND)
 	local tc=Duel.SelectMatchingCard(tp,s.thfilter,tp,LOCATION_DECK,0,1,1,nil,e,tp):GetFirst()
 	if tc and Duel.SendtoHand(tc,nil,REASON_EFFECT)>0 and tc:IsLocation(LOCATION_HAND) then

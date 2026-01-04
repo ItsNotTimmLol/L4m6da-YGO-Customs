@@ -42,6 +42,7 @@ function s.initial_effect(c)
 end
 s.listed_names={68505803}
 s.listed_series={SET_ALLY_OF_JUSTICE,SET_FLAMVELL,SET_GENEX}
+s.listed_names={68505803}
 function s.spfilter(c,e,tp,lvl)
 	return (c:IsCode(s.listed_names) or c:IsSetCard(s.listed_series)) 
 		and c:IsType(TYPE_SYNCHRO)
