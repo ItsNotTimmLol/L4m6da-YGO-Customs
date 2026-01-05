@@ -32,7 +32,7 @@ function s.initial_effect(c)
 		--Sent
 	local e2=Effect.CreateEffect(c)
 	e2:SetDescription(aux.Stringid(id,3))
-	e2:SetCategory(CATEGORY_TOHAND+CATEGORY_SPECIAL_SUMMON)
+	e2:SetCategory(CATEGORY_TOHAND+CATEGORY_SPECIAL_SUMMON+CATEGORY_SUMMON)
 	e2:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_F)
 	e2:SetProperty(EFFECT_FLAG_CARD_TARGET+EFFECT_FLAG_DELAY+EFFECT_FLAG_DAMAGE_STEP)
 	e2:SetCode(EVENT_TO_GRAVE)
@@ -61,7 +61,7 @@ function s.initial_effect(c)
 	e5:SetType(EFFECT_TYPE_FIELD)
 	e5:SetRange(LOCATION_SZONE)
 	e5:SetCode(EFFECT_ADD_SETCODE)
-	e5:SetTargetRange(LOCATION_GRAVE|LOCATION_REMOVED,0)
+	e5:SetTargetRange(LOCATION_HAND|LOCATION_GRAVE|LOCATION_REMOVED,0)
 	e5:SetTarget(s.setcodetg)
 	e5:SetValue(SET_ALLY_OF_JUSTICE)
 	c:RegisterEffect(e5)
@@ -74,7 +74,7 @@ function s.initial_effect(c)
 	e7:SetType(EFFECT_TYPE_FIELD)
 	e7:SetRange(LOCATION_SZONE)
 	e7:SetCode(EFFECT_ADD_SETCODE)
-	e7:SetTargetRange(LOCATION_HAND|LOCATION_MZONE|LOCATION_GRAVE|LOCATION_REMOVED,0)
+	e7:SetTargetRange(LOCATION_HAND|LOCATION_GRAVE|LOCATION_REMOVED,0)
 	e7:SetTarget(s.setcodetg)
 	e7:SetValue(SET_FLAMVELL)
 	c:RegisterEffect(e7)
@@ -87,7 +87,7 @@ function s.initial_effect(c)
 	e9:SetType(EFFECT_TYPE_FIELD)
 	e9:SetRange(LOCATION_SZONE)
 	e9:SetCode(EFFECT_ADD_SETCODE)
-	e9:SetTargetRange(LOCATION_HAND|LOCATION_MZONE|LOCATION_GRAVE|LOCATION_REMOVED,0)
+	e9:SetTargetRange(LOCATION_HAND|LOCATION_GRAVE|LOCATION_REMOVED,0)
 	e9:SetTarget(s.setcodetg)
 	e9:SetValue(SET_GENEX)
 	c:RegisterEffect(e9)
@@ -100,7 +100,7 @@ function s.initial_effect(c)
 	e11:SetType(EFFECT_TYPE_FIELD)
 	e11:SetCode(EFFECT_ADD_RACE)
 	e11:SetRange(LOCATION_SZONE)
-	e11:SetTargetRange(LOCATION_HAND|LOCATION_MZONE|LOCATION_GRAVE|LOCATION_REMOVED,0)
+	e11:SetTargetRange(LOCATION_HAND|LOCATION_GRAVE|LOCATION_REMOVED,0)
 	e11:SetTarget(s.setcodetg)
 	e11:SetValue(RACE_PYRO)
 	c:RegisterEffect(e11)
@@ -113,7 +113,7 @@ function s.initial_effect(c)
 	e13:SetType(EFFECT_TYPE_FIELD)
 	e13:SetCode(EFFECT_ADD_ATTRIBUTE)
 	e13:SetRange(LOCATION_SZONE)
-	e13:SetTargetRange(LOCATION_HAND|LOCATION_MZONE|LOCATION_GRAVE|LOCATION_REMOVED,0)
+	e13:SetTargetRange(LOCATION_HAND|LOCATION_GRAVE|LOCATION_REMOVED,0)
 	e13:SetTarget(s.setcodetg)
 	e13:SetValue(ATTRIBUTE_FIRE)
 	c:RegisterEffect(e13)
@@ -237,7 +237,7 @@ function s.sp2filter(c,e,tp,eg)
 		and not s.name_list[tp][c:GetCode()]
 		and c:IsMonster() and c:IsCanBeEffectTarget(e) and c:IsFaceup() 
 		and (c:IsAbleToHand()
-			or (Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and c:IsCanBeSpecialSummoned(e,0,tp,true,false,POS_FACEUP,tp))
+			--or (Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and c:IsCanBeSpecialSummoned(e,0,tp,true,false,POS_FACEUP,tp))
 			or (Duel.GetLocationCount(1-tp,LOCATION_MZONE)>0 and c:IsCanBeSpecialSummoned(e,0,tp,true,false,POS_FACEUP,1-tp)))
 		--and eg:IsExists(s.chkfilter,1,nil,c:GetLevel())
 end
@@ -261,8 +261,9 @@ function s.sp2tg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	Duel.SetTargetCard(c)
 	local code=c:GetCode()
 	s.name_list[tp][code]=true
+	Duel.SetPossibleOperationInfo(0,CATEGORY_SPECIAL_SUMMON,c,1,1-tp,0)
 	Duel.SetPossibleOperationInfo(0,CATEGORY_TOHAND,c,1,tp,0)
-	Duel.SetPossibleOperationInfo(0,CATEGORY_SPECIAL_SUMMON,c,1,tp,0)
+	Duel.SetPossibleOperationInfo(0,CATEGORY_SUMMON,c,1,tp,0)
 	if c:IsLocation(LOCATION_GRAVE) then
 		Duel.SetOperationInfo(0,CATEGORY_LEAVE_GRAVE,c,1,0,0)
 	end
@@ -271,12 +272,44 @@ function s.tgval(e,re,rp)
 	return rc:GetHandler():IsCode(id)
 end
 function s.higherfilter(c,att,lv)
-	return c:IsMonster() and c:IsSetCard(SET_FLAMVELL) and c:GetLevel()>lv and c:GetOriginalAttribute()==att
+	return c:IsMonster() and c:IsSetCard(s.listed_series) and c:GetLevel()>lv and  c:IsAttributeExcept(att)
+end
+function s.exconfilter(c,e,tp)
+	return (c:IsCode(s.ally_names) or c:IsSetCard(s.listed_series)) 
+		and c:IsMonster() 
 end
 function s.sp2op(e,tp,eg,ep,ev,re,r,rp)
 	local tc=Duel.GetFirstTarget()
 	if not tc:IsRelateToEffect(e) then return end
-	local btrue=Duel.IsExistingMatchingCard(s.higherfilter,tp,LOCATION_MZONE,0,1,nil,tc:GetOriginalAttribute(),tc:GetLevel())
+	local g1=Duel.GetMatchingGroup(s.exconfilter,tp,LOCATION_MZONE,0,nil)
+	--local btrue=Duel.IsExistingMatchingCard(s.higherfilter,tp,LOCATION_MZONE,0,1,nil,tc:GetOriginalAttribute(),tc:GetLevel())
+	local b1=Duel.GetLocationCount(1-tp,LOCATION_MZONE)>0 and tc:IsCanBeSpecialSummoned(e,0,tp,true,false,POS_FACEUP,1-tp)
+	local b2=g1:GetSum(Card.GetLevel)>5
+	if not (b1 or b2) then return end
+	if b1 and not b2 then return Duel.SpecialSummon(tc,0,tp,1-tp,true,false,POS_FACEUP) end
+	local op=Duel.SelectEffect(tp,
+		{b1,aux.Stringid(id,3)},
+		{b2,aux.Stringid(id,4)})
+	if op==1 then
+		Duel.SpecialSummon(tc,0,tp,1-tp,true,false,POS_FACEUP)
+	elseif op==2 or not b1 then
+		Duel.SendtoHand(tc,nil,REASON_EFFECT)
+		Duel.ConfirmCards(1-tp,tc)
+		if tc:GetLocation()==LOCATION_HAND and Duel.SelectYesNo(tp,aux.Stringid(id,5)) then
+			Duel.Summon(tp,tc,true,nil)
+		else
+			Duel.ShuffleHand(tp)
+		end
+	end
+end
+
+--[[old version
+function s.sp2op(e,tp,eg,ep,ev,re,r,rp)
+	local tc=Duel.GetFirstTarget()
+	if not tc:IsRelateToEffect(e) then return end
+	local g1=Duel.GetMatchingGroup(s.exconfilter,tp,LOCATION_MZONE,0,nil)
+	local btrue=g1:GetSum(Card.GetLevel)>6
+	--local btrue=Duel.IsExistingMatchingCard(s.higherfilter,tp,LOCATION_MZONE,0,1,nil,tc:GetOriginalAttribute(),tc:GetLevel())
 	local b1=btrue
 	local b2=Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and tc:IsCanBeSpecialSummoned(e,0,tp,true,false) and btrue
 	local b3=Duel.GetLocationCount(1-tp,LOCATION_MZONE)>0 and tc:IsCanBeSpecialSummoned(e,0,tp,true,false,POS_FACEUP,1-tp)
@@ -293,4 +326,4 @@ function s.sp2op(e,tp,eg,ep,ev,re,r,rp)
 		local target_player=op==2 and tp or 1-tp
 		if Duel.SpecialSummon(tc,0,tp,target_player,true,false,POS_FACEUP)==0 then return end
 	end
-end
+end]]--

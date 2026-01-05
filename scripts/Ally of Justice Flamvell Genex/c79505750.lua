@@ -26,19 +26,19 @@ function s.initial_effect(c)
 	local e2=e1:Clone()
 	e2:SetCode(EFFECT_CANNOT_BE_FUSION_MATERIAL)
 	c:RegisterEffect(e2)
-	--non-tuner
+	--[[non-tuner
 	local e3=Effect.CreateEffect(c)
 	e3:SetType(EFFECT_TYPE_SINGLE)
 	e3:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
 	e3:SetRange(LOCATION_MZONE)
 	e3:SetCode(EFFECT_NONTUNER)
-	c:RegisterEffect(e3)
+	c:RegisterEffect(e3)]]--
 	--[[treated synchro material
 	local e4=e3:Clone()
 	e4:SetCode(EFFECT_SYNCHRO_CHECK)
 	e4:SetValue(s.syncheck)
 	c:RegisterEffect(e4)]]--
-	--Tribute reduction
+	--[[Tribute reduction
 	local e5=Effect.CreateEffect(c)
     e5:SetType(EFFECT_TYPE_FIELD)
     e5:SetCode(EFFECT_DECREASE_TRIBUTE)
@@ -46,12 +46,12 @@ function s.initial_effect(c)
     e5:SetTargetRange(LOCATION_HAND,0)
     e5:SetTarget(aux.TargetBoolFunction(s.allynsfilter))
     e5:SetValue(0x1)
-    c:RegisterEffect(e5)
+    c:RegisterEffect(e5)]]--
 	--Search
 	local e6=Effect.CreateEffect(c)
 	e6:SetDescription(aux.Stringid(id,0))
 	e6:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_F)
-	e6:SetCategory(CATEGORY_TOHAND+CATEGORY_SEARCH)
+	e6:SetCategory(CATEGORY_TOHAND+CATEGORY_SEARCH+CATEGORY_SPECIAL_SUMMON)
 	e6:SetProperty(EFFECT_FLAG_DELAY+EFFECT_FLAG_DAMAGE_STEP)
 	e6:SetCode(EVENT_LEAVE_FIELD)
 	e6:SetCondition(s.thcon)
@@ -60,7 +60,7 @@ function s.initial_effect(c)
 	c:RegisterEffect(e6)
 	--banish
 	local e7=Effect.CreateEffect(c)
-	e7:SetDescription(aux.Stringid(id,1))
+	e7:SetDescription(aux.Stringid(id,2))
 	e7:SetCategory(CATEGORY_REMOVE)
 	e7:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
 	e7:SetProperty(EFFECT_FLAG_DELAY)
@@ -71,6 +71,7 @@ function s.initial_effect(c)
 	c:RegisterEffect(e7)
 end
 s.listed_series={SET_ALLY_OF_JUSTICE,SET_FLAMVELL,SET_GENEX}
+s.ally_series={SET_ALLY_OF_JUSTICE,SET_GENEX_ALLY}
 s.ally_names={40155554,59482302}
 function s.mfilter1(c,fc,sumtype,tp,sub,mg,sg)
 	return c:IsMonster() and (c:IsLocation(LOCATION_HAND) or c:IsFaceup())
@@ -93,32 +94,7 @@ function s.contactop(g,tp)
 	if #fd>0 then Duel.ConfirmCards(1-tp,fd) end
 	Duel.SendtoDeck(g,nil,SEQ_DECKSHUFFLE,REASON_COST|REASON_MATERIAL)
 end
---Alt Summoning Procedure
-function s.selfspfilter(c,tp,sc)
-	return (c:IsCode(40155554) or c:IsCode(59482302) or c:IsSetCard(SET_ALLY_OF_JUSTICE,fc,sumtype,tp) or c:IsSetCard(SET_FLAMVELL,fc,sumtype,tp)) and c:IsMonster() and not c:IsType(TYPE_FUSION) and c:IsAbleToDeckOrExtraAsCost() and (c:IsLocation(LOCATION_HAND) or c:IsFaceup())
-end
-function s.selfspcon(e,c)
-	if c==nil then return true end
-	local tp=c:GetControler()
-	return Duel.IsExistingMatchingCard(s.selfspfilter,tp,LOCATION_HAND|LOCATION_MZONE|LOCATION_GRAVE|LOCATION_REMOVED,0,1,nil)
-end
-function s.selfsptg(e,tp,eg,ep,ev,re,r,rp,chk,c)
-	local g=Duel.SelectMatchingCard(tp,s.selfspfilter,tp,LOCATION_HAND|LOCATION_MZONE|LOCATION_GRAVE|LOCATION_REMOVED,0,1,1,nil)
-	if g then
-		g:KeepAlive()
-		e:SetLabelObject(g)
-	return true
-	end
-	return false
-end
-function s.selfspop(e,tp,eg,ep,ev,re,r,rp,c)
-	local g=e:GetLabelObject()
-	if not g then return end
-	c:SetMaterial(g)
-	Duel.SendtoDeck(g,nil,SEQ_DECKSHUFFLE,REASON_COST|REASON_MATERIAL)
-	g:DeleteGroup()
-end
---Synchro Material Check
+--[[Synchro Material Check
 function s.syncheck(e,c,tp) --v1
 	e:GetHandler():AssumeProperty(ASSUME_RACE,RACE_PYRO)
 	e:GetHandler():AssumeProperty(ASSUME_ATTRIBUTE,ATTRIBUTE_WIND|ATTRIBUTE_WATER|ATTRIBUTE_FIRE|ATTRIBUTE_EARTH)
@@ -128,7 +104,8 @@ end
 function s.allynsfilter(c) --v1
 	return (c:IsCode(s.ally_names) or c:IsSetCard(SET_ALLY_OF_JUSTICE) or c:IsSetCard(SET_GENEX_ALLY))
 	and c:IsRace(RACE_MACHINE)
-end
+end]]--
+
 --Add
 function s.thcon(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
@@ -141,14 +118,38 @@ function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return Duel.IsExistingMatchingCard(s.thfilter,tp,LOCATION_DECK,0,1,nil) end
 	Duel.SetOperationInfo(0,CATEGORY_TOHAND,nil,1,tp,LOCATION_DECK)
 end
+function s.spfilter(c,e,tp)
+	return (c:IsCode(s.ally_names) or c:IsSetCard(s.ally_series)) 
+		and not c:IsType(TYPE_TUNER)
+		and c:IsRace(RACE_MACHINE)
+		and (Duel.GetLocationCount(tp,LOCATION_MZONE)>0 
+		and c:IsCanBeSpecialSummoned(e,0,tp,false,false,POS_FACEUP,tp))
+		and not Duel.IsExistingMatchingCard(s.uniquefilter,tp,LOCATION_GRAVE|LOCATION_REMOVED,0,1,nil,c:GetCode())
+		and c:IsMonster() 
+end
+function s.uniquefilter(c,code)
+	return c:IsCode(code) and c:IsFaceup() and c:IsMonster()
+end
 function s.thop(e,tp,eg,ep,ev,re,r,rp)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_ATOHAND)
-	local g=Duel.SelectMatchingCard(tp,s.thfilter,tp,LOCATION_DECK,0,1,1,nil)
-	if #g>0 then
-		Duel.SendtoHand(g,nil,REASON_EFFECT)
-		Duel.ConfirmCards(1-tp,g)
+	local g1=Duel.SelectMatchingCard(tp,s.thfilter,tp,LOCATION_DECK,0,1,1,nil)
+	if #g1==0 or Duel.SendtoHand(g1,nil,REASON_EFFECT)==0 then return end
+	Duel.ConfirmCards(1-tp,g1)
+	Duel.ShuffleHand(tp)
+	if Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and Duel.IsExistingMatchingCard(s.spfilter,tp,LOCATION_DECK,0,1,nil,e,tp) and Duel.SelectYesNo(tp,aux.Stringid(id,1)) then
+		local g2=Duel.GetMatchingGroup(s.spfilter,tp,LOCATION_DECK,0,nil,e,tp)
+		local ft=Duel.GetLocationCount(tp,LOCATION_MZONE)
+		ft=math.min(ft,3)
+		if Duel.IsPlayerAffectedByEffect(tp,CARD_BLUEEYES_SPIRIT) then ft=1 end
+		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
+		local sg=aux.SelectUnselectGroup(g2,e,tp,1,ft,aux.dncheck,1,tp,HINTMSG_SPSUMMON)
+		if #sg>0 then
+			Duel.SpecialSummon(sg,0,tp,tp,false,false,POS_FACEUP)
+		end
 	end
 end
+
+--Banish
 function s.remcon(e,tp,eg,ep,ev,re,r,rp)
 	local mg=e:GetHandler():GetMaterial()
 	return mg and e:GetHandler():IsSummonLocation(LOCATION_EXTRA) and mg:IsExists(Card.IsType,1,nil,TYPE_NORMAL)
