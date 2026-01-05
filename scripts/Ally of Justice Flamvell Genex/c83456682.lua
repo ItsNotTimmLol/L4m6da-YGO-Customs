@@ -10,7 +10,7 @@ function s.initial_effect(c)
 	e0:SetTarget(s.thtg)
 	e0:SetOperation(s.actop)
 	c:RegisterEffect(e0)
-	--Add to hand
+	--[[Add to hand
 	local e1=Effect.CreateEffect(c)
 	e1:SetDescription(aux.Stringid(id,1))
 	e1:SetCategory(CATEGORY_TOHAND+CATEGORY_SEARCH)
@@ -24,13 +24,13 @@ function s.initial_effect(c)
 	c:RegisterEffect(e1)
 	local e2=e1:Clone()
 	e2:SetCode(EVENT_SPSUMMON_SUCCESS)
-	c:RegisterEffect(e2)
-	--LIGHT during Battle Phase
+	c:RegisterEffect(e2)]]--
+	--LIGHT during Battle Phase and board
 	local e3=Effect.CreateEffect(c)
 	e3:SetType(EFFECT_TYPE_FIELD)
 	e3:SetRange(LOCATION_FZONE)
-	e3:SetTargetRange(LOCATION_GRAVE,LOCATION_ONFIELD|LOCATION_GRAVE)
-	e3:SetCondition(function(e) return Duel.IsBattlePhase() end)
+	e3:SetTargetRange(LOCATION_GRAVE,LOCATION_HAND|LOCATION_ONFIELD|LOCATION_GRAVE)
+	e3:SetCondition(s.lightcon)
 	e3:SetCode(EFFECT_ADD_ATTRIBUTE)
 	e3:SetValue(ATTRIBUTE_LIGHT)
 	c:RegisterEffect(e3)
@@ -77,6 +77,15 @@ end
 s.listed_series={SET_ALLY_OF_JUSTICE,SET_FLAMVELL,SET_GENEX}
 s.ally_names={40155554,59482302}
 --Fix stats
+function s.confilter(c)
+	return (c:IsCode(s.ally_names) or c:IsSetCard(s.listed_series)) 
+		and c:IsMonster() 
+		and c:IsFaceup()
+end
+function s.lightcon(c,e,tp) 
+	local g=Duel.GetMatchingGroup(s.confilter,c:GetHandler():GetControler(),LOCATION_MZONE,0,nil) 
+	return Duel.IsBattlePhase() or g:GetSum(Card.GetLevel)>15 
+end
 function s.changegytg(e,c)
 	if c:GetFlagEffect(1)==0 then
 		c:RegisterFlagEffect(1,0,0,0)
@@ -102,10 +111,13 @@ end
 function s.tributetarget(e,c)
 	return c:IsAttribute(ATTRIBUTE_LIGHT) or not c:IsFaceup()
 end
+
+--Add on opp monster
 function s.thfilter(c,e,tp)
 	return (c:IsSetCard(s.listed_series) or c:IsCode(s.ally_names))
 		and c:IsAbleToHand()
-		and c:IsMonster()
+		and not c:IsCode(id)
+		--and c:IsMonster()
 		--and not Duel.IsExistingMatchingCard(s.uniquefilter,tp,LOCATION_MZONE|LOCATION_GRAVE|LOCATION_REMOVED,0,1,nil,c:GetCode())
 end
 function s.uniquefilter(c,code)

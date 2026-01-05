@@ -6,9 +6,9 @@ function s.initial_effect(c)
 	local e0=Effect.CreateEffect(c)
 	e0:SetType(EFFECT_TYPE_ACTIVATE)
 	e0:SetCode(EVENT_FREE_CHAIN)
-	e0:SetTarget(s.acttg)
-	e0:SetOperation(s.actop)
-	e0:SetCountLimit(1,id,EFFECT_COUNT_CODE_OATH)
+	--e0:SetTarget(s.acttg)
+	--e0:SetOperation(s.actop)
+	--e0:SetCountLimit(1,id,EFFECT_COUNT_CODE_OATH)
 	e0:SetCost(s.actcost)
 	c:RegisterEffect(e0)
 	--Can be activated from the hand
@@ -29,9 +29,24 @@ function s.initial_effect(c)
 	e2:SetTarget(s.immtg)
 	e2:SetValue(s.immval)
 	c:RegisterEffect(e2)
+	--Add to hand
+	local e3=Effect.CreateEffect(c)
+	e3:SetDescription(aux.Stringid(id,2))
+	e3:SetCategory(CATEGORY_TOHAND+CATEGORY_SEARCH)
+	e3:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
+	e3:SetProperty(EFFECT_FLAG_DAMAGE_STEP+EFFECT_FLAG_DELAY)
+	e3:SetCode(EVENT_SUMMON_SUCCESS)
+	e3:SetRange(LOCATION_SZONE)
+	e3:SetCondition(function(e,tp,eg,ep,ev,re,r,rp) return eg:IsExists(Card.IsSummonPlayer,1,nil,1-tp) end)
+	e3:SetTarget(s.thtg)
+	e3:SetOperation(s.thop)
+	c:RegisterEffect(e3)
+	local e4=e3:Clone()
+	e4:SetCode(EVENT_SPSUMMON_SUCCESS)
+	c:RegisterEffect(e4)
 	--Change to LIGHT or face-down
 	local e6=Effect.CreateEffect(c)
-	e6:SetDescription(aux.Stringid(id,2))
+	e6:SetDescription(aux.Stringid(id,3))
 	e6:SetCategory(CATEGORY_POSITION)
 	e6:SetType(EFFECT_TYPE_QUICK_O)
 	e6:SetProperty(EFFECT_FLAG_CARD_TARGET)
@@ -48,8 +63,9 @@ s.ally_names={40155554,59482302}
 
 --activate from hand
 function s.actcostfilter(c)
-	return (c:IsCode(s.ally_names) or c:IsSetCard(s.ally_series)) 
-		and c:IsMonster() and c:IsDiscardable()
+	return c:IsDiscardable() 
+		--and (c:IsCode(s.ally_names) or c:IsSetCard(s.ally_series)) 
+		--and c:IsMonster() 
 end
 function s.actcon(e,c)
 	if c==nil then return true end
@@ -93,11 +109,48 @@ end
 
 --immune
 function s.immtg(e,c)
-	return (c:IsCode(s.ally_names) or c:IsSetCard(s.ally_series)) and c:IsMonster() and not c:IsAttack(c:GetBaseAttack())
+	return (c:IsCode(s.ally_names) or c:IsSetCard(s.ally_series)) 
+		and c:IsMonster() 
+		and (not c:IsAttack(c:GetBaseAttack()) 
+		or c:IsAttributeExcept(c:GetOriginalAttribute()))
 end
 function s.immval(e,te)
 	return te:GetOwnerPlayer()==1-e:GetHandlerPlayer() and te:IsActivated()
 end
+
+--Add on opp monster
+function s.uniquefilter(c,code)
+	return c:IsCode(code) and c:IsFaceup() and c:IsMonster()
+end
+function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk)
+	local c=e:GetHandler()
+	if chk==0 then return Duel.IsExistingMatchingCard(s.thfilter,tp,LOCATION_DECK,0,1,nil,e,tp)
+		end
+	Duel.SetOperationInfo(0,CATEGORY_TOHAND,nil,1,tp,LOCATION_DECK)
+end
+function s.nsfilter(c)
+	return (c:IsSetCard(s.listed_series) or c:IsCode(s.ally_names))
+		and c:IsSummonable(true,nil)
+end
+function s.thop(e,tp,eg,ep,ev,re,r,rp)
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_ATOHAND)
+	local tc=Duel.SelectMatchingCard(tp,s.thfilter,tp,LOCATION_DECK,0,1,1,nil,e,tp):GetFirst()
+	if tc and Duel.SendtoHand(tc,nil,REASON_EFFECT)>0 and tc:IsLocation(LOCATION_HAND) then
+		Duel.ConfirmCards(1-tp,tc)
+		Duel.ShuffleHand(tp)
+		--Normal Summon
+		--[[if Duel.IsExistingMatchingCard(s.nsfilter,tp,LOCATION_HAND|LOCATION_MZONE,0,1,nil)
+			and Duel.SelectYesNo(tp,aux.Stringid(id,0)) then
+			Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SUMMON)
+			local sc=Duel.SelectMatchingCard(tp,s.nsfilter,tp,LOCATION_HAND|LOCATION_MZONE,0,1,1,nil):GetFirst()
+			if sc then
+				Duel.BreakEffect()
+				Duel.SummonOrSet(tp,sc,true,nil)
+			end
+		end]]--
+	end
+end
+
 
 --Change Attribute or to facedown
 function s.posfilter(c)

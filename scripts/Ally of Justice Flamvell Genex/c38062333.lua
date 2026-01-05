@@ -6,6 +6,7 @@ function s.initial_effect(c)
 	local e0=Effect.CreateEffect(c)
 	e0:SetType(EFFECT_TYPE_ACTIVATE)
 	e0:SetCode(EVENT_FREE_CHAIN)
+	e0:SetDescription(aux.Stringid(id,0))
 	c:RegisterEffect(e0)
 	--[[Recycle banished
 	local e1=Effect.CreateEffect(c)
@@ -31,7 +32,7 @@ function s.initial_effect(c)
 	--Extender
 		--Sent
 	local e2=Effect.CreateEffect(c)
-	e2:SetDescription(aux.Stringid(id,3))
+	e2:SetDescription(aux.Stringid(id,1))
 	e2:SetCategory(CATEGORY_TOHAND+CATEGORY_SPECIAL_SUMMON+CATEGORY_SUMMON)
 	e2:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_F)
 	e2:SetProperty(EFFECT_FLAG_CARD_TARGET+EFFECT_FLAG_DELAY+EFFECT_FLAG_DAMAGE_STEP)
@@ -253,7 +254,7 @@ function s.sp2tg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	if chk==0 then return #g>0 end
 	local c=nil
 	if #g>1 then
-		Duel.Hint(HINT_SELECTMSG,tp,aux.Stringid(id,3))
+		Duel.Hint(HINT_SELECTMSG,tp,aux.Stringid(id,1))
 		c=g:Select(tp,1,1,nil):GetFirst()
 	else
 		c=g:GetFirst()
@@ -274,29 +275,33 @@ end
 function s.higherfilter(c,att,lv)
 	return c:IsMonster() and c:IsSetCard(s.listed_series) and c:GetLevel()>lv and  c:IsAttributeExcept(att)
 end
-function s.exconfilter(c,e,tp)
+function s.exconfilter(c)
 	return (c:IsCode(s.ally_names) or c:IsSetCard(s.listed_series)) 
 		and c:IsMonster() 
+		and c:IsFaceup()
 end
 function s.sp2op(e,tp,eg,ep,ev,re,r,rp)
 	local tc=Duel.GetFirstTarget()
 	if not tc:IsRelateToEffect(e) then return end
-	local g1=Duel.GetMatchingGroup(s.exconfilter,tp,LOCATION_MZONE,0,nil)
+	local g1=Duel.GetMatchingGroup(s.exconfilter,tp,LOCATION_MZONE,0,nil) 
 	--local btrue=Duel.IsExistingMatchingCard(s.higherfilter,tp,LOCATION_MZONE,0,1,nil,tc:GetOriginalAttribute(),tc:GetLevel())
 	local b1=Duel.GetLocationCount(1-tp,LOCATION_MZONE)>0 and tc:IsCanBeSpecialSummoned(e,0,tp,true,false,POS_FACEUP,1-tp)
 	local b2=g1:GetSum(Card.GetLevel)>5
 	if not (b1 or b2) then return end
 	if b1 and not b2 then return Duel.SpecialSummon(tc,0,tp,1-tp,true,false,POS_FACEUP) end
 	local op=Duel.SelectEffect(tp,
-		{b1,aux.Stringid(id,3)},
-		{b2,aux.Stringid(id,4)})
+		{b1,aux.Stringid(id,2)},
+		{b2,aux.Stringid(id,3)})
 	if op==1 then
 		Duel.SpecialSummon(tc,0,tp,1-tp,true,false,POS_FACEUP)
 	elseif op==2 or not b1 then
 		Duel.SendtoHand(tc,nil,REASON_EFFECT)
 		Duel.ConfirmCards(1-tp,tc)
-		if tc:GetLocation()==LOCATION_HAND and Duel.SelectYesNo(tp,aux.Stringid(id,5)) then
-			Duel.Summon(tp,tc,true,nil)
+		if Duel.IsExistingMatchingCard(Card.IsSummonable,tp,LOCATION_HAND|LOCATION_MZONE,0,1,nil,true,nil) and Duel.SelectYesNo(tp,aux.Stringid(id,4)) then
+			local sc=Duel.SelectMatchingCard(tp,Card.IsSummonable,tp,LOCATION_HAND|LOCATION_MZONE,0,1,1,nil,true,nil):GetFirst()
+			if sc then
+				Duel.SummonOrSet(tp,sc,true,nil)
+			end
 		else
 			Duel.ShuffleHand(tp)
 		end
