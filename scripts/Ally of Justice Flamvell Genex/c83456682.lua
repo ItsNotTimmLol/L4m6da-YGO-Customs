@@ -84,7 +84,7 @@ function s.confilter(c)
 end
 function s.lightcon(c,e,tp) 
 	local g=Duel.GetMatchingGroup(s.confilter,c:GetHandler():GetControler(),LOCATION_MZONE,0,nil) 
-	return Duel.IsBattlePhase() or g:GetSum(Card.GetLevel)>15 
+	return Duel.IsBattlePhase() or g:GetSum(Card.GetLevel)>20 
 end
 function s.changegytg(e,c)
 	if c:GetFlagEffect(1)==0 then
@@ -116,7 +116,8 @@ end
 function s.thfilter(c,e,tp)
 	return (c:IsSetCard(s.listed_series) or c:IsCode(s.ally_names))
 		and c:IsAbleToHand()
-		and not c:IsCode(id)
+		and not (c:IsType(TYPE_FIELD) and c:IsType(TYPE_SPELL))
+		--and not c:IsCode(id)
 		--and c:IsMonster()
 		--and not Duel.IsExistingMatchingCard(s.uniquefilter,tp,LOCATION_MZONE|LOCATION_GRAVE|LOCATION_REMOVED,0,1,nil,c:GetCode())
 end
