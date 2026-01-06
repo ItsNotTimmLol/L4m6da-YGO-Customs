@@ -133,22 +133,30 @@ function s.initial_effect(c)
 	c:RegisterEffect(e15)
 end
 s.listed_series={SET_ALLY_OF_JUSTICE,SET_FLAMVELL,SET_GENEX}
+s.allied_series={SET_ALLY_OF_JUSTICE,SET_FLAMVELL,SET_GENEX,SET_R_GENEX,SET_GENEX_ALLY}
 s.ally_names={40155554,59482302}
 --Fix stats
 function s.setcodetg(e,c)
-	return (c:IsCode(s.ally_names) or c:GetOriginalSetCard()==SET_ALLY_OF_JUSTICE or c:GetOriginalSetCard()==SET_FLAMVELL or c:GetOriginalSetCard()==SET_GENEX or c:GetOriginalSetCard()==SET_R_GENEX or c:GetOriginalSetCard()==SET_GENEX_ALLY) and c:IsMonster()
+	return (c:GetOriginalCode()==40155554 or c:GetOriginalCode()==59482302 or c:GetOriginalSetCard()==SET_ALLY_OF_JUSTICE or c:GetOriginalSetCard()==SET_FLAMVELL or c:GetOriginalSetCard()==SET_GENEX or c:GetOriginalSetCard()==SET_R_GENEX or c:GetOriginalSetCard()==SET_GENEX_ALLY) and c:GetType()==TYPE_MONSTER
 end
 function s.changegytg(e,c)
+	if not (c:IsOriginalCode(s.ally_names) or c:IsOriginalSetCard(s.allied_series)) then return false end
 	if c:GetFlagEffect(1)==0 then
 		c:RegisterFlagEffect(1,0,0,0)
-		local eff={c:GetCardEffect(EFFECT_NECRO_VALLEY)}
+		local eff
+		if c:IsLocation(LOCATION_MZONE) then
+			eff={Duel.GetPlayerEffect(c:GetControler(),EFFECT_NECRO_VALLEY)}
+		else
+			eff={c:GetCardEffect(EFFECT_NECRO_VALLEY)}
+		end
 		c:ResetFlagEffect(1)
 		for _,te in ipairs(eff) do
 			local op=te:GetOperation()
 			if not op or op(e,c) then return false end
 		end
 	end
-	return (c:IsCode(40155554) or c:IsCode(59482302) or c:GetOriginalSetCard()==SET_ALLY_OF_JUSTICE or c:GetOriginalSetCard()==SET_FLAMVELL or c:GetOriginalSetCard()==SET_GENEX or c:GetOriginalSetCard()==SET_R_GENEX or c:GetOriginalSetCard()==SET_GENEX_ALLY) and c:IsMonster()
+	return true
+	--return (c:GetOriginalCode()==40155554 or c:GetOriginalCode()==59482302 or c:GetOriginalSetCard()==SET_ALLY_OF_JUSTICE or c:GetOriginalSetCard()==SET_FLAMVELL or c:GetOriginalSetCard()==SET_GENEX or c:GetOriginalSetCard()==SET_R_GENEX or c:GetOriginalSetCard()==SET_GENEX_ALLY) and c:GetType()==TYPE_MONSTER
 end
 function s.statval(e,c,re,chk)
 	if chk==0 then return true end

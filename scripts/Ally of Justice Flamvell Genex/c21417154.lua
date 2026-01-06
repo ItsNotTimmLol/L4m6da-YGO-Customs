@@ -119,7 +119,7 @@ function s.immval(e,te)
 end
 
 --Add on opp monster
-function s.thfilter(c,e,tp)
+function s.thfilter(c)
 	return (c:IsSetCard(s.listed_series) or c:IsCode(s.ally_names))
 		and c:IsAbleToHand()
 		and not c:IsCode(id)
