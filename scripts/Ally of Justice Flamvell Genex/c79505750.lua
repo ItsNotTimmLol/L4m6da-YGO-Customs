@@ -21,10 +21,10 @@ function s.initial_effect(c)
 	e1:SetType(EFFECT_TYPE_SINGLE)
 	e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_UNCOPYABLE)
 	e1:SetCode(EFFECT_CANNOT_BE_LINK_MATERIAL)
-	e1:SetValue(1)
+	e1:SetValue(s.matlimit)
 	c:RegisterEffect(e1)
 	local e2=e1:Clone()
-	e2:SetCode(EFFECT_CANNOT_BE_FUSION_MATERIAL)
+	e2:SetCode(EFFECT_CANNOT_BE_SYNCHRO_MATERIAL)
 	c:RegisterEffect(e2)
 	--[[non-tuner
 	local e3=Effect.CreateEffect(c)
@@ -73,14 +73,19 @@ end
 s.listed_series={SET_ALLY_OF_JUSTICE,SET_FLAMVELL,SET_GENEX}
 s.ally_series={SET_ALLY_OF_JUSTICE,SET_GENEX_ALLY}
 s.ally_names={40155554,59482302}
+--Materials
 function s.mfilter1(c,fc,sumtype,tp,sub,mg,sg)
-	return c:IsMonster() and (c:IsLocation(LOCATION_HAND) or c:IsFaceup())
+	return c:IsMonster() 
+		and (c:IsLocation(LOCATION_HAND) or c:IsFaceup())
 		and (c:IsCode(s.ally_names) or c:IsSetCard(s.listed_series)) 
+		and not c:IsType(TYPE_FUSION)
 end
 function s.mfilter2(c,fc,sumtype,tp,sub,mg,sg)
 	return c:IsMonster() and (c:IsLocation(LOCATION_HAND) or c:IsFaceup())
 		and (c:IsCode(s.ally_names) or c:IsSetCard(s.listed_series)) 
 end
+
+
 --Modified Summoning Conditions
 function s.splimit(e,se,sp,st)
 	return e:GetHandler():GetLocation()~=LOCATION_EXTRA
@@ -94,17 +99,26 @@ function s.contactop(g,tp)
 	if #fd>0 then Duel.ConfirmCards(1-tp,fd) end
 	Duel.SendtoDeck(g,nil,SEQ_DECKSHUFFLE,REASON_COST|REASON_MATERIAL)
 end
+
 --[[Synchro Material Check
 function s.syncheck(e,c,tp) --v1
 	e:GetHandler():AssumeProperty(ASSUME_RACE,RACE_PYRO)
 	e:GetHandler():AssumeProperty(ASSUME_ATTRIBUTE,ATTRIBUTE_WIND|ATTRIBUTE_WATER|ATTRIBUTE_FIRE|ATTRIBUTE_EARTH)
 	return true
 end
+
 --Ally Machine Normal Summon reduction
 function s.allynsfilter(c) --v1
 	return (c:IsCode(s.ally_names) or c:IsSetCard(SET_ALLY_OF_JUSTICE) or c:IsSetCard(SET_GENEX_ALLY))
 	and c:IsRace(RACE_MACHINE)
 end]]--
+
+--Restrict summon use
+function s.matlimit(e,c)
+	if not c then return false end
+	return not c:IsSetCard(s.listed_series)
+end
+
 
 --Add
 function s.thcon(e,tp,eg,ep,ev,re,r,rp)

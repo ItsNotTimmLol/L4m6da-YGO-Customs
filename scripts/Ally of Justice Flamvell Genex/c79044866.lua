@@ -96,7 +96,7 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 			Duel.ConfirmCards(1-tp,sg)
 			rg:Merge(sg)
 		end
-		local td=rg:FilterCount(Card.IsLocation,nil,LOCATION_HAND)
+		local td=rg:FilterCount(Card.IsLocation,nil,LOCATION_HAND|LOCATION_EXTRA)
 		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
 		Duel.SendtoGrave(rg,REASON_EFFECT)
 		if tc and #rg>0 and Duel.SpecialSummon(tc,SUMMON_TYPE_SYNCHRO,tp,tp,false,false,POS_FACEUP) and Duel.Equip(tp,c,tc) then
@@ -111,9 +111,9 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 		end
 		tc:CompleteProcedure() 
 		if Duel.IsExistingMatchingCard(s.rthfilter,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,1,nil,tp)
-			and td>0 and Duel.SelectYesNo(tp,aux.Stringid(id,1)) then
+			and td>1 and Duel.SelectYesNo(tp,aux.Stringid(id,1)) then
 			Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_RTOHAND)
-			local g=Duel.SelectMatchingCard(tp,s.rthfilter,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,1,td,nil,tp)
+			local g=Duel.SelectMatchingCard(tp,s.rthfilter,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,1,td//2,nil,tp)
 			if #g>0 then
 				Duel.HintSelection(g)
 				Duel.BreakEffect()
