@@ -57,7 +57,7 @@ function s.initial_effect(c)
 	e6:SetOperation(s.nsop)
 	c:RegisterEffect(e6)
 end
-s.listed_series={SET_FLAMVELL,SET_GENEX}
+s.listed_series={SET_ALLY_OF_JUSTICE,SET_FLAMVELL,SET_GENEX}
 s.ally_series={SET_ALLY_OF_JUSTICE,SET_FLAMVELL,SET_GENEX}
 s.ally_names={40155554,59482302}
 
