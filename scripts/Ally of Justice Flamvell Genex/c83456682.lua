@@ -75,6 +75,7 @@ function s.initial_effect(c)
 	c:RegisterEffect(e8)
 end
 s.listed_series={SET_ALLY_OF_JUSTICE,SET_FLAMVELL,SET_GENEX}
+s.ally_series={SET_ALLY_OF_JUSTICE,SET_GENEX_ALLY}
 s.ally_names={40155554,59482302}
 --Fix stats
 function s.confilter(c)
@@ -82,9 +83,15 @@ function s.confilter(c)
 		and c:IsMonster() 
 		and c:IsFaceup()
 end
+function s.allymachinefilter(c)
+	return (c:IsCode(s.ally_names) or c:IsSetCard(s.ally_series)) 
+		and c:IsRace(RACE_MACHINE)
+		and c:IsMonster() 
+		and c:IsFaceup()
+end
 function s.lightcon(c,e,tp) 
 	local g=Duel.GetMatchingGroup(s.confilter,c:GetHandler():GetControler(),LOCATION_MZONE,0,nil) 
-	return Duel.IsBattlePhase() or g:GetSum(Card.GetLevel)>20 
+	return Duel.IsBattlePhase() or Duel.IsExistingMatchingCard(s.allymachinefilter,tp,LOCATION_MZONE,0,3,nil) --or g:GetSum(Card.GetLevel)>20 
 end
 function s.changegytg(e,c)
 	if c:GetFlagEffect(1)==0 then
