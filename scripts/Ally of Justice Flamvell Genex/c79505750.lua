@@ -8,7 +8,7 @@ function s.initial_effect(c)
 	Fusion.AddProcMixN(c,true,true,s.mfilter1,2)
 	Fusion.AddContactProc(c,s.contactfil,s.contactop,s.splimit)
 	--Only control 1
-	c:SetUniqueOnField(1,0,id)
+	--c:SetUniqueOnField(1,0,id)
 	--Must be either Fusion Summoned or Special Summoned by alternate procedure
 	local e0=Effect.CreateEffect(c)
 	e0:SetType(EFFECT_TYPE_SINGLE)

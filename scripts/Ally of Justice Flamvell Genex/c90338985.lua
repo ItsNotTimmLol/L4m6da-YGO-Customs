@@ -105,7 +105,7 @@ function s.op(e,tp,eg,ep,ev,re,r,rp)
 		if breakeffect then Duel.BreakEffect() end
 		local tc3=Duel.SelectMatchingCard(tp,s.nsfilter,tp,LOCATION_HAND|LOCATION_MZONE,0,1,1,nil):GetFirst()
 		if tc3 then
-			Duel.SummonOrSet(tp,sc,true,nil)
+			Duel.SummonOrSet(tp,tc3,true,nil)
 		end
 	end
 	local e0=Effect.CreateEffect(e:GetHandler())
