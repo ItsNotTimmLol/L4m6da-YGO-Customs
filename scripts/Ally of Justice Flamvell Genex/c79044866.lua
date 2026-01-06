@@ -42,9 +42,9 @@ function s.initial_effect(c)
 end
 s.listed_names={68505803}
 s.listed_series={SET_ALLY_OF_JUSTICE,SET_FLAMVELL,SET_GENEX}
-s.listed_names={68505803}
+s.ally_names={40155554,59482302}
 function s.spfilter(c,e,tp,lvl)
-	return (c:IsCode(s.listed_names) or c:IsSetCard(s.listed_series)) 
+	return (c:IsCode(s.ally_names) or c:IsSetCard(s.listed_series)) 
 		and c:IsType(TYPE_SYNCHRO)
 		and Duel.GetLocationCountFromEx(tp,tp,nil,c)>0
 		and c:IsCanBeSpecialSummoned(e,SUMMON_TYPE_SYNCHRO,tp,false,false)
@@ -52,13 +52,13 @@ function s.spfilter(c,e,tp,lvl)
 		and not c:IsPublic()
 end
 function s.spcostfilter1(c,e,tp)
-	return (c:IsCode(s.listed_names) or c:IsSetCard(s.listed_series))
+	return (c:IsCode(s.ally_names) or c:IsSetCard(s.listed_series))
 		and c:IsMonster()
 		and c:IsAbleToGrave()
 		--and not c:IsPublic()
 end
 function s.spcostfilter2(c,e,tp,tc)
-	return (c:IsCode(s.listed_names) or c:IsSetCard(s.listed_series))
+	return (c:IsCode(s.ally_names) or c:IsSetCard(s.listed_series))
 		and c:IsMonster()
 		and not c:IsCode(tc:GetCode())
 		and c:IsAbleToGrave()
