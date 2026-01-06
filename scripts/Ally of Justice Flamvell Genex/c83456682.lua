@@ -89,9 +89,9 @@ function s.allymachinefilter(c)
 		and c:IsMonster() 
 		and c:IsFaceup()
 end
-function s.lightcon(c,e,tp) 
-	local g=Duel.GetMatchingGroup(s.confilter,c:GetHandler():GetControler(),LOCATION_MZONE,0,nil) 
-	return Duel.IsBattlePhase() or Duel.IsExistingMatchingCard(s.allymachinefilter,tp,LOCATION_MZONE,0,3,nil) --or g:GetSum(Card.GetLevel)>20 
+function s.lightcon(e) 
+	--local g=Duel.GetMatchingGroup(s.confilter,e:GetHandlerPlayer(),LOCATION_MZONE,0,nil) 
+	return Duel.IsBattlePhase() or Duel.IsExistingMatchingCard(s.allymachinefilter,e:GetHandlerPlayer(),LOCATION_MZONE,0,3,nil,tp) --or g:GetSum(Card.GetLevel)>20 
 end
 function s.changegytg(e,c)
 	if c:GetFlagEffect(1)==0 then
