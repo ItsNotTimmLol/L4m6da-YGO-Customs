@@ -123,7 +123,7 @@ function s.thfilter(c,e,tp)
 	return (c:IsSetCard(s.listed_series) or c:IsCode(s.ally_names))
 		and c:IsAbleToHand()
 		and not c:IsCode(id)
-		--and c:IsMonster()
+		and c:IsMonster()
 		--and not Duel.IsExistingMatchingCard(s.uniquefilter,tp,LOCATION_MZONE|LOCATION_GRAVE|LOCATION_REMOVED,0,1,nil,c:GetCode())
 end
 function s.uniquefilter(c,code)
