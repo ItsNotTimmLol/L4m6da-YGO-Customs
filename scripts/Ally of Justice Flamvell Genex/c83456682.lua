@@ -171,7 +171,7 @@ end
 
 --Recycle
 function s.dtfilter(c)
-	return c:IsSetCard(SET_ALLY_OF_JUSTICE) and c:IsAbleToDeck()
+	return c:IsSetCard(s.listed_series) and c:IsAbleToDeck()
 end
 function s.dttg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return Duel.IsExistingMatchingCard(s.dtfilter,tp,LOCATION_GRAVE|LOCATION_REMOVED,0,1,nil) end

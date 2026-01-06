@@ -280,6 +280,33 @@ function s.exconfilter(c)
 		and c:IsMonster() 
 		and c:IsFaceup()
 end
+
+function s.sp2op(e,tp,eg,ep,ev,re,r,rp)
+	local tc=Duel.GetFirstTarget()
+	if not tc:IsRelateToEffect(e) then return end
+	local g1=Duel.GetMatchingGroup(s.exconfilter,tp,LOCATION_MZONE,0,nil)
+	local btrue=g1:GetSum(Card.GetLevel)>5
+	--local btrue=Duel.IsExistingMatchingCard(s.higherfilter,tp,LOCATION_MZONE,0,1,nil,tc:GetOriginalAttribute(),tc:GetLevel())
+	local b1=Duel.GetLocationCount(1-tp,LOCATION_MZONE)>0 and tc:IsCanBeSpecialSummoned(e,0,tp,true,false,POS_FACEUP,1-tp)
+	local b2=btrue
+	local b3=Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and tc:IsCanBeSpecialSummoned(e,0,tp,true,false) and btrue
+	if not (b1 or b2 or b3) then return end
+	if b1 and not btrue then return Duel.SpecialSummon(tc,0,tp,1-tp,true,false,POS_FACEUP) end
+	local op=Duel.SelectEffect(tp,
+		{b1,aux.Stringid(id,2)},
+		{b2,aux.Stringid(id,3)},
+		{b3,aux.Stringid(id,4)})
+	if op==1 then
+		Duel.SpecialSummon(tc,0,tp,1-tp,false,false,POS_FACEUP)
+	elseif op==2 or not (b2 and b3) then
+		Duel.SendtoHand(tc,nil,REASON_EFFECT)
+		Duel.ConfirmCards(1-tp,tc)
+	elseif op==3 or not (b1 and b2) then
+		Duel.SpecialSummon(tc,0,tp,tp,true,false,POS_FACEUP)
+	end
+end
+
+--[[old version
 function s.sp2op(e,tp,eg,ep,ev,re,r,rp)
 	local tc=Duel.GetFirstTarget()
 	if not tc:IsRelateToEffect(e) then return end
@@ -306,29 +333,6 @@ function s.sp2op(e,tp,eg,ep,ev,re,r,rp)
 			Duel.ShuffleHand(tp)
 		end
 	end
-end
-
---[[old version
-function s.sp2op(e,tp,eg,ep,ev,re,r,rp)
-	local tc=Duel.GetFirstTarget()
-	if not tc:IsRelateToEffect(e) then return end
-	local g1=Duel.GetMatchingGroup(s.exconfilter,tp,LOCATION_MZONE,0,nil)
-	local btrue=g1:GetSum(Card.GetLevel)>6
-	--local btrue=Duel.IsExistingMatchingCard(s.higherfilter,tp,LOCATION_MZONE,0,1,nil,tc:GetOriginalAttribute(),tc:GetLevel())
-	local b1=btrue
-	local b2=Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and tc:IsCanBeSpecialSummoned(e,0,tp,true,false) and btrue
-	local b3=Duel.GetLocationCount(1-tp,LOCATION_MZONE)>0 and tc:IsCanBeSpecialSummoned(e,0,tp,true,false,POS_FACEUP,1-tp)
-	if not (b1 or b2 or b3) then return end
-	if b3 and not btrue then return Duel.SpecialSummon(tc,0,tp,1-tp,true,false,POS_FACEUP) end
-	local op=Duel.SelectEffect(tp,
-		{b1,aux.Stringid(id,4)},
-		{b2,aux.Stringid(id,5)},
-		{b3,aux.Stringid(id,6)})
-	if op==1 then
-		Duel.SendtoHand(tc,nil,REASON_EFFECT)
-		Duel.ConfirmCards(1-tp,tc)
-	elseif op==2 or op==3 or not (b1 and b2) then
-		local target_player=op==2 and tp or 1-tp
-		if Duel.SpecialSummon(tc,0,tp,target_player,true,false,POS_FACEUP)==0 then return end
-	end
 end]]--
+
+

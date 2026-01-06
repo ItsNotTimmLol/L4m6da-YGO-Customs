@@ -19,12 +19,13 @@ s.aoj_series={SET_ALLY_OF_JUSTICE,SET_FLAMVELL,SET_GENEX}
 s.ally_names={40155554,59482302}
 function s.nsfilter(c)
 	return (c:IsSetCard(s.aoj_series) or c:IsCode(s.ally_names))
+		and c:IsMonster()
 		and c:IsSummonable(true,nil)
 end
 function s.tg(e,tp,eg,ep,ev,re,r,rp,chk)
-	local g1=Duel.GetMatchingGroup(s.sp1filter,tp,LOCATION_HAND,0,nil,e,tp)
+	local g1=Duel.GetMatchingGroup(s.sp1filter,tp,LOCATION_DECK,0,nil,e,tp)
 	local g2=Duel.GetMatchingGroup(s.sp2filter,tp,LOCATION_DECK,0,nil,e,tp)
-	local g3=Duel.GetMatchingGroup(s.nsfilter,tp,LOCATION_HAND,0,nil,e,tp)
+	local g3=Duel.GetMatchingGroup(s.nsfilter,tp,LOCATION_HAND|LOCATION_MZONE,0,nil,e,tp)
 	local ct=Duel.GetFieldGroupCount(tp,0,LOCATION_ONFIELD)
 	local ft=Duel.GetLocationCount(tp,LOCATION_MZONE)
 	if ft<ct then ct=ft end
@@ -32,26 +33,26 @@ function s.tg(e,tp,eg,ep,ev,re,r,rp,chk)
 	local b1=#g1>0
 	local b2=(ct>0 and #g2>0 and Duel.GetFlagEffect(tp,id)==0)
 	local b3=#g3>0
-	if chk==0 then return b1 or (b1 and b2) or b3 end
-	Duel.SetPossibleOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,1-tp,LOCATION_HAND)
-	Duel.SetPossibleOperationInfo(0,CATEGORY_SUMMON,nil,1,tp,LOCATION_HAND)
+	if chk==0 then return b1 or b2 or (b1 and b2) or b3 end
+	Duel.SetPossibleOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,1-tp,LOCATION_DECK)
 	Duel.SetPossibleOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,ct,tp,LOCATION_DECK)
+	Duel.SetPossibleOperationInfo(0,CATEGORY_SUMMON,nil,1,tp,LOCATION_DECK)
 end
 function s.op(e,tp,eg,ep,ev,re,r,rp)
-	local g1=Duel.GetMatchingGroup(s.sp1filter,tp,LOCATION_HAND,0,nil,e,tp)
+	local g1=Duel.GetMatchingGroup(s.sp1filter,tp,LOCATION_DECK,0,nil,e,tp)
 	local g2=Duel.GetMatchingGroup(s.sp2filter,tp,LOCATION_DECK,0,nil,e,tp)
-	local g3=Duel.GetMatchingGroup(s.nsfilter,tp,LOCATION_HAND,0,nil,e,tp)
+	local g3=Duel.GetMatchingGroup(s.nsfilter,tp,LOCATION_HAND|LOCATION_MZONE,0,nil,e,tp)
 	local ct1=Duel.GetFieldGroupCount(tp,0,LOCATION_ONFIELD)
 	local b1=#g1>0
 	local b2=(ct1>0 and #g2>0 and Duel.GetFlagEffect(tp,id)==0)
 	local b3=#g3>0
-	if not (b1 or b2 or b3) then return end
-	if b1 and (not (b2 and b3)) or Duel.SelectYesNo(tp,aux.Stringid(id,1)) then
+	if not (b1 or b2 or (b1 and b2) or b3) then return end
+	if b1 and (not (b2 or b3) or Duel.SelectYesNo(tp,aux.Stringid(id,1))) then
 		local sg1=aux.SelectUnselectGroup(g1,e,tp,1,1,nil,1,tp,HINTMSG_SPSUMMON)
 		local tc=sg1:GetFirst()
 		if tc then
 			for tc in aux.Next(sg1) do
-				Duel.SpecialSummonStep(tc,0,tp,1-tp,false,false,POS_FACEDOWN_DEFENSE)
+				Duel.SpecialSummonStep(tc,0,tp,1-tp,false,false,POS_FACEUP)
 				tc:RegisterFlagEffect(id,RESET_EVENT|RESETS_STANDARD,EFFECT_FLAG_CLIENT_HINT,1,0,aux.Stringid(id,5))
 			end
 		end
@@ -104,16 +105,18 @@ end
 
 
 --Basically soul charge
+--To opp
 function s.sp1filter(c,e,tp)
-	return --[[(c:IsCode(s.ally_names) or c:IsSetCard(s.aoj_series)) 
-		and ((Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and c:IsCanBeSpecialSummoned(e,0,tp,false,false,POS_FACEUP,tp))
-			or --]](Duel.GetLocationCount(1-tp,LOCATION_MZONE)>0 and c:IsCanBeSpecialSummoned(e,0,tp,false,false,POS_FACEDOWN_DEFENSE,1-tp))--)
+	return (c:IsCode(s.ally_names) or c:IsSetCard(s.aoj_series)) 
+		--and ((Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and c:IsCanBeSpecialSummoned(e,0,tp,false,false,POS_FACEUP,tp))
+			and (Duel.GetLocationCount(1-tp,LOCATION_MZONE)>0 and c:IsCanBeSpecialSummoned(e,0,tp,false,false,POS_FACEUP,1-tp))--)
 		and c:IsMonster()
 end
+--To tp
 function s.sp2filter(c,e,tp)
 	return (c:IsCode(s.ally_names) or c:IsSetCard(s.aoj_series)) 
-		and ((Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and c:IsCanBeSpecialSummoned(e,0,tp,false,false,POS_FACEUP,tp))
-			or (Duel.GetLocationCount(1-tp,LOCATION_MZONE)>0 and c:IsCanBeSpecialSummoned(e,0,tp,false,false,POS_FACEUP,1-tp)))
+		and ((Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and c:IsCanBeSpecialSummoned(e,0,tp,false,false,POS_FACEUP,tp)))
+			--or (Duel.GetLocationCount(1-tp,LOCATION_MZONE)>0 and c:IsCanBeSpecialSummoned(e,0,tp,false,false,POS_FACEUP,1-tp)))
 		--and not Duel.IsExistingMatchingCard(s.uniquefilter,tp,LOCATION_MZONE|LOCATION_GRAVE|LOCATION_REMOVED,0,1,nil,c:GetCode())
 		and c:IsMonster() 
 end
