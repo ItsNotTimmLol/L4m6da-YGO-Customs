@@ -138,7 +138,7 @@ function s.spfilter(c,e,tp)
 		and c:IsRace(RACE_MACHINE)
 		and (Duel.GetLocationCount(tp,LOCATION_MZONE)>0 
 		and c:IsCanBeSpecialSummoned(e,0,tp,false,false,POS_FACEUP,tp))
-		and not Duel.IsExistingMatchingCard(s.uniquefilter,tp,LOCATION_GRAVE|LOCATION_REMOVED,0,1,nil,c:GetCode())
+		--and not Duel.IsExistingMatchingCard(s.uniquefilter,tp,LOCATION_GRAVE|LOCATION_REMOVED,0,1,nil,c:GetCode())
 		and c:IsMonster() 
 end
 function s.uniquefilter(c,code)
