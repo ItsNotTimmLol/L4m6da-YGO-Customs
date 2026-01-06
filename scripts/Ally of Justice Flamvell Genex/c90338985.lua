@@ -47,28 +47,32 @@ function s.op(e,tp,eg,ep,ev,re,r,rp)
 	local b2=(ct1>0 and #g2>0 and Duel.GetFlagEffect(tp,id)==0)
 	local b3=#g3>0
 	if not (b1 or b2 or (b1 and b2) or b3) then return end
+	local breakeffect=false
 	if b1 and (not (b2 or b3) or Duel.SelectYesNo(tp,aux.Stringid(id,1))) then
 		local sg1=aux.SelectUnselectGroup(g1,e,tp,1,1,nil,1,tp,HINTMSG_SPSUMMON)
-		local tc=sg1:GetFirst()
-		if tc then
-			for tc in aux.Next(sg1) do
-				Duel.SpecialSummonStep(tc,0,tp,1-tp,false,false,POS_FACEUP)
-				tc:RegisterFlagEffect(id,RESET_EVENT|RESETS_STANDARD,EFFECT_FLAG_CLIENT_HINT,1,0,aux.Stringid(id,5))
+		local tc1=sg1:GetFirst()
+		if tc1 then
+			for tc1 in aux.Next(sg1) do
+				Duel.SpecialSummonStep(tc1,0,tp,1-tp,false,false,POS_FACEUP)
+				tc1:RegisterFlagEffect(id,RESET_EVENT|RESETS_STANDARD,EFFECT_FLAG_CLIENT_HINT,1,0,aux.Stringid(id,5))
 			end
 		end
 		Duel.SpecialSummonComplete()
+		breakeffect=true
 	end
 	local ct2=Duel.GetFieldGroupCount(tp,0,LOCATION_ONFIELD)
 	b2=(ct2>0 and #g2>0 and Duel.GetFlagEffect(tp,id)==0)
-	if b2 and (not b3 or Duel.SelectYesNo(tp,aux.Stringid(id,2))) then
+	if b2 and (not b3 or Duel.SelectYesNo(tp,aux.Stringid(id,2)) or not breakeffect) then
+		g2=Duel.GetMatchingGroup(s.sp2filter,tp,LOCATION_DECK,0,nil,e,tp)
 		local ft=Duel.GetLocationCount(tp,LOCATION_MZONE)
 		if ft<ct2 then ct2=ft end
 		if Duel.IsPlayerAffectedByEffect(tp,CARD_BLUEEYES_SPIRIT) then ct2=1 end
+		if breakeffect then Duel.BreakEffect() end
 		local sg2=aux.SelectUnselectGroup(g2,e,tp,0,ct2,nil,1,tp,HINTMSG_SPSUMMON)
-		tc=sg2:GetFirst()
-		for tc in aux.Next(sg2) do
-			Duel.SpecialSummonStep(tc,0,tp,tp,false,false,POS_FACEUP)
-			tc:RegisterFlagEffect(id,RESET_EVENT|RESETS_STANDARD,EFFECT_FLAG_CLIENT_HINT,1,0,aux.Stringid(id,5))
+		local tc2=sg2:GetFirst()
+		for tc2 in aux.Next(sg2) do
+			Duel.SpecialSummonStep(tc2,0,tp,tp,false,false,POS_FACEUP)
+			tc2:RegisterFlagEffect(id,RESET_EVENT|RESETS_STANDARD,EFFECT_FLAG_CLIENT_HINT,1,0,aux.Stringid(id,5))
 			Duel.RegisterFlagEffect(tp,id,RESET_PHASE|PHASE_END,0,1)
 			--sg1:Merge(sg2)
 		end
@@ -91,16 +95,31 @@ function s.op(e,tp,eg,ep,ev,re,r,rp)
 		e1:SetTargetRange(1,0)
 		e1:SetReset(RESET_PHASE|PHASE_END)
 		Duel.RegisterEffect(e1,tp)
+		breakeffect=true
 	end
 	g3=Duel.GetMatchingGroup(s.nsfilter,tp,LOCATION_HAND,0,nil,e,tp)
 	b3=#g3>0
-	if b3 and Duel.SelectYesNo(tp,aux.Stringid(id,3)) then
+	if b3 and (Duel.SelectYesNo(tp,aux.Stringid(id,3)) or not breakeffect) then
+		g3=Duel.GetMatchingGroup(s.nsfilter,tp,LOCATION_HAND|LOCATION_MZONE,0,nil,e,tp)
 		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SUMMON)
-		local sc=Duel.SelectMatchingCard(tp,s.nsfilter,tp,LOCATION_HAND|LOCATION_MZONE,0,1,1,nil):GetFirst()
-		if sc then
+		if breakeffect then Duel.BreakEffect() end
+		local tc3=Duel.SelectMatchingCard(tp,s.nsfilter,tp,LOCATION_HAND|LOCATION_MZONE,0,1,1,nil):GetFirst()
+		if tc3 then
 			Duel.SummonOrSet(tp,sc,true,nil)
 		end
 	end
+	local e0=Effect.CreateEffect(e:GetHandler())
+	e0:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
+	e0:SetCode(EVENT_PHASE+PHASE_END)
+	e0:SetProperty(EFFECT_FLAG_IGNORE_IMMUNE)
+	e0:SetReset(RESET_PHASE|PHASE_END)
+	e0:SetDescription(aux.Stringid(id,6))
+	e0:SetCountLimit(1)
+	--e0:SetLabel(fid)
+	--e0:SetLabelObject(g)
+	--e0:SetCondition(s.descon)
+	e0:SetOperation(s.desop)
+	Duel.RegisterEffect(e0,tp)
 end
 
 
@@ -212,7 +231,7 @@ function s.sp2tg(e,tp,eg,ep,ev,re,r,rp,chk)
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_DECK)
 end
 function s.sp2op(e,tp,eg,ep,ev,re,r,rp)
-	local fid=e:GetHandler():GetFieldID()
+	--local fid=e:GetHandler():GetFieldID()
 	local ft=Duel.GetLocationCount(tp,LOCATION_MZONE)
 	if ft>3 then ft=3 end
 	if Duel.IsPlayerAffectedByEffect(tp,CARD_BLUEEYES_SPIRIT) then ft=1 end
