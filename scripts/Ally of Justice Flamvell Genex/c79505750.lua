@@ -131,6 +131,7 @@ end
 function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return Duel.IsExistingMatchingCard(s.thfilter,tp,LOCATION_DECK,0,1,nil) end
 	Duel.SetOperationInfo(0,CATEGORY_TOHAND,nil,1,tp,LOCATION_DECK)
+	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_DECK)
 end
 function s.spfilter(c,e,tp)
 	return (c:IsCode(s.ally_names) or c:IsSetCard(s.ally_series)) 
@@ -144,9 +145,14 @@ end
 function s.uniquefilter(c,code)
 	return c:IsCode(code) and c:IsFaceup() and c:IsMonster()
 end
+function s.rescon(sg,e,tp)
+	return sg:IsExists(Card.IsMonster(),1,nil)
+end
 function s.thop(e,tp,eg,ep,ev,re,r,rp)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_ATOHAND)
-	local g1=Duel.SelectMatchingCard(tp,s.thfilter,tp,LOCATION_DECK,0,1,1,nil)
+	local g=Duel.GetMatchingGroup(s.thfilter,tp,LOCATION_DECK,0,nil
+	local g1=aux.SelectUnselectGroup(g,e,tp,1,2,s.rescon,1,tp,HINTMSG_ATOHAND)
+	--local g1=Duel.SelectMatchingCard(tp,s.thfilter,tp,LOCATION_DECK,0,1,1,nil)
 	if #g1==0 or Duel.SendtoHand(g1,nil,REASON_EFFECT)==0 then return end
 	Duel.ConfirmCards(1-tp,g1)
 	Duel.ShuffleHand(tp)
@@ -156,7 +162,7 @@ function s.thop(e,tp,eg,ep,ev,re,r,rp)
 		ft=math.min(ft,2)
 		if Duel.IsPlayerAffectedByEffect(tp,CARD_BLUEEYES_SPIRIT) then ft=1 end
 		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
-		local sg=aux.SelectUnselectGroup(g2,e,tp,1,ft,aux.dncheck,1,tp,HINTMSG_SPSUMMON)
+		local sg=aux.SelectUnselectGroup(g2,e,tp,1,1,aux.dncheck,1,tp,HINTMSG_SPSUMMON)
 		if #sg>0 then
 			Duel.SpecialSummon(sg,0,tp,tp,false,false,POS_FACEUP)
 		end

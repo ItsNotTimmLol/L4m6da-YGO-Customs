@@ -105,7 +105,7 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 			Duel.ConfirmCards(1-tp,sg)
 			rg:Merge(sg)
 		end
-		local td=rg:FilterCount(Card.IsLocation,nil,LOCATION_HAND|LOCATION_EXTRA)
+		local td=rg:FilterCount(Card.IsLocation,nil,LOCATION_HAND|LOCATION_EXTRA|LOCATION_ONFIELD)
 		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
 		Duel.SendtoGrave(rg,REASON_EFFECT)
 		if tc and #rg>0 and Duel.SpecialSummon(tc,SUMMON_TYPE_SYNCHRO,tp,tp,false,false,POS_FACEUP) and Duel.Equip(tp,c,tc) then
