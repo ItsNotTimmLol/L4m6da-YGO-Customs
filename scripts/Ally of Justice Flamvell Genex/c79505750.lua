@@ -150,7 +150,7 @@ function s.rescon(sg,e,tp)
 end
 function s.thop(e,tp,eg,ep,ev,re,r,rp)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_ATOHAND)
-	local g=Duel.GetMatchingGroup(s.thfilter,tp,LOCATION_DECK,0,nil
+	local g=Duel.GetMatchingGroup(s.thfilter,tp,LOCATION_DECK,0,nil)
 	local g1=aux.SelectUnselectGroup(g,e,tp,1,2,s.rescon,1,tp,HINTMSG_ATOHAND)
 	--local g1=Duel.SelectMatchingCard(tp,s.thfilter,tp,LOCATION_DECK,0,1,1,nil)
 	if #g1==0 or Duel.SendtoHand(g1,nil,REASON_EFFECT)==0 then return end
