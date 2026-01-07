@@ -121,7 +121,7 @@ end
 
 --Add on opp monster
 function s.thfilter(c,e,tp)
-	return (c:IsSetCard(s.listed_series) or c:IsCode(s.ally_names))
+	return (c:IsSetCard(s.listed_series))
 		and c:IsAbleToHand()
 		--and not (c:IsType(TYPE_FIELD) and c:IsType(TYPE_SPELL))
 		and not c:IsCode(id)

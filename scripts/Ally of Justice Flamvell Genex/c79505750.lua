@@ -145,8 +145,8 @@ end
 function s.uniquefilter(c,code)
 	return c:IsCode(code) and c:IsFaceup() and c:IsMonster()
 end
-function s.rescon(sg,e,tp)
-	return sg:IsExists(Card.IsMonster(),1,nil)
+function s.rescon(sg,e,tp,mg)
+	return sg:IsExists(Card.IsMonster,1,nil)
 end
 function s.thop(e,tp,eg,ep,ev,re,r,rp)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_ATOHAND)
