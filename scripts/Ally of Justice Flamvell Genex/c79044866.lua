@@ -2,6 +2,7 @@
 --Scripted by WolfSif
 local s,id=GetID()
 function s.initial_effect(c)
+	c:SetUniqueOnField(1,0,id)
 	--Special Summon 1 'Ally' monster from your hand or GY, and if you do, equip it with this card
 	local e0=Effect.CreateEffect(c)
 	e0:SetDescription(aux.Stringid(id,0))
@@ -12,7 +13,7 @@ function s.initial_effect(c)
 	e0:SetTarget(s.sptg)
 	e0:SetOperation(s.spop)
 	c:RegisterEffect(e0)
-	--Monsters you control become "Genex" monsters
+	--[[Monsters you control become "Genex" monsters
 	local e1=Effect.CreateEffect(c)
 	e1:SetType(EFFECT_TYPE_FIELD)
 	e1:SetCode(EFFECT_ADD_SETCODE)
@@ -63,14 +64,16 @@ end
 function s.spcostfilter1(c,e,tp)
 	return (c:IsCode(s.ally_names) or c:IsSetCard(s.listed_series))
 		and c:IsMonster()
-		and c:IsAbleToGrave()
+		and c:IsAbleToRemove()
+		--and c:IsAbleToGrave()
 		--and not c:IsPublic()
 end
 function s.spcostfilter2(c,e,tp,tc)
 	return (c:IsCode(s.ally_names) or c:IsSetCard(s.listed_series))
 		and c:IsMonster()
 		and not c:IsCode(tc:GetCode())
-		and c:IsAbleToGrave()
+		and c:IsAbleToRemove()
+		--and c:IsAbleToGrave()
 		--and not c:IsPublic()
 end
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
@@ -84,7 +87,7 @@ function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	Duel.ConfirmCards(1-tp,tc)
 	Duel.ShuffleExtra(tp)
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_EXTRA)
-	Duel.SetOperationInfo(0,CATEGORY_TOGRAVE,nil,lvl,tp,LOCATION_HAND|LOCATION_DECK|LOCATION_EXTRA|LOCATION_ONFIELD)
+	Duel.SetOperationInfo(0,CATEGORY_REMOVE,nil,lvl,tp,LOCATION_HAND|LOCATION_DECK|LOCATION_EXTRA|LOCATION_ONFIELD)--Duel.SetOperationInfo(0,CATEGORY_TOGRAVE,nil,lvl,tp,LOCATION_HAND|LOCATION_DECK|LOCATION_EXTRA|LOCATION_ONFIELD)
 	Duel.SetOperationInfo(0,CATEGORY_EQUIP,e:GetHandler(),1,tp,0)
 end
 function s.rthfilter(c,tp)
@@ -95,11 +98,13 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	local lvl=e:GetLabel()
 	local tc=Duel.GetFirstTarget()
 	local g=Duel.GetMatchingGroup(s.spcostfilter2,c:GetControler(),LOCATION_HAND|LOCATION_DECK|LOCATION_EXTRA|LOCATION_ONFIELD,0,nil,e,tp,tc)
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOGRAVE)
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_REMOVE)
+	--Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOGRAVE)
 	if #g>lvl then 
 		local rg=Group.CreateGroup()
 		for i = 1,lvl do
-			Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOGRAVE)
+			Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_REMOVE)
+			--Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOGRAVE)
 			local sg=g:Select(tp,1,1,nil)
 			g:Remove(Card.IsCode,nil,sg:GetFirst():GetCode())
 			Duel.ConfirmCards(1-tp,sg)
@@ -107,7 +112,8 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 		end
 		local td=rg:FilterCount(Card.IsLocation,nil,LOCATION_HAND|LOCATION_EXTRA|LOCATION_ONFIELD)
 		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
-		Duel.SendtoGrave(rg,REASON_EFFECT)
+		Duel.Remove(g,POS_FACEUP,REASON_EFFECT)
+		--Duel.SendtoGrave(rg,REASON_EFFECT)
 		if tc and #rg>0 and Duel.SpecialSummon(tc,SUMMON_TYPE_SYNCHRO,tp,tp,false,false,POS_FACEUP) and Duel.Equip(tp,c,tc) then
 			--Equip limit
 			local e1=Effect.CreateEffect(c)

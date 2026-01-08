@@ -86,12 +86,13 @@ end
 function s.allymachinefilter(c)
 	return (c:IsCode(s.ally_names) or c:IsSetCard(s.ally_series)) 
 		and c:IsRace(RACE_MACHINE)
+		and c:IsTributeSummoned()
 		and c:IsMonster() 
 		and c:IsFaceup()
 end
 function s.lightcon(e) 
 	--local g=Duel.GetMatchingGroup(s.confilter,e:GetHandlerPlayer(),LOCATION_MZONE,0,nil) 
-	return Duel.IsBattlePhase() or Duel.IsExistingMatchingCard(s.allymachinefilter,e:GetHandlerPlayer(),LOCATION_MZONE,0,5,nil,tp) --or g:GetSum(Card.GetLevel)>20 
+	return Duel.IsBattlePhase() or Duel.IsExistingMatchingCard(s.allymachinefilter,e:GetHandlerPlayer(),LOCATION_MZONE,0,1,nil,tp) --or g:GetSum(Card.GetLevel)>20 
 end
 function s.changegytg(e,c)
 	if c:GetFlagEffect(1)==0 then
