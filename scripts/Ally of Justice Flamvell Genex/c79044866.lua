@@ -92,7 +92,7 @@ function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	Duel.SetOperationInfo(0,CATEGORY_EQUIP,e:GetHandler(),1,tp,0)
 end
 function s.rthfilter(c,tp)
-	return c:IsAbleToHand() and not c:IsCode(id)
+	return c:IsAbleToHand() --and not c:IsCode(id)
 end
 function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
@@ -129,7 +129,7 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 		if Duel.IsExistingMatchingCard(s.rthfilter,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,1,nil,tp)
 			and td>1 and Duel.SelectYesNo(tp,aux.Stringid(id,1)) then
 			Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_RTOHAND)
-			local g=Duel.SelectMatchingCard(tp,s.rthfilter,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,1,td//2,nil,tp)
+			local g=Duel.SelectMatchingCard(tp,s.rthfilter,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,1,td//2,c,tp)
 			if #g>0 then
 				Duel.HintSelection(g)
 				Duel.BreakEffect()
