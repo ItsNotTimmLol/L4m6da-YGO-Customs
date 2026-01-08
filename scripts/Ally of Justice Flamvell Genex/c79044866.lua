@@ -2,7 +2,7 @@
 --Scripted by WolfSif
 local s,id=GetID()
 function s.initial_effect(c)
-	c:SetUniqueOnField(1,0,id)
+	--c:SetUniqueOnField(1,0,id)
 	--Special Summon 1 'Ally' monster from your hand or GY, and if you do, equip it with this card
 	local e0=Effect.CreateEffect(c)
 	e0:SetDescription(aux.Stringid(id,0))
@@ -13,7 +13,7 @@ function s.initial_effect(c)
 	e0:SetTarget(s.sptg)
 	e0:SetOperation(s.spop)
 	c:RegisterEffect(e0)
-	--[[Monsters you control become "Genex" monsters
+	--Monsters you control become "Genex" monsters
 	local e1=Effect.CreateEffect(c)
 	e1:SetType(EFFECT_TYPE_FIELD)
 	e1:SetCode(EFFECT_ADD_SETCODE)
