@@ -112,7 +112,7 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 		end
 		local td=rg:FilterCount(Card.IsLocation,nil,LOCATION_HAND|LOCATION_EXTRA|LOCATION_ONFIELD)
 		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
-		Duel.Remove(g,POS_FACEUP,REASON_EFFECT)
+		Duel.Remove(rg,POS_FACEUP,REASON_EFFECT)
 		--Duel.SendtoGrave(rg,REASON_EFFECT)
 		if tc and #rg>0 and Duel.SpecialSummon(tc,SUMMON_TYPE_SYNCHRO,tp,tp,false,false,POS_FACEUP) and Duel.Equip(tp,c,tc) then
 			--Equip limit
