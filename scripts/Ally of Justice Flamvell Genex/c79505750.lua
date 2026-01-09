@@ -135,7 +135,7 @@ function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk)
 end
 function s.spfilter(c,e,tp)
 	return (c:IsCode(s.ally_names) or c:IsSetCard(s.ally_series)) 
-		and not c:IsType(TYPE_TUNER)
+		--and not c:IsType(TYPE_TUNER)
 		and c:IsRace(RACE_MACHINE)
 		and (Duel.GetLocationCount(tp,LOCATION_MZONE)>0 
 		and c:IsCanBeSpecialSummoned(e,0,tp,false,false,POS_FACEUP,tp))
@@ -146,7 +146,7 @@ function s.uniquefilter(c,code)
 	return c:IsCode(code) and c:IsFaceup() and c:IsMonster()
 end
 function s.rescon(sg,e,tp,mg)
-	return sg:IsExists(Card.IsMonster,1,nil)
+	return #sg<2 or not sg:IsExists(Card.IsType,1,nil,TYPE_TUNER)--sg:IsExists(Card.IsMonster,1,nil)
 end
 function s.thop(e,tp,eg,ep,ev,re,r,rp)
 	local g1=Duel.GetMatchingGroup(s.thfilter,tp,LOCATION_DECK,0,nil)
@@ -169,7 +169,7 @@ function s.thop(e,tp,eg,ep,ev,re,r,rp)
 		ft=math.min(ft,2)
 		if Duel.IsPlayerAffectedByEffect(tp,CARD_BLUEEYES_SPIRIT) then ft=1 end
 		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
-		local sg=aux.SelectUnselectGroup(g2,e,tp,1,ft,nil,1,tp,HINTMSG_SPSUMMON)
+		local sg=aux.SelectUnselectGroup(g2,e,tp,1,ft,s.rescon,1,tp,HINTMSG_SPSUMMON)
 		if #sg>0 then
 			Duel.SpecialSummon(sg,0,tp,tp,false,false,POS_FACEUP)
 		end
@@ -212,13 +212,13 @@ function s.remcon(e,tp,eg,ep,ev,re,r,rp)
 	return mg and e:GetHandler():IsSummonLocation(LOCATION_EXTRA) and mg:IsExists(Card.IsType,1,nil,TYPE_NORMAL)
 end
 function s.remtg(e,tp,eg,ep,ev,re,r,rp,chk)
-	local g=Duel.GetMatchingGroup(Card.IsAbleToRemove,tp,LOCATION_ONFIELD|LOCATION_GRAVE,LOCATION_ONFIELD|LOCATION_GRAVE,nil)
+	local g=Duel.GetMatchingGroup(Card.IsAbleToRemove,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,nil)
 	if chk==0 then return #g>0 end
-	Duel.SetOperationInfo(0,CATEGORY_REMOVE,g,1,0,LOCATION_ONFIELD|LOCATION_GRAVE)
+	Duel.SetOperationInfo(0,CATEGORY_REMOVE,g,1,0,LOCATION_ONFIELD)
 end
 function s.remop(e,tp,eg,ep,ev,re,r,rp)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_REMOVE)
-	local g=Duel.SelectMatchingCard(tp,Card.IsAbleToRemove,tp,LOCATION_ONFIELD|LOCATION_GRAVE,LOCATION_ONFIELD|LOCATION_GRAVE,1,1,nil)
+	local g=Duel.SelectMatchingCard(tp,Card.IsAbleToRemove,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,1,1,nil)
 	if #g>0 then
 		Duel.Remove(g,POS_FACEUP,REASON_EFFECT)
 	end

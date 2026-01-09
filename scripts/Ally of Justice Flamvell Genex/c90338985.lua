@@ -38,17 +38,23 @@ function s.tg(e,tp,eg,ep,ev,re,r,rp,chk)
 	Duel.SetPossibleOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,ct,tp,LOCATION_DECK)
 	Duel.SetPossibleOperationInfo(0,CATEGORY_SUMMON,nil,1,tp,LOCATION_DECK)
 end
+function s.nontunerfilter(c)
+	return (c:IsSetCard(s.aoj_series) or c:IsCode(s.ally_names))
+		and c:IsMonster()
+		and not c:IsType(TYPE_TUNER)
+end
 function s.op(e,tp,eg,ep,ev,re,r,rp)
 	local g1=Duel.GetMatchingGroup(s.sp1filter,tp,LOCATION_DECK,0,nil,e,tp)
 	local g2=Duel.GetMatchingGroup(s.sp2filter,tp,LOCATION_DECK,0,nil,e,tp)
-	local g3=Duel.GetMatchingGroup(s.nsfilter,tp,LOCATION_HAND|LOCATION_MZONE,0,nil,e,tp)
+	local g4=Duel.GetMatchingGroup(s.nsfilter,tp,LOCATION_HAND|LOCATION_MZONE,0,nil,e,tp)
 	local ct1=Duel.GetFieldGroupCount(tp,0,LOCATION_ONFIELD)
 	local b1=#g1>0
 	local b2=(ct1>0 and #g2>0 and Duel.GetFlagEffect(tp,id)==0)
-	local b3=#g3>0
-	if not (b1 or b2 or (b1 and b2) or b3) then return end
+	local b3=Duel.IsExistingMatchingCard(s.nontunerfilter,tp,LOCATION_MZONE,0,1,nil)
+	local b4=#g4>0
+	if not (b1 or b2 or (b1 and b2) or (b2 and b3) or b3 or b4) then return end
 	local breakeffect=false
-	if b1 and (not (b2 or b3) or Duel.SelectYesNo(tp,aux.Stringid(id,1))) then
+	if b1 and (not (b2 or b3 or b4) or Duel.SelectYesNo(tp,aux.Stringid(id,1))) then
 		local sg1=aux.SelectUnselectGroup(g1,e,tp,1,1,nil,1,tp,HINTMSG_SPSUMMON)
 		local tc1=sg1:GetFirst()
 		if tc1 then
@@ -62,7 +68,7 @@ function s.op(e,tp,eg,ep,ev,re,r,rp)
 	end
 	local ct2=Duel.GetFieldGroupCount(tp,0,LOCATION_ONFIELD)
 	b2=(ct2>0 and #g2>0 and Duel.GetFlagEffect(tp,id)==0)
-	if b2 and (not b3 or Duel.SelectYesNo(tp,aux.Stringid(id,2)) or not breakeffect) then
+	if b2 and (not (b3 or b4) or Duel.SelectYesNo(tp,aux.Stringid(id,2)) or not breakeffect) then
 		g2=Duel.GetMatchingGroup(s.sp2filter,tp,LOCATION_DECK,0,nil,e,tp)
 		local ft=Duel.GetLocationCount(tp,LOCATION_MZONE)
 		if ft<ct2 then ct2=ft end
@@ -89,7 +95,7 @@ function s.op(e,tp,eg,ep,ev,re,r,rp)
 		e1:SetOperation(s.sp2op)
 		Duel.RegisterEffect(e1,tp)
 		local e1=Effect.CreateEffect(e:GetHandler())
-		e1:SetDescription(aux.Stringid(id,4))
+		e1:SetDescription(aux.Stringid(id,6))
 		e1:SetType(EFFECT_TYPE_FIELD)
 		e1:SetProperty(EFFECT_FLAG_PLAYER_TARGET+EFFECT_FLAG_CLIENT_HINT)
 		e1:SetTargetRange(1,0)
@@ -97,15 +103,30 @@ function s.op(e,tp,eg,ep,ev,re,r,rp)
 		Duel.RegisterEffect(e1,tp)
 		breakeffect=true
 	end
-	g3=Duel.GetMatchingGroup(s.nsfilter,tp,LOCATION_HAND,0,nil,e,tp)
+	local g3=Duel.GetMatchingGroup(s.nontunerfilter,tp,LOCATION_MZONE,0,nil,e,tp)
 	b3=#g3>0
-	if b3 and (Duel.SelectYesNo(tp,aux.Stringid(id,3)) or not breakeffect) then
-		g3=Duel.GetMatchingGroup(s.nsfilter,tp,LOCATION_HAND|LOCATION_MZONE,0,nil,e,tp)
+	if b3 and (not b4 or Duel.SelectYesNo(tp,aux.Stringid(id,3)) or not breakeffect) then
+		local tc3=g3:GetFirst()
+		for tc3 in aux.Next(g3) do
+			local e1=Effect.CreateEffect(e:GetHandler())
+			e1:SetType(EFFECT_TYPE_SINGLE)
+			e1:SetCode(EFFECT_ADD_TYPE)
+			e1:SetValue(TYPE_TUNER)
+			e1:SetReset(RESET_EVENT|RESETS_STANDARD)
+			tc3:RegisterEffect(e1)
+			tc3:RegisterFlagEffect(id,RESET_EVENT|RESETS_STANDARD,EFFECT_FLAG_CLIENT_HINT,1,0,aux.Stringid(id,7))
+		end
+		breakeffect=true
+	end
+	g4=Duel.GetMatchingGroup(s.nsfilter,tp,LOCATION_HAND,0,nil,e,tp)
+	b4=#g4>0
+	if b4 and (Duel.SelectYesNo(tp,aux.Stringid(id,4)) or not breakeffect) then
+		g4=Duel.GetMatchingGroup(s.nsfilter,tp,LOCATION_HAND|LOCATION_MZONE,0,nil,e,tp)
 		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SUMMON)
 		if breakeffect then Duel.BreakEffect() end
-		local tc3=Duel.SelectMatchingCard(tp,s.nsfilter,tp,LOCATION_HAND|LOCATION_MZONE,0,1,1,nil):GetFirst()
-		if tc3 then
-			Duel.SummonOrSet(tp,tc3,true,nil)
+		local tc4=Duel.SelectMatchingCard(tp,s.nsfilter,tp,LOCATION_HAND|LOCATION_MZONE,0,1,1,nil):GetFirst()
+		if tc4 then
+			Duel.SummonOrSet(tp,tc4,true,nil)
 		end
 	end
 	local e0=Effect.CreateEffect(e:GetHandler())
@@ -113,7 +134,7 @@ function s.op(e,tp,eg,ep,ev,re,r,rp)
 	e0:SetCode(EVENT_PHASE+PHASE_END)
 	e0:SetProperty(EFFECT_FLAG_IGNORE_IMMUNE)
 	e0:SetReset(RESET_PHASE|PHASE_END)
-	e0:SetDescription(aux.Stringid(id,6))
+	e0:SetDescription(aux.Stringid(id,8))
 	e0:SetCountLimit(1)
 	--e0:SetLabel(fid)
 	--e0:SetLabelObject(g)
