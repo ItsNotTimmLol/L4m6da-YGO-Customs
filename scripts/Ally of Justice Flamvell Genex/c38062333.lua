@@ -287,7 +287,8 @@ function s.exconfilter(c)
 	return (c:IsCode(s.ally_names) or c:IsSetCard(s.listed_series)) 
 		and c:IsMonster() 
 		and c:IsFaceup()
-		and c:IsLevelAbove(5)
+		and (c:IsNormalSummoned() or c:IsSynchroSummoned())
+		--and c:IsLevelAbove(5)
 end
 
 function s.sp2op(e,tp,eg,ep,ev,re,r,rp)

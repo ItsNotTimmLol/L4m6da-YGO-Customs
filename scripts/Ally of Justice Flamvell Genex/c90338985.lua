@@ -22,6 +22,14 @@ function s.nsfilter(c)
 		and c:IsMonster()
 		and c:IsSummonable(true,nil)
 end
+function s.scfilter(c)
+	return (c:IsSetCard(s.aoj_series) or c:IsCode(s.ally_names)) 
+		and c:IsSynchroSummonable(nil)
+end
+function s.lfilter(c)
+	return (c:IsSetCard(s.aoj_series) or c:IsCode(s.ally_names))
+		and c:IsLinkSummonable(nil)
+end
 function s.tg(e,tp,eg,ep,ev,re,r,rp,chk)
 	local g1=Duel.GetMatchingGroup(s.sp1filter,tp,LOCATION_DECK,0,nil,e,tp)
 	local g2=Duel.GetMatchingGroup(s.sp2filter,tp,LOCATION_DECK,0,nil,e,tp)
@@ -33,10 +41,12 @@ function s.tg(e,tp,eg,ep,ev,re,r,rp,chk)
 	local b1=#g1>0
 	local b2=(ct>0 and #g2>0 and Duel.GetFlagEffect(tp,id)==0)
 	local b3=#g3>0
-	if chk==0 then return b1 or b2 or (b1 and b2) or b3 end
+	local b4=(Duel.IsExistingMatchingCard(s.scfilter,tp,LOCATION_EXTRA,0,1,nil) or Duel.IsExistingMatchingCard(s.lfilter,tp,LOCATION_EXTRA,0,1,nil))
+	if chk==0 then return b1 or b2 or (b1 and b2) or b3 or b4 end
 	Duel.SetPossibleOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,1-tp,LOCATION_DECK)
 	Duel.SetPossibleOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,ct,tp,LOCATION_DECK)
 	Duel.SetPossibleOperationInfo(0,CATEGORY_SUMMON,nil,1,tp,LOCATION_DECK)
+	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_EXTRA)
 end
 function s.nontunerfilter(c)
 	return (c:IsSetCard(s.aoj_series) or c:IsCode(s.ally_names))
@@ -46,12 +56,12 @@ end
 function s.op(e,tp,eg,ep,ev,re,r,rp)
 	local g1=Duel.GetMatchingGroup(s.sp1filter,tp,LOCATION_DECK,0,nil,e,tp)
 	local g2=Duel.GetMatchingGroup(s.sp2filter,tp,LOCATION_DECK,0,nil,e,tp)
-	local g4=Duel.GetMatchingGroup(s.nsfilter,tp,LOCATION_HAND|LOCATION_MZONE,0,nil,e,tp)
+	local g3=Duel.GetMatchingGroup(s.nsfilter,tp,LOCATION_HAND|LOCATION_MZONE,0,nil,e,tp)
 	local ct1=Duel.GetFieldGroupCount(tp,0,LOCATION_ONFIELD)
 	local b1=#g1>0
 	local b2=(ct1>0 and #g2>0 and Duel.GetFlagEffect(tp,id)==0)
-	local b3=Duel.IsExistingMatchingCard(s.nontunerfilter,tp,LOCATION_MZONE,0,1,nil)
-	local b4=#g4>0
+	local b3=#g3>0
+	local b4=(Duel.IsExistingMatchingCard(s.scfilter,tp,LOCATION_EXTRA,0,1,nil) or Duel.IsExistingMatchingCard(s.lfilter,tp,LOCATION_EXTRA,0,1,nil))
 	if not (b1 or b2 or (b1 and b2) or (b2 and b3) or b3 or b4) then return end
 	local breakeffect=false
 	if b1 and (not (b2 or b3 or b4) or Duel.SelectYesNo(tp,aux.Stringid(id,1))) then
@@ -103,6 +113,46 @@ function s.op(e,tp,eg,ep,ev,re,r,rp)
 		Duel.RegisterEffect(e1,tp)
 		breakeffect=true
 	end
+	g3=Duel.GetMatchingGroup(s.nsfilter,tp,LOCATION_HAND,0,nil,e,tp)
+	b3=#g3>0
+	if b3 and (Duel.SelectYesNo(tp,aux.Stringid(id,3)) or not breakeffect) then
+		g3=Duel.GetMatchingGroup(s.nsfilter,tp,LOCATION_HAND|LOCATION_MZONE,0,nil,e,tp)
+		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SUMMON)
+		if breakeffect then Duel.BreakEffect() end
+		local tc3=Duel.SelectMatchingCard(tp,s.nsfilter,tp,LOCATION_HAND|LOCATION_MZONE,0,1,1,nil):GetFirst()
+		if tc3 then
+			Duel.SummonOrSet(tp,tc3,true,nil)
+		end
+	end
+	if b4 and (Duel.SelectYesNo(tp,aux.Stringid(id,4)) or not breakeffect) then
+		local sg=Duel.GetMatchingGroup(s.scfilter,tp,LOCATION_EXTRA,0,nil)
+		local sg2=Duel.GetMatchingGroup(s.lfilter,tp,LOCATION_EXTRA,0,nil)
+		sg:Merge(sg2)
+		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
+		local sc=sg:Select(tp,1,1,nil):GetFirst()
+		if not sc then return end
+		Duel.BreakEffect()
+		if sc:IsType(TYPE_SYNCHRO) then
+			Duel.SynchroSummon(tp,sc)
+		elseif sc:IsType(TYPE_LINK) then
+			Duel.LinkSummon(tp,sc)
+		end
+	local e0=Effect.CreateEffect(e:GetHandler())
+	e0:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
+	e0:SetCode(EVENT_PHASE+PHASE_END)
+	e0:SetProperty(EFFECT_FLAG_IGNORE_IMMUNE)
+	e0:SetReset(RESET_PHASE|PHASE_END)
+	e0:SetDescription(aux.Stringid(id,8))
+	e0:SetCountLimit(1)
+	--e0:SetLabel(fid)
+	--e0:SetLabelObject(g)
+	--e0:SetCondition(s.descon)
+	e0:SetOperation(s.desop)
+	Duel.RegisterEffect(e0,tp)
+end
+
+--[[
+make tuners
 	local g3=Duel.GetMatchingGroup(s.nontunerfilter,tp,LOCATION_MZONE,0,nil,e,tp)
 	b3=#g3>0
 	if b3 and (not b4 or Duel.SelectYesNo(tp,aux.Stringid(id,3)) or not breakeffect) then
@@ -118,30 +168,8 @@ function s.op(e,tp,eg,ep,ev,re,r,rp)
 		end
 		breakeffect=true
 	end
-	g4=Duel.GetMatchingGroup(s.nsfilter,tp,LOCATION_HAND,0,nil,e,tp)
-	b4=#g4>0
-	if b4 and (Duel.SelectYesNo(tp,aux.Stringid(id,4)) or not breakeffect) then
-		g4=Duel.GetMatchingGroup(s.nsfilter,tp,LOCATION_HAND|LOCATION_MZONE,0,nil,e,tp)
-		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SUMMON)
-		if breakeffect then Duel.BreakEffect() end
-		local tc4=Duel.SelectMatchingCard(tp,s.nsfilter,tp,LOCATION_HAND|LOCATION_MZONE,0,1,1,nil):GetFirst()
-		if tc4 then
-			Duel.SummonOrSet(tp,tc4,true,nil)
-		end
-	end
-	local e0=Effect.CreateEffect(e:GetHandler())
-	e0:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
-	e0:SetCode(EVENT_PHASE+PHASE_END)
-	e0:SetProperty(EFFECT_FLAG_IGNORE_IMMUNE)
-	e0:SetReset(RESET_PHASE|PHASE_END)
-	e0:SetDescription(aux.Stringid(id,8))
-	e0:SetCountLimit(1)
-	--e0:SetLabel(fid)
-	--e0:SetLabelObject(g)
-	--e0:SetCondition(s.descon)
-	e0:SetOperation(s.desop)
-	Duel.RegisterEffect(e0,tp)
-end
+	]]--
+
 
 
 --Basically soul charge

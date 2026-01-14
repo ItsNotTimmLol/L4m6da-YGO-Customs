@@ -13,7 +13,7 @@ function s.initial_effect(c)
 	e0:SetTarget(s.sptg)
 	e0:SetOperation(s.spop)
 	c:RegisterEffect(e0)
-	--Monsters you control become "Genex" monsters
+	--[[Monsters you control become "Genex" monsters
 	local e1=Effect.CreateEffect(c)
 	e1:SetType(EFFECT_TYPE_FIELD)
 	e1:SetCode(EFFECT_ADD_SETCODE)
@@ -114,7 +114,8 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 		local td=rg:FilterCount(Card.IsLocation,nil,LOCATION_HAND|LOCATION_EXTRA|LOCATION_ONFIELD)
 		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
 		--Duel.Remove(rg,POS_FACEUP,REASON_EFFECT)
-		Duel.SendtoGrave(rg,REASON_EFFECT)
+		Duel.SendtoGrave(rg,REASON_EFFECT+REASON_MATERIAL+REASON_SYNCHRO)
+		tc:SetMaterial(rg)
 		if tc and #rg>0 and Duel.SpecialSummon(tc,SUMMON_TYPE_SYNCHRO,tp,tp,false,false,POS_FACEUP) and Duel.Equip(tp,c,tc) then
 			--Equip limit
 			local e1=Effect.CreateEffect(c)
