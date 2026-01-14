@@ -125,6 +125,8 @@ function s.op(e,tp,eg,ep,ev,re,r,rp)
 			breakeffect=true
 		end
 	end
+	g4=(Duel.IsExistingMatchingCard(s.scfilter,tp,LOCATION_EXTRA,0,1,nil) or Duel.IsExistingMatchingCard(s.lfilter,tp,LOCATION_EXTRA,0,1,nil))
+	b4=g4
 	if b4 and (Duel.SelectYesNo(tp,aux.Stringid(id,4)) or not breakeffect) then
 		local sg=Duel.GetMatchingGroup(s.scfilter,tp,LOCATION_EXTRA,0,nil)
 		local sg2=Duel.GetMatchingGroup(s.lfilter,tp,LOCATION_EXTRA,0,nil)
