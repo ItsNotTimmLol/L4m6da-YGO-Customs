@@ -122,9 +122,8 @@ function s.op(e,tp,eg,ep,ev,re,r,rp)
 		local tc3=Duel.SelectMatchingCard(tp,s.nsfilter,tp,LOCATION_HAND|LOCATION_MZONE,0,1,1,nil):GetFirst()
 		if tc3 then
 			Duel.SummonOrSet(tp,tc3,true,nil)
-			Duel.BreakEffect()
+			breakeffect=true
 		end
-		breakeffect=true
 	end
 	if b4 and (Duel.SelectYesNo(tp,aux.Stringid(id,4)) or not breakeffect) then
 		local sg=Duel.GetMatchingGroup(s.scfilter,tp,LOCATION_EXTRA,0,nil)
