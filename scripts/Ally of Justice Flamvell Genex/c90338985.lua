@@ -125,17 +125,17 @@ function s.op(e,tp,eg,ep,ev,re,r,rp)
 			breakeffect=true
 		end
 	end
+	if breakeffect then Duel.BreakEffect() end
+	breakeffect=false
 	g4=(Duel.IsExistingMatchingCard(s.scfilter,tp,LOCATION_EXTRA,0,1,nil) or Duel.IsExistingMatchingCard(s.lfilter,tp,LOCATION_EXTRA,0,1,nil))
 	b4=g4
 	if b4 and (Duel.SelectYesNo(tp,aux.Stringid(id,4)) or not breakeffect) then
 		local sg=Duel.GetMatchingGroup(s.scfilter,tp,LOCATION_EXTRA,0,nil)
 		local sg2=Duel.GetMatchingGroup(s.lfilter,tp,LOCATION_EXTRA,0,nil)
 		sg:Merge(sg2)
-		if breakeffect then Duel.BreakEffect() end
 		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
 		local sc=sg:Select(tp,1,1,nil):GetFirst()
 		if not sc then return end
-		if breakeffect then Duel.BreakEffect() end
 		if sc:IsType(TYPE_SYNCHRO) then
 			Duel.SynchroSummon(tp,sc)
 		elseif sc:IsType(TYPE_LINK) then
