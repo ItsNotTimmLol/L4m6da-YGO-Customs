@@ -122,6 +122,7 @@ function s.op(e,tp,eg,ep,ev,re,r,rp)
 		local tc3=Duel.SelectMatchingCard(tp,s.nsfilter,tp,LOCATION_HAND|LOCATION_MZONE,0,1,1,nil):GetFirst()
 		if tc3 then
 			Duel.SummonOrSet(tp,tc3,true,nil)
+			breakeffect=true
 		end
 	end
 	if b4 and (Duel.SelectYesNo(tp,aux.Stringid(id,4)) or not breakeffect) then
@@ -131,12 +132,13 @@ function s.op(e,tp,eg,ep,ev,re,r,rp)
 		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
 		local sc=sg:Select(tp,1,1,nil):GetFirst()
 		if not sc then return end
-		Duel.BreakEffect()
+		if breakeffect then Duel.BreakEffect() end
 		if sc:IsType(TYPE_SYNCHRO) then
 			Duel.SynchroSummon(tp,sc)
 		elseif sc:IsType(TYPE_LINK) then
 			Duel.LinkSummon(tp,sc)
 		end
+	end
 	local e0=Effect.CreateEffect(e:GetHandler())
 	e0:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
 	e0:SetCode(EVENT_PHASE+PHASE_END)
