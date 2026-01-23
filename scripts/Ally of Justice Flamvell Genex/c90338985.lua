@@ -104,17 +104,18 @@ function s.op(e,tp,eg,ep,ev,re,r,rp)
 		e1:SetTarget(s.sp2tg)
 		e1:SetOperation(s.sp2op)
 		Duel.RegisterEffect(e1,tp)
-		local e1=Effect.CreateEffect(e:GetHandler())
-		e1:SetDescription(aux.Stringid(id,6))
-		e1:SetType(EFFECT_TYPE_FIELD)
-		e1:SetProperty(EFFECT_FLAG_PLAYER_TARGET+EFFECT_FLAG_CLIENT_HINT)
-		e1:SetTargetRange(1,0)
-		e1:SetReset(RESET_PHASE|PHASE_END)
-		Duel.RegisterEffect(e1,tp)
+		local e2=Effect.CreateEffect(e:GetHandler())
+		e2:SetDescription(aux.Stringid(id,6))
+		e2:SetType(EFFECT_TYPE_FIELD)
+		e2:SetProperty(EFFECT_FLAG_PLAYER_TARGET+EFFECT_FLAG_CLIENT_HINT)
+		e2:SetTargetRange(1,0)
+		e2:SetReset(RESET_PHASE|PHASE_END)
+		Duel.RegisterEffect(e2,tp)
 		breakeffect=true
 	end
 	g3=Duel.GetMatchingGroup(s.nsfilter,tp,LOCATION_HAND,0,nil,e,tp)
 	b3=#g3>0
+	local summon=false
 	if b3 and (Duel.SelectYesNo(tp,aux.Stringid(id,3)) or not breakeffect) then
 		g3=Duel.GetMatchingGroup(s.nsfilter,tp,LOCATION_HAND|LOCATION_MZONE,0,nil,e,tp)
 		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SUMMON)
@@ -123,13 +124,19 @@ function s.op(e,tp,eg,ep,ev,re,r,rp)
 		if tc3 then
 			Duel.SummonOrSet(tp,tc3,true,nil)
 			breakeffect=true
+			summon=true
+			local e3=Effect.CreateEffect(e:GetHandler())
+			e3:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
+			e3:SetCode(EVENT_SUMMON_SUCCESS)
+			e3:SetProperty(EFFECT_FLAG_DAMAGE_STEP+EFFECT_FLAG_DELAY)
+			e3:SetCountLimit(1)
+			e3:SetOperation(s.g4chain)
+			Duel.RegisterEffect(e3,tp)
 		end
 	end
-	if breakeffect then Duel.BreakEffect() end
-	breakeffect=false
 	g4=(Duel.IsExistingMatchingCard(s.scfilter,tp,LOCATION_EXTRA,0,1,nil) or Duel.IsExistingMatchingCard(s.lfilter,tp,LOCATION_EXTRA,0,1,nil))
 	b4=g4
-	if b4 and (Duel.SelectYesNo(tp,aux.Stringid(id,4)) or not breakeffect) then
+	if b4 and not summon and (Duel.SelectYesNo(tp,aux.Stringid(id,4)) or not breakeffect) then
 		local sg=Duel.GetMatchingGroup(s.scfilter,tp,LOCATION_EXTRA,0,nil)
 		local sg2=Duel.GetMatchingGroup(s.lfilter,tp,LOCATION_EXTRA,0,nil)
 		sg:Merge(sg2)
@@ -142,18 +149,34 @@ function s.op(e,tp,eg,ep,ev,re,r,rp)
 			Duel.LinkSummon(tp,sc)
 		end
 	end
-	local e0=Effect.CreateEffect(e:GetHandler())
-	e0:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
-	e0:SetCode(EVENT_PHASE+PHASE_END)
-	e0:SetProperty(EFFECT_FLAG_IGNORE_IMMUNE)
-	e0:SetReset(RESET_PHASE|PHASE_END)
-	e0:SetDescription(aux.Stringid(id,8))
-	e0:SetCountLimit(1)
-	--e0:SetLabel(fid)
-	--e0:SetLabelObject(g)
-	--e0:SetCondition(s.descon)
-	e0:SetOperation(s.desop)
-	Duel.RegisterEffect(e0,tp)
+	local e4=Effect.CreateEffect(e:GetHandler())
+	e4:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
+	e4:SetCode(EVENT_PHASE+PHASE_END)
+	e4:SetProperty(EFFECT_FLAG_IGNORE_IMMUNE)
+	e4:SetReset(RESET_PHASE|PHASE_END)
+	e4:SetDescription(aux.Stringid(id,8))
+	e4:SetCountLimit(1)
+	--e4:SetLabel(fid)
+	--e4:SetLabelObject(g)
+	--e4:SetCondition(s.descon)
+	e4:SetOperation(s.desop)
+	Duel.RegisterEffect(e4,tp)
+end
+function s.g4chain(e,tp,eg,ep,ev,re,r,rp)
+	local b4=(Duel.IsExistingMatchingCard(s.scfilter,tp,LOCATION_EXTRA,0,1,nil) or Duel.IsExistingMatchingCard(s.lfilter,tp,LOCATION_EXTRA,0,1,nil))
+	if not (b4 and Duel.SelectYesNo(tp,aux.Stringid(id,4))) then return end
+	Duel.BreakEffect()
+	local sg=Duel.GetMatchingGroup(s.scfilter,tp,LOCATION_EXTRA,0,nil)
+	local sg2=Duel.GetMatchingGroup(s.lfilter,tp,LOCATION_EXTRA,0,nil)
+	sg:Merge(sg2)
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
+	local sc=sg:Select(tp,1,1,nil):GetFirst()
+	if not sc then return end
+	if sc:IsType(TYPE_SYNCHRO) then
+		Duel.SynchroSummon(tp,sc)
+	elseif sc:IsType(TYPE_LINK) then
+		Duel.LinkSummon(tp,sc)
+	end
 end
 
 --[[
