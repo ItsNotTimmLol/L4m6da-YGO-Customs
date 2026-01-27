@@ -313,7 +313,17 @@ function s.sp2op(e,tp,eg,ep,ev,re,r,rp)
 		Duel.SendtoHand(tc,nil,REASON_EFFECT)
 		Duel.ConfirmCards(1-tp,tc)
 	elseif op==3 or not (b1 and b2) then
-		Duel.SpecialSummon(tc,0,tp,tp,true,false,POS_FACEUP)
+		if Duel.SpecialSummonStep(tc,0,tp,tp,true,false,POS_FACEUP) then
+			--Treated as a Tuner
+			local e1=Effect.CreateEffect(e:GetHandler())
+			e1:SetType(EFFECT_TYPE_SINGLE)
+			e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_IGNORE_IMMUNE)
+			e1:SetCode(EFFECT_ADD_TYPE)
+			e1:SetValue(TYPE_TUNER)
+			e1:SetReset(RESET_EVENT|RESETS_STANDARD)
+			tc:RegisterEffect(e1)
+		end
+		Duel.SpecialSummonComplete()
 	end
 end
 

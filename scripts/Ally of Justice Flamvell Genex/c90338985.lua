@@ -70,7 +70,7 @@ function s.op(e,tp,eg,ep,ev,re,r,rp)
 		if tc1 then
 			for tc1 in aux.Next(sg1) do
 				Duel.SpecialSummonStep(tc1,0,tp,1-tp,false,false,POS_FACEUP)
-				tc1:RegisterFlagEffect(id,RESET_EVENT|RESETS_STANDARD,EFFECT_FLAG_CLIENT_HINT,1,0,aux.Stringid(id,5))
+				--tc1:RegisterFlagEffect(id,RESET_EVENT|RESETS_STANDARD,EFFECT_FLAG_CLIENT_HINT,1,0,aux.Stringid(id,5))
 			end
 		end
 		Duel.SpecialSummonComplete()
