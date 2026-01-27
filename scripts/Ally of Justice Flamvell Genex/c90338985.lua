@@ -88,7 +88,7 @@ function s.op(e,tp,eg,ep,ev,re,r,rp)
 		local tc2=sg2:GetFirst()
 		for tc2 in aux.Next(sg2) do
 			Duel.SpecialSummonStep(tc2,0,tp,tp,false,false,POS_FACEUP)
-			tc2:RegisterFlagEffect(id,RESET_EVENT|RESETS_STANDARD,EFFECT_FLAG_CLIENT_HINT,1,0,aux.Stringid(id,5))
+			--tc2:RegisterFlagEffect(id,RESET_EVENT|RESETS_STANDARD,EFFECT_FLAG_CLIENT_HINT,1,0,aux.Stringid(id,5))
 			Duel.RegisterFlagEffect(tp,id,RESET_PHASE|PHASE_END,0,1)
 			--sg1:Merge(sg2)
 		end
@@ -149,6 +149,7 @@ function s.op(e,tp,eg,ep,ev,re,r,rp)
 			Duel.LinkSummon(tp,sc)
 		end
 	end
+	--[[
 	local e4=Effect.CreateEffect(e:GetHandler())
 	e4:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
 	e4:SetCode(EVENT_PHASE+PHASE_END)
@@ -160,7 +161,7 @@ function s.op(e,tp,eg,ep,ev,re,r,rp)
 	--e4:SetLabelObject(g)
 	--e4:SetCondition(s.descon)
 	e4:SetOperation(s.desop)
-	Duel.RegisterEffect(e4,tp)
+	Duel.RegisterEffect(e4,tp)]]--
 end
 function s.g4chain(e,tp,eg,ep,ev,re,r,rp)
 	local b4=(Duel.IsExistingMatchingCard(s.scfilter,tp,LOCATION_EXTRA,0,1,nil) or Duel.IsExistingMatchingCard(s.lfilter,tp,LOCATION_EXTRA,0,1,nil))
