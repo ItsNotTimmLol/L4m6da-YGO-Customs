@@ -206,7 +206,7 @@ make tuners
 function s.sp1filter(c,e,tp)
 	return (c:IsCode(s.ally_names) or c:IsSetCard(s.aoj_series)) 
 		--and ((Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and c:IsCanBeSpecialSummoned(e,0,tp,false,false,POS_FACEUP,tp))
-			and (Duel.GetLocationCount(1-tp,LOCATION_MZONE)>0 and c:IsCanBeSpecialSummoned(e,0,tp,false,false,POS_FACEUP,1-tp))--)
+			and (Duel.GetLocationCount(1-tp,LOCATION_MZONE)>0 and c:IsCanBeSpecialSummoned(e,0,tp,false,false,POS_FACEUP_DEFENSE,1-tp))--)
 		and c:IsMonster()
 end
 --To tp
