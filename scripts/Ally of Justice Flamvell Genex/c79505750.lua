@@ -126,7 +126,9 @@ function s.thcon(e,tp,eg,ep,ev,re,r,rp)
 	return c:IsPreviousPosition(POS_FACEUP) and not c:IsLocation(LOCATION_EXTRA)
 end
 function s.thfilter(c)
-	return c:IsSetCard(s.listed_series) and c:IsAbleToHand()
+	return c:IsSetCard(s.listed_series) 
+		and c:IsSpellTrap()
+		and c:IsAbleToHand()
 end
 function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return Duel.IsExistingMatchingCard(s.thfilter,tp,LOCATION_DECK,0,1,nil) or Duel.IsExistingMatchingCard(s.spfilter,tp,LOCATION_DECK,0,1,nil,e,tp) end
@@ -154,22 +156,25 @@ function s.thop(e,tp,eg,ep,ev,re,r,rp)
 	local b1=#g1>0
 	local b2=#g2>0 and Duel.GetLocationCount(tp,LOCATION_MZONE)>0
 	if not (b1 or b2) then return end
-	
+	--[[
 	local op=Duel.SelectEffect(tp,
 		{b1,aux.Stringid(id,2)},
 		{b2,aux.Stringid(id,3)})
-	if op==1 then
+	if op==1 then]]--
+	if b1 and Duel.SelectYesNo(tp,aux.Stringid(id,2)) then
 		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_ATOHAND)
 		local g1=Duel.SelectMatchingCard(tp,s.thfilter,tp,LOCATION_DECK,0,1,1,nil)
 		if #g1==0 or Duel.SendtoHand(g1,nil,REASON_EFFECT)==0 then return end
 		Duel.ConfirmCards(1-tp,g1)
 		Duel.ShuffleHand(tp)
-	elseif op==2 then
+	end
+	--elseif op==2 then
+	if b2 and (not b1 or Duel.SelectYesNo(tp,aux.Stringid(id,3))) then
 		local ft=Duel.GetLocationCount(tp,LOCATION_MZONE)
 		ft=math.min(ft,2)
 		if Duel.IsPlayerAffectedByEffect(tp,CARD_BLUEEYES_SPIRIT) then ft=1 end
 		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
-		local sg=aux.SelectUnselectGroup(g2,e,tp,1,ft,s.rescon,1,tp,HINTMSG_SPSUMMON)
+		local sg=aux.SelectUnselectGroup(g2,e,tp,1,ft,nil,1,tp,HINTMSG_SPSUMMON)
 		if #sg>0 then
 			Duel.SpecialSummon(sg,0,tp,tp,false,false,POS_FACEUP)
 		end

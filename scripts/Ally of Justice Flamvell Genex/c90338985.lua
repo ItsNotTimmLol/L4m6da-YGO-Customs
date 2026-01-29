@@ -69,7 +69,7 @@ function s.op(e,tp,eg,ep,ev,re,r,rp)
 		local tc1=sg1:GetFirst()
 		if tc1 then
 			for tc1 in aux.Next(sg1) do
-				Duel.SpecialSummonStep(tc1,0,tp,1-tp,false,false,POS_FACEUP)
+				Duel.SpecialSummonStep(tc1,0,tp,1-tp,false,false,POS_FACEUP_DEFENSE)
 				--tc1:RegisterFlagEffect(id,RESET_EVENT|RESETS_STANDARD,EFFECT_FLAG_CLIENT_HINT,1,0,aux.Stringid(id,5))
 			end
 		end
@@ -87,7 +87,7 @@ function s.op(e,tp,eg,ep,ev,re,r,rp)
 		local sg2=aux.SelectUnselectGroup(g2,e,tp,0,ct2,nil,1,tp,HINTMSG_SPSUMMON)
 		local tc2=sg2:GetFirst()
 		for tc2 in aux.Next(sg2) do
-			Duel.SpecialSummonStep(tc2,0,tp,tp,false,false,POS_FACEUP)
+			Duel.SpecialSummonStep(tc2,0,tp,tp,false,false,POS_FACEUP_DEFENSE)
 			--tc2:RegisterFlagEffect(id,RESET_EVENT|RESETS_STANDARD,EFFECT_FLAG_CLIENT_HINT,1,0,aux.Stringid(id,5))
 			Duel.RegisterFlagEffect(tp,id,RESET_PHASE|PHASE_END,0,1)
 			--sg1:Merge(sg2)

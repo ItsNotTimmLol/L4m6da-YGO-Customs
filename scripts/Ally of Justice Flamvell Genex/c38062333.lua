@@ -295,24 +295,21 @@ function s.sp2op(e,tp,eg,ep,ev,re,r,rp)
 	local tc=Duel.GetFirstTarget()
 	if not tc:IsRelateToEffect(e) then return end
 	local g1=Duel.GetMatchingGroup(s.exconfilter,tp,LOCATION_MZONE,0,nil)
-	btrue=Duel.IsExistingMatchingCard(s.exconfilter,tp,LOCATION_MZONE,0,1,nil)
+	local btrue=Duel.IsExistingMatchingCard(s.exconfilter,tp,LOCATION_MZONE,0,1,nil)
 	--local btrue=g1:GetSum(Card.GetLevel)>5
 	--local btrue=Duel.IsExistingMatchingCard(s.higherfilter,tp,LOCATION_MZONE,0,1,nil,tc:GetOriginalAttribute(),tc:GetLevel())
-	local b1=Duel.GetLocationCount(1-tp,LOCATION_MZONE)>0 and tc:IsCanBeSpecialSummoned(e,0,tp,true,false,POS_FACEUP,1-tp)
-	local b2=btrue
-	local b3=Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and tc:IsCanBeSpecialSummoned(e,0,tp,true,false) and btrue
-	if not (b1 or b2 or b3) then return end
-	if b1 and not btrue then return Duel.SpecialSummon(tc,0,tp,1-tp,true,false,POS_FACEUP) end
+	--local b1=Duel.GetLocationCount(1-tp,LOCATION_MZONE)>0 and tc:IsCanBeSpecialSummoned(e,0,tp,true,false,POS_FACEUP,1-tp)
+	local b1=true
+	local b2=Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and tc:IsCanBeSpecialSummoned(e,0,tp,true,false)
+	if not (b1 or b2) then return end
+	--if b1 and not btrue then return Duel.SpecialSummon(tc,0,tp,1-tp,true,false,POS_FACEUP) end
 	local op=Duel.SelectEffect(tp,
 		{b1,aux.Stringid(id,2)},
-		{b2,aux.Stringid(id,3)},
-		{b3,aux.Stringid(id,4)})
+		{b2,aux.Stringid(id,3)})
 	if op==1 then
-		Duel.SpecialSummon(tc,0,tp,1-tp,false,false,POS_FACEUP)
-	elseif op==2 or not (b2 and b3) then
 		Duel.SendtoHand(tc,nil,REASON_EFFECT)
 		Duel.ConfirmCards(1-tp,tc)
-	elseif op==3 or not (b1 and b2) then
+	elseif op==2 or not (b2 and b3) then
 		if Duel.SpecialSummonStep(tc,0,tp,tp,true,false,POS_FACEUP) then
 			--Treated as a Tuner
 			local e1=Effect.CreateEffect(e:GetHandler())
@@ -325,6 +322,15 @@ function s.sp2op(e,tp,eg,ep,ev,re,r,rp)
 			tc:RegisterFlagEffect(id,RESET_EVENT|RESETS_STANDARD,EFFECT_FLAG_CLIENT_HINT,1,0,aux.Stringid(id,5))
 		end
 		Duel.SpecialSummonComplete()
+	end
+	if not btrue and Duel.SelectYesNo(1-tp,aux.Stringid(id,5)) then
+		--Take control of 1 monster your opponent controls until the End Phase
+		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_CONTROL)
+		local g=Duel.SelectMatchingCard(1-tp,Card.IsControlerCanBeChanged,0,1-tp,LOCATION_MZONE,1,1,nil)
+		if #g>0 then
+			Duel.HintSelection(g)
+			Duel.GetControl(g,1-tp,PHASE_END,1)
+		end
 	end
 end
 
