@@ -323,10 +323,10 @@ function s.sp2op(e,tp,eg,ep,ev,re,r,rp)
 		end
 		Duel.SpecialSummonComplete()
 	end
-	if not btrue and Duel.SelectYesNo(1-tp,aux.Stringid(id,5)) then
+	if not btrue and Duel.SelectYesNo(1-tp,aux.Stringid(id,4)) then
 		--Take control of 1 monster your opponent controls until the End Phase
 		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_CONTROL)
-		local g=Duel.SelectMatchingCard(1-tp,Card.IsControlerCanBeChanged,0,1-tp,LOCATION_MZONE,1,1,nil)
+		local g=Duel.SelectMatchingCard(1-tp,Card.IsControlerCanBeChanged,tp,LOCATION_MZONE,0,1,1,nil)
 		if #g>0 then
 			Duel.HintSelection(g)
 			Duel.GetControl(g,1-tp,PHASE_END,1)
