@@ -127,7 +127,7 @@ function s.thcon(e,tp,eg,ep,ev,re,r,rp)
 end
 function s.thfilter(c)
 	return c:IsSetCard(s.listed_series) 
-		and c:IsSpellTrap()
+		--and c:IsSpellTrap()
 		and c:IsAbleToHand()
 end
 function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk)
