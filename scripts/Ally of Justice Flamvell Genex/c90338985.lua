@@ -164,6 +164,7 @@ function s.op(e,tp,eg,ep,ev,re,r,rp)
 	Duel.RegisterEffect(e4,tp)]]--
 end
 function s.g4chain(e,tp,eg,ep,ev,re,r,rp)
+	if not e:GetHandler()==id then return end
 	local b4=(Duel.IsExistingMatchingCard(s.scfilter,tp,LOCATION_EXTRA,0,1,nil) or Duel.IsExistingMatchingCard(s.lfilter,tp,LOCATION_EXTRA,0,1,nil))
 	if not (b4 and Duel.SelectYesNo(tp,aux.Stringid(id,4))) then return end
 	Duel.BreakEffect()
@@ -325,7 +326,7 @@ function s.sp2op(e,tp,eg,ep,ev,re,r,rp)
 	end
 	Duel.SpecialSummonComplete()
 	--Destroy during End Phase
-	--g:KeepAlive()
+	--[[g:KeepAlive()
 	local e0=Effect.CreateEffect(e:GetHandler())
 	e0:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
 	e0:SetCode(EVENT_PHASE+PHASE_END)
@@ -337,7 +338,7 @@ function s.sp2op(e,tp,eg,ep,ev,re,r,rp)
 	--e0:SetLabelObject(g)
 	--e0:SetCondition(s.descon)
 	e0:SetOperation(s.desop)
-	Duel.RegisterEffect(e0,tp)
+	Duel.RegisterEffect(e0,tp)]]--
 end
 --Destroy during End Phase
 function s.desfilter(c)
