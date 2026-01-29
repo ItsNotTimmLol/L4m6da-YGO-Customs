@@ -111,7 +111,7 @@ end
 function s.immtg(e,c)
 	return (c:IsCode(s.ally_names) or c:IsSetCard(s.ally_series)) 
 		and c:IsMonster() 
-		and (not c:IsAttack(c:GetBaseAttack()) 
+		and not (c:IsAttack(c:GetBaseAttack()) 
 		or c:IsAttributeExcept(c:GetOriginalAttribute())
 		or c:IsCode(c:GetOriginalCode()))
 end
