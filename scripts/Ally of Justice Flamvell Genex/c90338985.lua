@@ -130,6 +130,8 @@ function s.op(e,tp,eg,ep,ev,re,r,rp)
 			e3:SetCode(EVENT_SUMMON_SUCCESS)
 			e3:SetProperty(EFFECT_FLAG_DAMAGE_STEP+EFFECT_FLAG_DELAY)
 			e3:SetCountLimit(1)
+			e3:SetReset(RESET_PHASE|PHASE_END)
+			e3:SetCondition(function(e,tp,eg) return eg:IsExists(Card.IsSummonPlayer,1,nil,tp) end)
 			e3:SetOperation(s.g4chain)
 			Duel.RegisterEffect(e3,tp)
 		end
@@ -164,7 +166,7 @@ function s.op(e,tp,eg,ep,ev,re,r,rp)
 	Duel.RegisterEffect(e4,tp)]]--
 end
 function s.g4chain(e,tp,eg,ep,ev,re,r,rp)
-	if not e:GetHandler()==id then return end
+	if not (e:GetHandler():GetCode()==id and e:GetHandler():GetControler()==tp) then return end
 	local b4=(Duel.IsExistingMatchingCard(s.scfilter,tp,LOCATION_EXTRA,0,1,nil) or Duel.IsExistingMatchingCard(s.lfilter,tp,LOCATION_EXTRA,0,1,nil))
 	if not (b4 and Duel.SelectYesNo(tp,aux.Stringid(id,4))) then return end
 	Duel.BreakEffect()
