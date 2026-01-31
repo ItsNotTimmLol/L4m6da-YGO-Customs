@@ -294,8 +294,7 @@ function s.sp2op(e,tp,eg,ep,ev,re,r,rp)
 	local code=tc:GetCode()
 	if not tc:IsRelateToEffect(e) then return end
 	local g1=Duel.GetMatchingGroup(s.exconfilter,tp,LOCATION_MZONE,0,nil)
-	local btrue=not s.name_list[tp][code]  
-	--local btrue=Duel.IsExistingMatchingCard(s.exconfilter,tp,LOCATION_MZONE,0,1,nil)
+	local btrue=Duel.IsExistingMatchingCard(s.exconfilter,tp,LOCATION_MZONE,0,1,nil) and not s.name_list[tp][code]  
 	--local btrue=g1:GetSum(Card.GetLevel)>5
 	--local btrue=Duel.IsExistingMatchingCard(s.higherfilter,tp,LOCATION_MZONE,0,1,nil,tc:GetOriginalAttribute(),tc:GetLevel())
 	local b1=Duel.GetLocationCount(1-tp,LOCATION_MZONE)>0 and tc:IsCanBeSpecialSummoned(e,0,tp,true,false,POS_FACEUP,1-tp)
