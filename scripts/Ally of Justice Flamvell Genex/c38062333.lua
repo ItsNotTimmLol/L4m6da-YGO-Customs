@@ -34,7 +34,7 @@ function s.initial_effect(c)
 	local e2=Effect.CreateEffect(c)
 	e2:SetDescription(aux.Stringid(id,1))
 	e2:SetCategory(CATEGORY_TOHAND+CATEGORY_SPECIAL_SUMMON+CATEGORY_SUMMON)
-	e2:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
+	e2:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_F)
 	e2:SetProperty(EFFECT_FLAG_CARD_TARGET+EFFECT_FLAG_DELAY+EFFECT_FLAG_DAMAGE_STEP)
 	e2:SetCode(EVENT_TO_GRAVE)
 	e2:SetRange(LOCATION_SZONE)
@@ -75,7 +75,7 @@ function s.initial_effect(c)
 	e7:SetType(EFFECT_TYPE_FIELD)
 	e7:SetRange(LOCATION_SZONE)
 	e7:SetCode(EFFECT_ADD_SETCODE)
-	e7:SetTargetRange(LOCATION_HAND|LOCATION_GRAVE|LOCATION_REMOVED,0)
+	e7:SetTargetRange(LOCATION_GRAVE|LOCATION_REMOVED,0)
 	e7:SetTarget(function(_,c) return s.setcodetg(c) end)
 	e7:SetValue(SET_FLAMVELL)
 	c:RegisterEffect(e7)
@@ -88,7 +88,7 @@ function s.initial_effect(c)
 	e9:SetType(EFFECT_TYPE_FIELD)
 	e9:SetRange(LOCATION_SZONE)
 	e9:SetCode(EFFECT_ADD_SETCODE)
-	e9:SetTargetRange(LOCATION_HAND|LOCATION_GRAVE|LOCATION_REMOVED,0)
+	e9:SetTargetRange(LOCATION_GRAVE|LOCATION_REMOVED,0)
 	e9:SetTarget(function(_,c) return s.setcodetg(c) end)
 	e9:SetValue(SET_GENEX)
 	c:RegisterEffect(e9)
@@ -101,7 +101,7 @@ function s.initial_effect(c)
 	e11:SetType(EFFECT_TYPE_FIELD)
 	e11:SetCode(EFFECT_ADD_RACE)
 	e11:SetRange(LOCATION_SZONE)
-	e11:SetTargetRange(LOCATION_HAND|LOCATION_GRAVE|LOCATION_REMOVED,0)
+	e11:SetTargetRange(LOCATION_GRAVE|LOCATION_REMOVED,0)
 	e11:SetTarget(function(_,c) return s.setcodetg(c) end)
 	e11:SetValue(RACE_PYRO)
 	c:RegisterEffect(e11)
@@ -114,7 +114,7 @@ function s.initial_effect(c)
 	e13:SetType(EFFECT_TYPE_FIELD)
 	e13:SetCode(EFFECT_ADD_ATTRIBUTE)
 	e13:SetRange(LOCATION_SZONE)
-	e13:SetTargetRange(LOCATION_HAND|LOCATION_GRAVE|LOCATION_REMOVED,0)
+	e13:SetTargetRange(LOCATION_GRAVE|LOCATION_REMOVED,0)
 	e13:SetTarget(function(_,c) return s.setcodetg(c) end)
 	e13:SetValue(ATTRIBUTE_FIRE)
 	c:RegisterEffect(e13)
@@ -243,11 +243,11 @@ function s.sp2filter(c,e,tp,eg)
 	--if c:GetReasonEffect() and not ((c:GetReasonEffect():GetHandler():IsSetCard(SET_ALLY_OF_JUSTICE)) or (c:GetReasonEffect():GetHandler():IsSetCard(SET_FLAMVELL))) then return end
 	--if c:GetReasonEffect()==REASON_COST and c:GetReasonEffect():IsActivated() and not ((Duel.GetChainInfo(ev,CHAININFO_TRIGGERING_SETCODES)==SET_ALLY_OF_JUSTICE) or (Duel.GetChainInfo(ev,CHAININFO_TRIGGERING_SETCODES)==SET_FLAMVELL)) then return end
 	return c:IsSetCard(SET_FLAMVELL) and c:IsControler(tp)
-		and not s.name_list[tp][c:GetCode()]
 		and c:IsMonster() and c:IsCanBeEffectTarget(e) and c:IsFaceup() 
-		and (c:IsAbleToHand()
-			--or (Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and c:IsCanBeSpecialSummoned(e,0,tp,true,false,POS_FACEUP,tp))
-			or (Duel.GetLocationCount(1-tp,LOCATION_MZONE)>0 and c:IsCanBeSpecialSummoned(e,0,tp,true,false,POS_FACEUP,1-tp)))
+		and ((Duel.GetLocationCount(1-tp,LOCATION_MZONE)>0 and c:IsCanBeSpecialSummoned(e,0,tp,true,false,POS_FACEUP_DEFENSE,1-tp))
+			or (not s.name_list[tp][c:GetCode()] 
+				and (c:IsAbleToHand()
+				or (Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and c:IsCanBeSpecialSummoned(e,0,tp,true,false,POS_FACEUP,tp)))))
 		--and eg:IsExists(s.chkfilter,1,nil,c:GetLevel())
 end
 function s.chkfilter(c,lvl)
@@ -268,8 +268,6 @@ function s.sp2tg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 		c=g:GetFirst()
 	end
 	Duel.SetTargetCard(c)
-	local code=c:GetCode()
-	s.name_list[tp][code]=true
 	Duel.SetPossibleOperationInfo(0,CATEGORY_SPECIAL_SUMMON,c,1,1-tp,0)
 	Duel.SetPossibleOperationInfo(0,CATEGORY_TOHAND,c,1,tp,0)
 	Duel.SetPossibleOperationInfo(0,CATEGORY_SUMMON,c,1,tp,0)
@@ -295,23 +293,29 @@ function s.sp2op(e,tp,eg,ep,ev,re,r,rp)
 	local tc=Duel.GetFirstTarget()
 	if not tc:IsRelateToEffect(e) then return end
 	local g1=Duel.GetMatchingGroup(s.exconfilter,tp,LOCATION_MZONE,0,nil)
-	local btrue=Duel.IsExistingMatchingCard(s.exconfilter,tp,LOCATION_MZONE,0,1,nil)
+	btrue=Duel.IsExistingMatchingCard(s.exconfilter,tp,LOCATION_MZONE,0,1,nil)
 	--local btrue=g1:GetSum(Card.GetLevel)>5
 	--local btrue=Duel.IsExistingMatchingCard(s.higherfilter,tp,LOCATION_MZONE,0,1,nil,tc:GetOriginalAttribute(),tc:GetLevel())
-	--local b1=Duel.GetLocationCount(1-tp,LOCATION_MZONE)>0 and tc:IsCanBeSpecialSummoned(e,0,tp,true,false,POS_FACEUP,1-tp)
-	local b1=true
-	local b2=Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and tc:IsCanBeSpecialSummoned(e,0,tp,true,false)
-	if not (b1 or b2) then return end
-	--if b1 and not btrue then return Duel.SpecialSummon(tc,0,tp,1-tp,true,false,POS_FACEUP) end
+	local b1=Duel.GetLocationCount(1-tp,LOCATION_MZONE)>0 and tc:IsCanBeSpecialSummoned(e,0,tp,true,false,POS_FACEUP,1-tp)
+	local b2=btrue
+	local b3=Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and tc:IsCanBeSpecialSummoned(e,0,tp,true,false) and btrue
+	if not (b1 or b2 or b3) then return end
+	if b1 and not btrue then return Duel.SpecialSummon(tc,0,tp,1-tp,true,false,POS_FACEUP) end
+	local code=tc:GetCode()
 	local op=Duel.SelectEffect(tp,
 		{b1,aux.Stringid(id,2)},
-		{b2,aux.Stringid(id,3)})
+		{b2,aux.Stringid(id,3)},
+		{b3,aux.Stringid(id,4)})
 	if op==1 then
+		Duel.SpecialSummon(tc,0,tp,1-tp,false,false,POS_FACEUP_DEFENSE)
+	elseif not s.name_list[tp][code] and op==2 or not (b2 and b3) then
+		s.name_list[tp][code]=true
 		Duel.SendtoHand(tc,nil,REASON_EFFECT)
 		Duel.ConfirmCards(1-tp,tc)
-	elseif op==2 or not (b2 and b3) then
+	elseif not s.name_list[tp][code] and op==3 or not (b1 and b2) then
+		s.name_list[tp][code]=true
 		if Duel.SpecialSummonStep(tc,0,tp,tp,true,false,POS_FACEUP) then
-			--Treated as a Tuner
+			--[[Treated as a Tuner
 			local e1=Effect.CreateEffect(e:GetHandler())
 			e1:SetType(EFFECT_TYPE_SINGLE)
 			e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_IGNORE_IMMUNE)
@@ -320,17 +324,8 @@ function s.sp2op(e,tp,eg,ep,ev,re,r,rp)
 			e1:SetReset(RESET_EVENT|RESETS_STANDARD)
 			tc:RegisterEffect(e1)
 			tc:RegisterFlagEffect(id,RESET_EVENT|RESETS_STANDARD,EFFECT_FLAG_CLIENT_HINT,1,0,aux.Stringid(id,5))
-		end
+		]]ends
 		Duel.SpecialSummonComplete()
-	end
-	if not btrue and Duel.SelectYesNo(1-tp,aux.Stringid(id,4)) then
-		--Take control of 1 monster your opponent controls until the End Phase
-		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_CONTROL)
-		local g=Duel.SelectMatchingCard(1-tp,Card.IsControlerCanBeChanged,tp,LOCATION_MZONE,0,1,1,nil)
-		if #g>0 then
-			Duel.HintSelection(g)
-			Duel.GetControl(g,1-tp,PHASE_END,1)
-		end
 	end
 end
 
@@ -362,5 +357,3 @@ function s.sp2op(e,tp,eg,ep,ev,re,r,rp)
 		end
 	end
 end]]--
-
-
