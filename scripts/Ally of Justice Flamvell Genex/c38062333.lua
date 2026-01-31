@@ -291,9 +291,11 @@ end
 
 function s.sp2op(e,tp,eg,ep,ev,re,r,rp)
 	local tc=Duel.GetFirstTarget()
+	local code=tc:GetCode()
 	if not tc:IsRelateToEffect(e) then return end
 	local g1=Duel.GetMatchingGroup(s.exconfilter,tp,LOCATION_MZONE,0,nil)
-	btrue=Duel.IsExistingMatchingCard(s.exconfilter,tp,LOCATION_MZONE,0,1,nil)
+	local btrue=not s.name_list[tp][code]  
+	--local btrue=Duel.IsExistingMatchingCard(s.exconfilter,tp,LOCATION_MZONE,0,1,nil)
 	--local btrue=g1:GetSum(Card.GetLevel)>5
 	--local btrue=Duel.IsExistingMatchingCard(s.higherfilter,tp,LOCATION_MZONE,0,1,nil,tc:GetOriginalAttribute(),tc:GetLevel())
 	local b1=Duel.GetLocationCount(1-tp,LOCATION_MZONE)>0 and tc:IsCanBeSpecialSummoned(e,0,tp,true,false,POS_FACEUP,1-tp)
@@ -301,18 +303,17 @@ function s.sp2op(e,tp,eg,ep,ev,re,r,rp)
 	local b3=Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and tc:IsCanBeSpecialSummoned(e,0,tp,true,false) and btrue
 	if not (b1 or b2 or b3) then return end
 	if b1 and not btrue then return Duel.SpecialSummon(tc,0,tp,1-tp,true,false,POS_FACEUP) end
-	local code=tc:GetCode()
 	local op=Duel.SelectEffect(tp,
 		{b1,aux.Stringid(id,2)},
 		{b2,aux.Stringid(id,3)},
 		{b3,aux.Stringid(id,4)})
 	if op==1 then
 		Duel.SpecialSummon(tc,0,tp,1-tp,false,false,POS_FACEUP_DEFENSE)
-	elseif not s.name_list[tp][code] and op==2 or not (b2 and b3) then
+	elseif op==2 or not (b2 and b3) then
 		s.name_list[tp][code]=true
 		Duel.SendtoHand(tc,nil,REASON_EFFECT)
 		Duel.ConfirmCards(1-tp,tc)
-	elseif not s.name_list[tp][code] and op==3 or not (b1 and b2) then
+	elseif op==3 or not (b1 and b2) then
 		s.name_list[tp][code]=true
 		if Duel.SpecialSummonStep(tc,0,tp,tp,true,false,POS_FACEUP) then
 			--[[Treated as a Tuner
