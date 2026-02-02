@@ -350,6 +350,7 @@ function s.sp2op(e,tp,eg,ep,ev,re,r,rp)
 			tc:RegisterFlagEffect(id,RESET_EVENT|RESETS_STANDARD,EFFECT_FLAG_CLIENT_HINT,1,0,aux.Stringid(id,5))
 		end
 		Duel.SpecialSummonComplete()
+	end
 end
 
 --[[old version
