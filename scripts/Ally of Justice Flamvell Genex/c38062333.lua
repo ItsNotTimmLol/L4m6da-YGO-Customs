@@ -34,12 +34,12 @@ function s.initial_effect(c)
 	local e2=Effect.CreateEffect(c)
 	e2:SetDescription(aux.Stringid(id,1))
 	e2:SetCategory(CATEGORY_TOHAND+CATEGORY_SPECIAL_SUMMON+CATEGORY_SUMMON)
-	e2:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_F)
+	e2:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
 	e2:SetProperty(EFFECT_FLAG_CARD_TARGET+EFFECT_FLAG_DELAY+EFFECT_FLAG_DAMAGE_STEP)
 	e2:SetCode(EVENT_TO_GRAVE)
 	e2:SetRange(LOCATION_SZONE)
 	e2:SetCountLimit(1,0,EFFECT_COUNT_CODE_CHAIN)
-	--e2:SetCondition(s.sp2con)
+	e2:SetCondition(s.exconfilter)
 	e2:SetTarget(s.sp2tg)
 	e2:SetOperation(s.sp2op)
 	c:RegisterEffect(e2)
@@ -244,7 +244,7 @@ function s.sp2filter(c,e,tp,eg)
 	--if c:GetReasonEffect()==REASON_COST and c:GetReasonEffect():IsActivated() and not ((Duel.GetChainInfo(ev,CHAININFO_TRIGGERING_SETCODES)==SET_ALLY_OF_JUSTICE) or (Duel.GetChainInfo(ev,CHAININFO_TRIGGERING_SETCODES)==SET_FLAMVELL)) then return end
 	return c:IsSetCard(SET_FLAMVELL) and c:IsControler(tp)
 		and c:IsMonster() and c:IsCanBeEffectTarget(e) and c:IsFaceup() 
-		and ((Duel.GetLocationCount(1-tp,LOCATION_MZONE)>0 and c:IsCanBeSpecialSummoned(e,0,tp,true,false,POS_FACEUP_DEFENSE,1-tp))
+		and ((Duel.GetLocationCount(1-tp,LOCATION_MZONE)>0 and c:IsCanBeSpecialSummoned(e,0,tp,true,false,POS_FACEUP,1-tp))
 			or (not s.name_list[tp][c:GetCode()] 
 				and (c:IsAbleToHand()
 				or (Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and c:IsCanBeSpecialSummoned(e,0,tp,true,false,POS_FACEUP,tp)))))
@@ -294,39 +294,62 @@ function s.sp2op(e,tp,eg,ep,ev,re,r,rp)
 	local code=tc:GetCode()
 	if not tc:IsRelateToEffect(e) then return end
 	local g1=Duel.GetMatchingGroup(s.exconfilter,tp,LOCATION_MZONE,0,nil)
-	local btrue=Duel.IsExistingMatchingCard(s.exconfilter,tp,LOCATION_MZONE,0,1,nil) and not s.name_list[tp][code]  
+	local btrue=true--Duel.IsExistingMatchingCard(s.exconfilter,tp,LOCATION_MZONE,0,1,nil) and not s.name_list[tp][code]  
 	--local btrue=g1:GetSum(Card.GetLevel)>5
 	--local btrue=Duel.IsExistingMatchingCard(s.higherfilter,tp,LOCATION_MZONE,0,1,nil,tc:GetOriginalAttribute(),tc:GetLevel())
-	local b1=Duel.GetLocationCount(1-tp,LOCATION_MZONE)>0 and tc:IsCanBeSpecialSummoned(e,0,tp,true,false,POS_FACEUP_DEFENSE,1-tp)
-	local b2=btrue
-	local b3=Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and tc:IsCanBeSpecialSummoned(e,0,tp,true,false) and btrue
+	local b1=btrue
+	local b2=Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and tc:IsCanBeSpecialSummoned(e,0,tp,true,false) and btrue
+	local b3=Duel.GetLocationCount(1-tp,LOCATION_MZONE)>0 and tc:IsCanBeSpecialSummoned(e,0,tp,true,false,POS_FACEUP_DEFENSE,1-tp)
 	if not (b1 or b2 or b3) then return end
-	--if b1 and not btrue then return Duel.SpecialSummon(tc,0,tp,1-tp,true,false,POS_FACEUP) end
+	if b3 and not b1 or b2 then return Duel.SpecialSummon(tc,0,tp,1-tp,true,false,POS_FACEUP) end
 	local op=Duel.SelectEffect(tp,
 		{b1,aux.Stringid(id,2)},
 		{b2,aux.Stringid(id,3)},
 		{b3,aux.Stringid(id,4)})
 	if op==1 then
-		Duel.SpecialSummon(tc,0,tp,1-tp,false,false,POS_FACEUP_DEFENSE)
-	elseif op==2 or not (b2 and b3) then
 		s.name_list[tp][code]=true
 		Duel.SendtoHand(tc,nil,REASON_EFFECT)
 		Duel.ConfirmCards(1-tp,tc)
-	elseif op==3 or not (b1 and b2) then
+	elseif op==2 or not (b1 and b3) then
 		s.name_list[tp][code]=true
 		if Duel.SpecialSummonStep(tc,0,tp,tp,true,false,POS_FACEUP) then
-			--[[Treated as a Tuner
 			local e1=Effect.CreateEffect(e:GetHandler())
 			e1:SetType(EFFECT_TYPE_SINGLE)
-			e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_IGNORE_IMMUNE)
-			e1:SetCode(EFFECT_ADD_TYPE)
-			e1:SetValue(TYPE_TUNER)
+			e1:SetCode(EFFECT_CHANGE_LEVEL)
+			e1:SetValue(3)
 			e1:SetReset(RESET_EVENT|RESETS_STANDARD)
-			tc:RegisterEffect(e1)
+			tc:RegisterEffect(e1,true)
+			--Treated as a Tuner
+			local e2=Effect.CreateEffect(e:GetHandler())
+			e2:SetType(EFFECT_TYPE_SINGLE)
+			e2:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_IGNORE_IMMUNE)
+			e2:SetCode(EFFECT_ADD_TYPE)
+			e2:SetValue(TYPE_TUNER)
+			e2:SetReset(RESET_EVENT|RESETS_STANDARD)
+			tc:RegisterEffect(e2)
 			tc:RegisterFlagEffect(id,RESET_EVENT|RESETS_STANDARD,EFFECT_FLAG_CLIENT_HINT,1,0,aux.Stringid(id,5))
-		]]end
+		end
 		Duel.SpecialSummonComplete()
 	end
+	if op==3 or not (b1 and b2) then
+		if Duel.SpecialSummonStep(tc,0,tp,1-tp,false,false,POS_FACEUP) then
+			local e1=Effect.CreateEffect(e:GetHandler())
+			e1:SetType(EFFECT_TYPE_SINGLE)
+			e1:SetCode(EFFECT_CHANGE_LEVEL)
+			e1:SetValue(3)
+			e1:SetReset(RESET_EVENT|RESETS_STANDARD)
+			tc:RegisterEffect(e1,true)
+			--Treated as a Tuner
+			local e2=Effect.CreateEffect(e:GetHandler())
+			e2:SetType(EFFECT_TYPE_SINGLE)
+			e2:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_IGNORE_IMMUNE)
+			e2:SetCode(EFFECT_ADD_TYPE)
+			e2:SetValue(TYPE_TUNER)
+			e2:SetReset(RESET_EVENT|RESETS_STANDARD)
+			tc:RegisterEffect(e2)
+			tc:RegisterFlagEffect(id,RESET_EVENT|RESETS_STANDARD,EFFECT_FLAG_CLIENT_HINT,1,0,aux.Stringid(id,5))
+		end
+		Duel.SpecialSummonComplete()
 end
 
 --[[old version

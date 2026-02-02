@@ -20,7 +20,7 @@ function s.initial_effect(c)
 	e1:SetCode(EFFECT_TRAP_ACT_IN_HAND)
 	c:RegisterEffect(e1)
 	e0:SetLabelObject(e1)
-	--Monsters whose ATK is different from their original ATK are unaffected by your opponent's activated effects
+	--Monsters with different traits are unaffected by your opponent's activated effects
 	local e2=Effect.CreateEffect(c)
 	e2:SetType(EFFECT_TYPE_FIELD)
 	e2:SetCode(EFFECT_IMMUNE_EFFECT)
@@ -111,9 +111,10 @@ end
 function s.immtg(e,c)
 	return (c:IsCode(s.ally_names) or c:IsSetCard(s.ally_series)) 
 		and c:IsMonster() 
-		and not (c:IsAttack(c:GetBaseAttack()) 
-		or c:IsAttributeExcept(c:GetOriginalAttribute())
-		or c:IsCode(c:GetOriginalCode()))
+		and (c:IsAttributeExcept(c:GetOriginalAttribute())
+			or not (c:IsCode(c:GetOriginalCode())
+			or c:IsAttack(c:GetBaseAttack())
+			or c:IsDefense(c:GetBaseDefense())))
 end
 function s.immval(e,te)
 	return te:GetOwnerPlayer()==1-e:GetHandlerPlayer() and te:IsActivated()

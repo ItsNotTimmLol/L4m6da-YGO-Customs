@@ -29,7 +29,7 @@ function s.initial_effect(c)
 	local e3=Effect.CreateEffect(c)
 	e3:SetType(EFFECT_TYPE_FIELD)
 	e3:SetRange(LOCATION_FZONE)
-	e3:SetTargetRange(LOCATION_GRAVE,LOCATION_HAND|LOCATION_ONFIELD|LOCATION_GRAVE)
+	e3:SetTargetRange(LOCATION_GRAVE,LOCATION_ONFIELD|LOCATION_GRAVE)
 	e3:SetCondition(s.lightcon)
 	e3:SetCode(EFFECT_CHANGE_ATTRIBUTE)
 	e3:SetValue(ATTRIBUTE_LIGHT)
@@ -60,12 +60,12 @@ function s.initial_effect(c)
 	e7:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_GRANT)
 	e7:SetRange(LOCATION_FZONE)
 	e7:SetTargetRange(LOCATION_HAND,0)
-	e7:SetTarget(function(e,c) return c:IsMonster() and (c:IsCode(s.ally_names) or c:IsSetCard(SET_ALLY_OF_JUSTICE) or c:IsSetCard(SET_GENEX_ALLY)) end)
+	e7:SetTarget(function(e,c) return c:IsMonster() and c:IsAttribute(ATTRIBUTE_DARK) and (c:IsCode(s.ally_names) or c:IsSetCard(SET_ALLY_OF_JUSTICE) or c:IsSetCard(SET_GENEX_ALLY)) end)
 	e7:SetLabelObject(e6)
 	c:RegisterEffect(e7)
 	--Recycle banished
 	local e8=Effect.CreateEffect(c)
-	e8:SetDescription(aux.Stringid(id,2))
+	e8:SetDescription(aux.Stringid(id,3))
 	e8:SetCategory(CATEGORY_TODECK)
 	e8:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
 	e8:SetRange(LOCATION_FZONE)
@@ -92,7 +92,7 @@ function s.allymachinefilter(c)
 end
 function s.lightcon(e) 
 	--local g=Duel.GetMatchingGroup(s.confilter,e:GetHandlerPlayer(),LOCATION_MZONE,0,nil) 
-	return Duel.IsBattlePhase() or Duel.IsExistingMatchingCard(s.allymachinefilter,e:GetHandlerPlayer(),LOCATION_MZONE,0,1,nil,tp) --or g:GetSum(Card.GetLevel)>20 
+	return Duel.IsBattlePhase() --or Duel.IsExistingMatchingCard(s.allymachinefilter,e:GetHandlerPlayer(),LOCATION_MZONE,0,1,nil,tp) --or g:GetSum(Card.GetLevel)>20 
 end
 function s.changegytg(e,c)
 	if c:GetFlagEffect(1)==0 then
@@ -120,8 +120,8 @@ function s.tributetarget(e,c)
 	return c:IsAttribute(ATTRIBUTE_LIGHT) or not c:IsFaceup()
 end
 
---Add on opp monster
-function s.thfilter(c,e,tp)
+--Add to hand
+function s.th1filter(c,e,tp)
 	return (c:IsSetCard(s.listed_series))
 		and c:IsAbleToHand()
 		--and not (c:IsType(TYPE_FIELD) and c:IsType(TYPE_SPELL))
@@ -129,12 +129,17 @@ function s.thfilter(c,e,tp)
 		--and c:IsMonster()
 		--and not Duel.IsExistingMatchingCard(s.uniquefilter,tp,LOCATION_MZONE|LOCATION_GRAVE|LOCATION_REMOVED,0,1,nil,c:GetCode())
 end
+--Add to opponent
+function s.th2filter(c)
+	return c:IsAttribute(ATTRIBUTE_LIGHT)
+		and c:IsAbleToHand()
+end
 function s.uniquefilter(c,code)
 	return c:IsCode(code) and c:IsFaceup() and c:IsMonster()
 end
 function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk)
 	local c=e:GetHandler()
-	if chk==0 then return true --Duel.IsExistingMatchingCard(s.thfilter,tp,LOCATION_DECK,0,1,nil,e,tp)
+	if chk==0 then return true --Duel.IsExistingMatchingCard(s.th1filter,tp,LOCATION_DECK,0,1,nil,e,tp)
 		end
 	Duel.SetOperationInfo(0,CATEGORY_TOHAND,nil,1,tp,LOCATION_DECK)
 end
@@ -143,11 +148,11 @@ function s.nsfilter(c)
 		and c:IsSummonable(true,nil)
 end
 function s.actop(e,tp,eg,ep,ev,re,r,rp)
-	if not (Duel.IsExistingMatchingCard(s.thfilter,tp,LOCATION_DECK,0,1,nil,e,tp) and Duel.SelectYesNo(tp,aux.Stringid(id,1))) then return end
+	if not (Duel.IsExistingMatchingCard(s.th1filter,tp,LOCATION_DECK,0,1,nil,e,tp) and Duel.SelectYesNo(tp,aux.Stringid(id,1))) then return end
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_ATOHAND)
-	local tc=Duel.SelectMatchingCard(tp,s.thfilter,tp,LOCATION_DECK,0,1,1,nil,e,tp):GetFirst()
-	if tc and Duel.SendtoHand(tc,nil,REASON_EFFECT)>0 and tc:IsLocation(LOCATION_HAND) then
-		Duel.ConfirmCards(1-tp,tc)
+	local tc1=Duel.SelectMatchingCard(tp,s.th1filter,tp,LOCATION_DECK,0,1,1,nil,e,tp):GetFirst()
+	if tc1 and Duel.SendtoHand(tc1,nil,REASON_EFFECT)>0 and tc1:IsLocation(LOCATION_HAND) then
+		Duel.ConfirmCards(1-tp,tc1)
 		Duel.ShuffleHand(tp)
 		--[[if Duel.IsExistingMatchingCard(s.nsfilter,tp,LOCATION_HAND|LOCATION_MZONE,0,1,nil)
 			and Duel.SelectYesNo(tp,aux.Stringid(id,0)) then
@@ -158,11 +163,19 @@ function s.actop(e,tp,eg,ep,ev,re,r,rp)
 				Duel.SummonOrSet(tp,sc,true,nil)
 			end
 		end]]--
+		if Duel.IsExistingMatchingCard(s.th2filter,tp,LOCATION_DECK,0,1,nil,e,tp) and Duel.SelectYesNo(tp,aux.Stringid(id,2)) then
+			Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_ATOHAND)
+			local tc2=Duel.SelectMatchingCard(tp,s.th2filter,tp,LOCATION_DECK,0,1,1,nil,e,tp):GetFirst()
+			if tc2 and Duel.SendtoHand(tc2,1-tp,REASON_EFFECT)>0 and tc2:IsLocation(LOCATION_HAND) then
+				Duel.ConfirmCards(tp,tc2)
+				Duel.ShuffleHand(1-tp)
+			end
+		end
 	end
 end
 function s.thop(e,tp,eg,ep,ev,re,r,rp)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_ATOHAND)
-	local tc=Duel.SelectMatchingCard(tp,s.thfilter,tp,LOCATION_DECK,0,1,1,nil,e,tp):GetFirst()
+	local tc=Duel.SelectMatchingCard(tp,s.th1filter,tp,LOCATION_DECK,0,1,1,nil,e,tp):GetFirst()
 	if tc and Duel.SendtoHand(tc,nil,REASON_EFFECT)>0 and tc:IsLocation(LOCATION_HAND) then
 		Duel.ConfirmCards(1-tp,tc)
 		Duel.ShuffleHand(tp)
