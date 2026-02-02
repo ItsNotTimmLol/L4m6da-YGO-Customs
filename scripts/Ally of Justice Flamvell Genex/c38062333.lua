@@ -282,7 +282,7 @@ function s.higherfilter(c,att,lv)
 	return c:IsMonster() and c:IsSetCard(s.listed_series) and c:GetLevel()>lv and  c:IsAttributeExcept(att)
 end
 function s.exconfilter(c)
-	return (c:IsCode(s.ally_names) or c:IsSetCard(s.listed_series)) 
+	return (c:IsCode(s.ally_names):GetFirst() or c:IsSetCard(s.listed_series)) 
 		and c:IsMonster() 
 		and c:IsFaceup()
 		and (c:IsNormalSummoned() or c:IsSynchroSummoned())
