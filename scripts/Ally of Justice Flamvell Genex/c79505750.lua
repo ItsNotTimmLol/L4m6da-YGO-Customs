@@ -51,12 +51,12 @@ function s.initial_effect(c)
 	local e6=Effect.CreateEffect(c)
 	e6:SetDescription(aux.Stringid(id,0))
 	e6:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
-	e6:SetCategory(CATEGORY_TOHAND+CATEGORY_SEARCH+CATEGORY_SPECIAL_SUMMON)
+	e6:SetCategory(CATEGORY_SET)
 	e6:SetProperty(EFFECT_FLAG_DELAY+EFFECT_FLAG_DAMAGE_STEP)
 	e6:SetCode(EVENT_LEAVE_FIELD)
-	e6:SetCondition(s.thcon)
-	e6:SetTarget(s.thtg)
-	e6:SetOperation(s.thop)
+	e6:SetCondition(s.setcon)
+	e6:SetTarget(s.settg)
+	e6:SetOperation(s.setop)
 	c:RegisterEffect(e6)
 	--banish
 	local e7=Effect.CreateEffect(c)
@@ -71,6 +71,7 @@ function s.initial_effect(c)
 	c:RegisterEffect(e7)
 end
 s.listed_series={SET_ALLY_OF_JUSTICE,SET_FLAMVELL,SET_GENEX}
+s.listed_names={42079445}
 s.ally_series={SET_ALLY_OF_JUSTICE,SET_GENEX_ALLY}
 s.ally_names={40155554,59482302}
 --Materials
@@ -117,6 +118,43 @@ end]]--
 function s.matlimit(e,c)
 	if not c then return false end
 	return not c:IsSetCard(s.listed_series)
+end
+
+--Set
+function s.setcon(e,tp,eg,ep,ev,re,r,rp)
+	local c=e:GetHandler()
+	return c:IsPreviousPosition(POS_FACEUP)
+end
+function s.setfilter(c,e,tp,mft,sft)
+	return (c:IsCode(42079445) or c:IsSetCard(SET_ALLY_OF_JUSTICE))
+	and c:IsSpellTrap() and c:IsSSetable()
+end
+function s.settg(e,tp,eg,ep,ev,re,r,rp,chk)
+	local ft=Duel.GetLocationCount(tp,LOCATION_SZONE)
+	if chk==0 then return Duel.IsExistingMatchingCard(s.setfilter,tp,LOCATION_HAND|LOCATION_DECK|LOCATION_GRAVE|LOCATION_REMOVED,0,1,nil) end
+end
+function s.rescon2(sg,e,tp,mg)
+	return #sg==1 or sg:IsExists(Card.IsCode,1,nil,42079445)
+end
+function s.setop(e,tp,eg,ep,ev,re,r,rp)
+	local ft=Duel.GetLocationCount(tp,LOCATION_SZONE)
+	if ft<=0 then return end
+	local g=Duel.GetMatchingGroup(aux.NecroValleyFilter(s.setfilter),tp,LOCATION_HAND|LOCATION_DECK|LOCATION_GRAVE|LOCATION_REMOVED,0,nil)
+	if #g==0 then return end
+	local sg=aux.SelectUnselectGroup(g,e,tp,1,math.min(ft,2),s.rescon2,1,tp,HINTMSG_SET)
+	if #sg>0 and Duel.SSet(tp,sg)>0 then
+		local c=e:GetHandler()
+		for tc in g:Iter() do
+			--Can be activated this turn
+			local e1=Effect.CreateEffect(c)
+			e1:SetDescription(aux.Stringid(id,2))
+			e1:SetType(EFFECT_TYPE_SINGLE)
+			e1:SetProperty(EFFECT_FLAG_SET_AVAILABLE)
+			e1:SetCode(EFFECT_TRAP_ACT_IN_SET_TURN)
+			e1:SetReset(RESET_EVENT|RESETS_STANDARD)
+			tc:RegisterEffect(e1)
+		end
+	end
 end
 
 
