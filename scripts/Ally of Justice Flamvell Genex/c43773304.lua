@@ -66,7 +66,7 @@ function s.setfilter(c)
 	return c:IsSSetable() or c:IsMSetable(true,nil)
 end
 function s.settg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.IsExistingMatchingCard(s.setfilter,tp,LOCATION_HAND,0,1,nil) or Duel.IsExistingMatchingCard(s.setfilter,1-tp,0,LOCATION_HAND,1,nil) end
+	if chk==0 then return Duel.IsExistingMatchingCard(s.setfilter,tp,LOCATION_HAND,0,1,nil) or Duel.IsExistingMatchingCard(s.setfilter,1-tp,LOCATION_HAND,0,1,nil) end
 end
 function s.setop(e,tp,eg,ep,ev,re,r,rp)
 	local g1=Duel.GetFieldGroup(tp,LOCATION_HAND,0)
@@ -74,7 +74,7 @@ function s.setop(e,tp,eg,ep,ev,re,r,rp)
 	local sc1=g1:FilterSelect(tp,s.setfilter,1,1,nil):GetFirst()
 	if sc1:IsMSetable(true,nil) then
 		Duel.MSet(tp,sc1,true,nil)
-	else
+	elseif sc1:IsSSetable(true,nil) then
 		Duel.SSet(tp,sc1)
 		local e1=Effect.CreateEffect(e:GetHandler())
 		e1:SetType(EFFECT_TYPE_SINGLE)
@@ -85,7 +85,7 @@ function s.setop(e,tp,eg,ep,ev,re,r,rp)
 	local sc2=g2:FilterSelect(1-tp,s.setfilter,1,1,nil):GetFirst()
 	if sc2:IsMSetable(true,nil) then
 		Duel.MSet(1-tp,sc2,true,nil)
-	else
+	elseif sc2:IsSSetable(true,nil) then
 		Duel.SSet(1-tp,sc2)
 		local e2=Effect.CreateEffect(e:GetHandler())
 		e2:SetType(EFFECT_TYPE_SINGLE)
@@ -97,17 +97,15 @@ end
 
 --Special Summon
 function s.thfilter(c,tp)
-	return (c:IsCode(s.ally_names) 
-	or c:IsSetCard(s.ally_series) 
-	or (c:IsSetCard(SET_WORM) and c:IsRace(RACE_REPTILE))) 
+	return (c:IsRace(RACE_MACHINE) and (c:IsCode(s.ally_names) or c:IsSetCard(s.ally_series)))
 	and c:IsMonster() and c:IsAbleToHand()
-	and not Duel.IsExistingMatchingCard(aux.FaceupFilter(Card.IsCode,c:GetCode()),tp,LOCATION_ONFIELD|LOCATION_GRAVE,LOCATION_ONFIELD,1,nil)
+	and not Duel.IsExistingMatchingCard(aux.FaceupFilter(Card.IsCode,nil,c:GetCode()),tp,LOCATION_ONFIELD|LOCATION_GRAVE,LOCATION_ONFIELD,1,nil)
 end
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
 	local c=e:GetHandler()
 	if chk==0 then return (Duel.GetLocationCount(tp,LOCATION_MZONE)>0 and c:IsCanBeSpecialSummoned(e,0,tp,false,false,POS_FACEDOWN_DEFENSE))
 		or (Duel.GetLocationCount(1-tp,LOCATION_MZONE)>0 and c:IsCanBeSpecialSummoned(e,0,tp,false,false,POS_FACEUP+POS_FACEDOWN_DEFENSE,1-tp))
-		and Duel.IsExistingMatchingCard(s.thfilter,tp,LOCATION_DECK,0,1,nil) end
+		and Duel.IsExistingMatchingCard(s.thfilter,tp,LOCATION_DECK,0,1,nil,tp) end
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,c,1,tp,0)
 	Duel.SetOperationInfo(0,CATEGORY_TOHAND,nil,1,tp,LOCATION_DECK)
 end
