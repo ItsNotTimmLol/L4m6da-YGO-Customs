@@ -30,15 +30,6 @@ function s.initial_effect(c)
 	e3:SetTarget(function(e,c) return c:IsMonster() and c:IsAttribute(ATTRIBUTE_DARK) and (c:IsCode(s.ally_names) or c:IsSetCard(SET_ALLY_OF_JUSTICE) or c:IsSetCard(SET_GENEX_ALLY)) end)
 	e3:SetLabelObject(e5)
 	c:RegisterEffect(e3)
-	local e4=Effect.CreateEffect(c)
-	e4:SetType(EFFECT_TYPE_FIELD)
-	e4:SetCode(EFFECT_SUMMON_COST)
-	e4:SetRange(LOCATION_MZONE)
-	e4:SetTargetRange(LOCATION_HAND,LOCATION_HAND)
-	e4:SetTarget(s.sumtg)
-	e4:SetCost(s.ccost)
-	e4:SetOperation(s.acop)
-	c:RegisterEffect(e4)
 	local e5=Effect.CreateEffect(c)
 	e5:SetDescription(aux.Stringid(id,2))
 	e5:SetCategory(CATEGORY_SPECIAL_SUMMON+CATEGORY_SUMMON)
@@ -49,28 +40,58 @@ function s.initial_effect(c)
 	e5:SetCountLimit(1,0,EFFECT_COUNT_CODE_CHAIN)
 	e5:SetTarget(s.sptg)
 	e5:SetOperation(s.spop)
+	aux.GlobalCheck(s,function()
+		local ge1=Effect.CreateEffect(c)
+		ge1:SetType(EFFECT_TYPE_FIELD)
+		ge1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE+EFFECT_FLAG_SET_AVAILABLE+EFFECT_FLAG_IGNORE_RANGE)
+		ge1:SetCode(EFFECT_MATERIAL_CHECK)
+		ge1:SetValue(s.valcheck)
+		Duel.RegisterEffect(ge1,0)
+	end)
 end
 s.listed_series={SET_ALLY_OF_JUSTICE,SET_WORM}
 s.ally_series={SET_ALLY_OF_JUSTICE}
 s.ally_names={40155554,59482302}
-function s.sumtg(e,c,tp)
+function s.valcheck(e,c)
 	local tp=e:GetHandlerPlayer()
-	local ct=c:GetMaterial():Filter(Card.IsPreviousControler,nil,1-tp):GetSum(Card.GetBaseAttack)
-	if ct>0 then e:SetLabel(ct) end
-	Debug.Message("Labeltg: "..(ct))
+	local g=c:GetMaterial():Filter(Card.IsPreviousControler,nil,1-tp)
+	if #g>0 then
+		Debug.Message("ct: "..(#g))
+		local ct=g:GetSum(Card.GetBaseAttack)
+		Debug.Message("ct: "..(ct))
+	end
+end
+function s.sumtg(e,c,tp)
+	local tp=c:GetOwner()
+	Debug.Message("tp: "..(tp))
+	Debug.Message("m: "..(c:GetCode()))
+	Debug.Message("r: "..(c:GetRace()))
+	Debug.Message("g: "..(c:GetMaterialCount()))
+	local ct1=c:GetMaterial():Filter(Card.IsPreviousControler,nil,1-tp)
+	Debug.Message("ct1: "..(#ct1))
+	local ct=ct1:GetSum(Card.GetBaseAttack)
+	Debug.Message("ct: "..(ct))
+	if ct>0 then 
+		e:GetLabelObject():SetLabel(ct) 
+	end
+	local ct1=c:GetMaterialCount()
 	return ct>0
 end
 function s.ccost(e,c,tp)
-	local ct=e:GetLabel()>=0
+	local ct=e:GetLabel()
 	Debug.Message("Labelcost: "..(ct))
 	return Duel.CheckLPCost(tp,ct)
 end
 function s.acop(e,tp,eg,ep,ev,re,r,rp)
-	local ct=e:GetLabel()>=0
+	local ct=e:GetLabel()
 	Debug.Message("Labelop: "..(ct))
-	Duel.Hint(HINT_CARD,0,id)
-	Duel.PayLPCost(tp,ct)
+	if ct>0 and ct~=nil then
+		Duel.Hint(HINT_CARD,0,id)
+		Duel.PayLPCost(tp,ct)
+	end
 end
+
+
 function s.spfilter(c,e,tp)
 	return (c:IsCode(s.ally_names) or c:IsSetCard(s.listed_series)) 
 		and Duel.GetLocationCount(1-tp,LOCATION_MZONE)>0 and c:IsCanBeSpecialSummoned(e,0,tp,false,false,POS_FACEUP_DEFENSE,1-tp)
