@@ -22,48 +22,49 @@ function s.initial_effect(c)
 	e2:SetCondition(s.cond)
 	e2:SetValue(s.tgtg)
 	c:RegisterEffect(e2)
-	--disable zones
+	--Make all monsters Level 2 and WATER, then Set "Terror of Trishula"
 	local e3=Effect.CreateEffect(c)
-	e3:SetDescription(aux.Stringid(id,2))
-	e3:SetType(EFFECT_TYPE_QUICK_O+EFFECT_TYPE_FIELD)
-	e3:SetProperty(EFFECT_FLAG_DELAY)
-	e3:SetCode(EVENT_FREE_CHAIN)
+	e3:SetDescription(aux.Stringid(id,1))
+	e3:SetType(EFFECT_TYPE_IGNITION)
 	e3:SetRange(LOCATION_SZONE)
-	e3:SetCondition(function(e,tp) return Duel.IsExistingMatchingCard(aux.FaceupFilter(Card.IsCode,92065772),tp,LOCATION_ONFIELD,0,1,nil) end)
 	e3:SetCountLimit(1)
-	e3:SetTarget(s.ztg)
-	e3:SetOperation(s.zop)
+	e3:SetOperation(s.operation)
 	c:RegisterEffect(e3)
-	--immune to opp eff
-	local e4=Effect.CreateEffect(c)
-	e4:SetType(EFFECT_TYPE_SINGLE)
-	e4:SetProperty(EFFECT_FLAG_SINGLE_RANGE)
-	e4:SetCode(EFFECT_IMMUNE_EFFECT)
-	e4:SetRange(LOCATION_SZONE)
-	e4:SetValue(s.efilter)
-	c:RegisterEffect(e4)
 end
 s.listed_series={SET_ICE_BARRIER}
 s.listed_names={06075533,92065772}
 function s.spfilter(c,e,tp)
-	return c:IsSetCard(SET_ICE_BARRIER) and (c:IsLevel(8) or c:IsLevelBelow(4) or c:IsType(TYPE_SYNCHRO))
-	and (c:IsLocation(LOCATION_HAND|LOCATION_DECK) or c:IsFaceup())
+	return c:IsSetCard(SET_ICE_BARRIER) 
 	and c:IsCanBeSpecialSummoned(e,0,tp,false,false)
 end
-function s.setfilter(c)
-	return c:IsCode(06075533) and c:IsSSetable() and (c:IsLocation(LOCATION_DECK) or c:IsFaceup())
+function s.lfilter1(c,g)
+	return g:IsExists(s.lfilter2,1,c,c:GetLevel())
+end
+function s.lfilter2(c,lvl)
+	return c:GetLevel()==lvl
 end
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
+	local g=Duel.GetMatchingGroup(s.spfilter,tp,LOCATION_HAND|LOCATION_DECK,0,nil,e,tp)
 	if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
-		and Duel.IsExistingMatchingCard(s.spfilter,tp,LOCATION_HAND+LOCATION_DECK+LOCATION_GRAVE+LOCATION_REMOVED,0,1,nil,e,tp) end
+		and g:IsExists(s.lfilter1,1,nil,g) end
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_HAND+LOCATION_DECK+LOCATION_GRAVE+LOCATION_REMOVED)
 end
+function s.spchk(sg,e,tp)
+	local l=g:GetClassCount(Card.GetLevel)
+	local c=g:GetClassCount(Card.GetCode)
+	return (l==1 and n==#sg)
+end
 function s.spop(e,tp,eg,ep,ev,re,r,rp)
-	if Duel.GetLocationCount(tp,LOCATION_MZONE)<=0 then return end
-	local c=e:GetHandler()
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
-	local g=Duel.SelectMatchingCard(tp,s.spfilter,tp,LOCATION_HAND+LOCATION_DECK+LOCATION_GRAVE+LOCATION_REMOVED,0,1,1,nil,e,tp)
-	local tc=g:GetFirst()
+	local g=Duel.GetMatchingGroup(s.spfilter,tp,LOCATION_HAND|LOCATION_DECK,0,nil,e,tp)
+	local rg=aux.SelectUnselectGroup(g,e,tp,3,99,s.spchk,1,tp,HINTMSG_CONFIRM)
+	Duel.ConfirmCards(1-tp,rg)
+	local tg=nil
+	if #rg>=5 then 
+		tg=rg:Select(tp,1)
+	else 
+		tg=rg:RandomSelect(1-tp,1)
+	end
+	local tc=tg:GetFirst()
 	if tc and Duel.SpecialSummonStep(tc,0,tp,tp,false,false,POS_FACEUP) then
 		Duel.Equip(tp,c,tc)
 		--Add Equip limit
@@ -74,15 +75,6 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 		e1:SetReset(RESET_EVENT+RESETS_STANDARD)
 		e1:SetValue(s.eqlimit)
 		c:RegisterEffect(e1)
-	end
-	if Duel.SpecialSummonComplete()==0 then return end
-	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SET)
-	local sg=Duel.GetMatchingGroup(s.setfilter,tp,LOCATION_DECK+LOCATION_REMOVED,0,nil)
-	if #sg>0 and Duel.SelectYesNo(tp,aux.Stringid(id,1)) then
-		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SET)
-		local set=sg:Select(tp,1,1,nil)
-		Duel.BreakEffect()
-		Duel.SSet(tp,set)
 	end
 end
 function s.eqlimit(e,c)
@@ -96,36 +88,35 @@ function s.tgtg(e,c)
 	local tc=e:GetHandler():GetEquipTarget()
 	return c~=tc
 end
---need to remove targeting
-function s.zexfilter(c)
-	return c:IsCode(92065772)
+
+function s.setfilter(c)
+	return c:IsCode(06075533) and c:IsSSetable() and (c:IsLocation(LOCATION_DECK) or c:IsFaceup())
 end
-function s.ztg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE,PLAYER_NONE,0)
-		+Duel.GetLocationCount(tp,LOCATION_SZONE,PLAYER_NONE,0)
-		+Duel.GetLocationCount(1-tp,LOCATION_MZONE,PLAYER_NONE,0)
-		+Duel.GetLocationCount(1-tp,LOCATION_SZONE,PLAYER_NONE,0)>0 end
-	local ct=1
-	if not Duel.IsExistingMatchingCard(s.zexfilter,tp,LOCATION_MZONE,0,1,nil) then return end
-	local dis=Duel.SelectDisableField(tp,ct,LOCATION_ONFIELD,LOCATION_ONFIELD,0)
-	Duel.Hint(HINT_ZONE,tp,dis)
-	e:SetLabel(dis)
+--Make all monsters level 2 WATER
+function s.operation(e,tp,eg,ep,ev,re,r,rp)
+	local g=Duel.GetMatchingGroup(Card.IsFaceup,tp,LOCATION_MZONE,LOCATION_MZONE,nil)
+	local tc=g:GetFirst()
+	for tc in aux.Next(g) do
+		local e1=Effect.CreateEffect(e:GetHandler())
+		e1:SetType(EFFECT_TYPE_SINGLE)
+		e1:SetProperty(EFFECT_FLAG_CANNOT_DISABLE)
+		e1:SetCode(EFFECT_CHANGE_LEVEL)
+		e1:SetValue(2)
+		e1:SetReset(RESET_EVENT+RESETS_STANDARD+RESET_PHASE+PHASE_END)
+		tc:RegisterEffect(e1)
+		local e2=e1:Clone()
+		e2:SetCode(EFFECT_CHANGE_ATTRIBUTE)
+		e2:SetValue(ATTRIBUTE_WATER)
+		tc:RegisterEffect(e2)
+	end
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SET)
+	local sg=Duel.GetMatchingGroup(s.setfilter,tp,LOCATION_DECK+LOCATION_REMOVED,0,nil)
+	if #sg>0 and Duel.SelectYesNo(tp,aux.Stringid(id,1)) then
+		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SET)
+		local set=sg:Select(tp,1,1,nil)
+		Duel.BreakEffect()
+		Duel.SSet(tp,set)
+	end
 end
-function s.zop(e,tp,eg,ep,ev,re,r,rp)
-	local c=e:GetHandler()
-	if not c:IsRelateToEffect(e) then return end
-	local e1=Effect.CreateEffect(c)
-	e1:SetType(EFFECT_TYPE_FIELD)
-	e1:SetRange(LOCATION_ONFIELD)
-	e1:SetCode(EFFECT_DISABLE_FIELD)
-	e1:SetOperation(s.disop)
-	e1:SetReset(RESET_EVENT+RESETS_STANDARD_DISABLE)
-	e1:SetLabel(e:GetLabel())
-	c:RegisterEffect(e1)
-end
-function s.disop(e,tp)
-	return e:GetLabel()
-end
-function s.efilter(e,re)
-	return e:GetHandlerPlayer()~=re:GetOwnerPlayer()
-end
+
+
