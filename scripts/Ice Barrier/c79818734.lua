@@ -44,19 +44,20 @@ function s.lfilter2(c,lvl)
 	return c:GetLevel()==lvl
 end
 function s.spchk(sg,e,tp,mg)
-	return sg:GetClassCount(Card.GetLevel)==1 and sg:GetClassCount(Card.GetCode)>=#sg
+	return sg:GetClassCount(Card.GetLevel)==1 
+	and sg:GetClassCount(Card.GetCode)>=#sg
 end
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
 	local g=Duel.GetMatchingGroup(s.spfilter,tp,LOCATION_HAND|LOCATION_DECK,0,nil,e,tp)
 	if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
 		and g:IsExists(s.lfilter1,1,nil,g) 
-		and aux.SelectUnselectGroup(g,e,tp,3,3,s.spchk,0)end
+		and aux.SelectUnselectGroup(g,e,tp,3,3,s.spchk,0) end
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_HAND+LOCATION_DECK+LOCATION_GRAVE+LOCATION_REMOVED)
 end
 function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 	local g=Duel.GetMatchingGroup(s.spfilter,tp,LOCATION_HAND|LOCATION_DECK,0,nil,e,tp)
-	local sg=aux.SelectUnselectGroup(g,e,tp,3,99,s.spchk,1,tp,HINTMSG_CONFIRM,s.spchk)
+	local sg=aux.SelectUnselectGroup(g,e,tp,3,12,s.spchk,1,tp,HINTMSG_CONFIRM,nil,false)
 	Duel.ConfirmCards(1-tp,sg)
 	local tg=nil
 	if #sg>=5 then 
@@ -76,6 +77,8 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 		e1:SetValue(s.eqlimit)
 		c:RegisterEffect(e1)
 	end
+	sg:RemoveCard(tc)
+	Duel.SendtoGrave(sg,REASON_EFFECT)
 end
 function s.eqlimit(e,c)
 	return e:GetOwner()==c
