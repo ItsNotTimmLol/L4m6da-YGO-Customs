@@ -43,29 +43,29 @@ end
 function s.lfilter2(c,lvl)
 	return c:GetLevel()==lvl
 end
+function s.spchk(sg,e,tp,mg)
+	return sg:GetClassCount(Card.GetLevel)==1 and sg:GetClassCount(Card.GetCode)>=#sg
+end
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
 	local g=Duel.GetMatchingGroup(s.spfilter,tp,LOCATION_HAND|LOCATION_DECK,0,nil,e,tp)
 	if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
-		and g:IsExists(s.lfilter1,1,nil,g) end
+		and g:IsExists(s.lfilter1,1,nil,g) 
+		and aux.SelectUnselectGroup(g,e,tp,3,3,s.spchk,0)end
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,tp,LOCATION_HAND+LOCATION_DECK+LOCATION_GRAVE+LOCATION_REMOVED)
 end
-function s.spchk(sg,e,tp)
-	local l=g:GetClassCount(Card.GetLevel)
-	local c=g:GetClassCount(Card.GetCode)
-	return (l==1 and n==#sg)
-end
 function s.spop(e,tp,eg,ep,ev,re,r,rp)
+	local c=e:GetHandler()
 	local g=Duel.GetMatchingGroup(s.spfilter,tp,LOCATION_HAND|LOCATION_DECK,0,nil,e,tp)
-	local rg=aux.SelectUnselectGroup(g,e,tp,3,99,s.spchk,1,tp,HINTMSG_CONFIRM)
-	Duel.ConfirmCards(1-tp,rg)
+	local sg=aux.SelectUnselectGroup(g,e,tp,3,#g,s.spchk,1,tp,HINTMSG_CONFIRM,s.spchk)
+	Duel.ConfirmCards(1-tp,sg)
 	local tg=nil
-	if #rg>=5 then 
-		tg=rg:Select(tp,1)
+	if #sg>=5 then 
+		tg=sg:Select(tp,1,1,nil)
 	else 
-		tg=rg:RandomSelect(1-tp,1)
+		tg=sg:RandomSelect(1-tp,1)
 	end
 	local tc=tg:GetFirst()
-	if tc and Duel.SpecialSummonStep(tc,0,tp,tp,false,false,POS_FACEUP) then
+	if c:IsRelateToEffect(e) and tc and Duel.SpecialSummonStep(tc,0,tp,tp,false,false,POS_FACEUP) then
 		Duel.Equip(tp,c,tc)
 		--Add Equip limit
 		local e1=Effect.CreateEffect(tc)
