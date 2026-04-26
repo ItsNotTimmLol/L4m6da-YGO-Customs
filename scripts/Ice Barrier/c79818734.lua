@@ -44,8 +44,7 @@ function s.lfilter2(c,lvl)
 	return c:GetLevel()==lvl
 end
 function s.spchk(sg,e,tp,mg)
-	return sg:GetClassCount(Card.GetLevel)==1 
-	and sg:GetClassCount(Card.GetCode)>=#sg
+	return sg:GetClassCount(Card.GetLevel)==1 and sg:GetClassCount(Card.GetCode)==#sg,sg:GetClassCount(Card.GetCode)~=#sg
 end
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
 	local g=Duel.GetMatchingGroup(s.spfilter,tp,LOCATION_HAND|LOCATION_DECK,0,nil,e,tp)
@@ -77,6 +76,7 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 		e1:SetValue(s.eqlimit)
 		c:RegisterEffect(e1)
 	end
+	Duel.SpecialSummonComplete()
 	sg:RemoveCard(tc)
 	Duel.SendtoGrave(sg,REASON_EFFECT)
 end
