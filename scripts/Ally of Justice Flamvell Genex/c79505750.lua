@@ -59,18 +59,21 @@ function s.initial_effect(c)
     e5:SetTarget(aux.TargetBoolFunction(s.allynsfilter))
     e5:SetValue(0x1)
     c:RegisterEffect(e5)]]--
-	--Search
+	--Set
 	local e6=Effect.CreateEffect(c)
 	e6:SetDescription(aux.Stringid(id,0))
 	e6:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
 	e6:SetCategory(CATEGORY_SET)
 	e6:SetProperty(EFFECT_FLAG_DELAY+EFFECT_FLAG_DAMAGE_STEP)
-	e6:SetCode(EVENT_LEAVE_FIELD)
-	e6:SetCondition(s.setcon)
+	e6:SetCode(EVENT_SPSUMMON_SUCCESS)
+	--e6:SetCondition(s.setcon)
 	e6:SetTarget(s.settg)
 	e6:SetOperation(s.setop)
 	c:RegisterEffect(e6)
-	--banish
+	local e3=e6:Clone()
+	e3:SetCode(EVENT_FLIP)
+	c:RegisterEffect(e3)
+	--[[anish
 	local e7=Effect.CreateEffect(c)
 	e7:SetDescription(aux.Stringid(id,4))
 	e7:SetCategory(CATEGORY_REMOVE)
@@ -80,12 +83,13 @@ function s.initial_effect(c)
 	e7:SetCondition(s.remcon)
 	e7:SetTarget(s.remtg)
 	e7:SetOperation(s.remop)
-	c:RegisterEffect(e7)
+	c:RegisterEffect(e7)]]--
 end
 s.listed_series={SET_ALLY_OF_JUSTICE,SET_FLAMVELL,SET_GENEX}
 s.listed_names={42079445}
 s.ally_series={SET_ALLY_OF_JUSTICE,SET_GENEX_ALLY}
 s.ally_names={40155554,59482302}
+s.w_nebula_names={18304915,30476000,40079081,53842829,55939812,76108887}
 --Materials
 function s.mfilter1(c,fc,sumtype,tp,sub,mg,sg)
 	return c:IsMonster() 
@@ -138,7 +142,7 @@ function s.setcon(e,tp,eg,ep,ev,re,r,rp)
 	return c:IsPreviousPosition(POS_FACEUP)
 end
 function s.setfilter(c,e,tp,mft,sft)
-	return (c:IsCode(42079445) or c:IsSetCard(SET_ALLY_OF_JUSTICE))
+	return (c:IsCode(42079445) or c:IsSetCard(SET_ALLY_OF_JUSTICE) or c:IsCode(s.w_nebula_names))
 	and c:IsSpellTrap() and c:IsSSetable()
 end
 function s.settg(e,tp,eg,ep,ev,re,r,rp,chk)
@@ -148,12 +152,13 @@ end
 function s.rescon2(sg,e,tp,mg)
 	return #sg==1 or sg:IsExists(Card.IsCode,1,nil,42079445)
 end
-function s.setop(e,tp,eg,ep,ev,re,r,rp)
+function s.setop(c,e,tp,eg,ep,ev,re,r,rp)
+	local ct=c:GetMaterial():FilterCount(Card.IsType,nil,TYPE_NORMAL)
 	local ft=Duel.GetLocationCount(tp,LOCATION_SZONE)
-	if ft<=0 then return end
+	if ft<=0 or ct<ft then return end
 	local g=Duel.GetMatchingGroup(aux.NecroValleyFilter(s.setfilter),tp,LOCATION_HAND|LOCATION_DECK|LOCATION_GRAVE|LOCATION_REMOVED,0,nil)
 	if #g==0 then return end
-	local sg=aux.SelectUnselectGroup(g,e,tp,1,math.min(ft,2),s.rescon2,1,tp,HINTMSG_SET)
+	local sg=aux.SelectUnselectGroup(g,e,tp,1,ct+1,nil,1,tp,HINTMSG_SET)
 	if #sg>0 and Duel.SSet(tp,sg)>0 then
 		local c=e:GetHandler()
 		for tc in g:Iter() do
