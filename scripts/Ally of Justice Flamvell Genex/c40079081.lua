@@ -60,22 +60,21 @@ s.listed_names={88438982}
 s.listed_series={SET_ALLY_OF_JUSTICE,SET_WORM}
 s.ally_series={SET_ALLY_OF_JUSTICE}
 s.ally_names={40155554,59482302}
-function s.atkconfilter(c)
-	return c:IsFaceup() and c:IsCode(88438982) and c:IsSummonType(SUMMON_TYPE_FLIP)
+function s.atkconfilter(e,c)
+	return c:IsCode(88438982) and c:IsPreviousPosition(POS_FACEDOWN)
 end
 function s.atkdeftg(e,c)
-	return not c:IsSummonType(SUMMON_TYPE_FLIP)
+	return not c:IsPreviousPosition(POS_FACEDOWN)
 end
 function s.atkval(e,c)
-	local ct=Duel.GetMatchingGroupCount(s.atkconfilter,0,LOCATION_MZONE,0,nil)
-	local dct=Duel.GetMatchingGroupCount(s.atkdeftg,0,LOCATION_MZONE,LOCATION_MZONE,nil)
+	local c=e:GetHandler()
+	local ct=Duel.GetMatchingGroupCount(s.atkconfilter,0,LOCATION_MZONE,0,nil,c,e)
 	if ct<1 then ct=0.5 end
-	Debug.Message("ct: "&ct)
-	Debug.Message("dct: "&dct)
 	return c:GetBaseAttack()/(ct*2)
 end
 function s.defval(e,c)
-	local ct=Duel.GetMatchingGroupCount(s.atkconfilter,0,LOCATION_MZONE,0,nil)
+	local c=e:GetHandler()
+	local ct=Duel.GetMatchingGroupCount(s.atkconfilter,0,LOCATION_MZONE,0,nil,c,e)
 	if ct<1 then ct=0.5 end
 	return c:GetBaseDefense()/(ct*2)
 end
