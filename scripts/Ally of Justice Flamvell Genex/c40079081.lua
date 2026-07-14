@@ -2,12 +2,12 @@
 --Scripted by WolfSif
 local s,id=GetID()
 function s.initial_effect(c)
-	--[[Activate
+	--Activate
 	local e0=Effect.CreateEffect(c)
 	e0:SetType(EFFECT_TYPE_ACTIVATE)
 	e0:SetDescription(aux.Stringid(id,0))
 	e0:SetCode(EVENT_FREE_CHAIN)
-	c:RegisterEffect(e0)]]--
+	c:RegisterEffect(e0)
 	--Can be activated from the hand
 	local e1=Effect.CreateEffect(c)
 	e1:SetDescription(aux.Stringid(id,1))
