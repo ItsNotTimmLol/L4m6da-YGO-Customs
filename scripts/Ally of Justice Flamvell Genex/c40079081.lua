@@ -61,6 +61,11 @@ function s.initial_effect(c)
 		ge1:SetCode(EVENT_FLIP)
 		ge1:SetOperation(s.checkop)
 		Duel.RegisterEffect(ge1,0)
+		local ge2=Effect.CreateEffect(c)
+		ge2:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
+		ge2:SetCode(EVENT_FLIP_SUMMON_SUCCESS)
+		ge2:SetOperation(s.checkop)
+		Duel.RegisterEffect(ge2,0)
 	end)
 end
 s.listed_names={88438982}
@@ -70,19 +75,21 @@ s.ally_names={40155554,59482302}
 function s.checkop(e,tp,eg,ep,ev,re,r,rp)
 	eg:GetFirst():RegisterFlagEffect(id,RESET_EVENT|RESETS_STANDARD,0,1)
 end
-function s.atkconfilter(e,c)
+function s.atkconfilter(c)
 	return c:IsFaceup() and c:IsCode(88438982) and c:GetFlagEffect(id)~=0
 end
 function s.atkdeftg(e,c)
-	return not c:GetFlagEffect(id)~=0
+	return c:GetFlagEffect(id)==0
 end
 function s.atkval(e,c)
-	local ct=Duel.GetMatchingGroupCount(s.atkconfilter,0,LOCATION_MZONE,0,nil,c,e)
+	local ct=Duel.GetMatchingGroupCount(s.atkconfilter,0,LOCATION_MZONE,0,nil)
+	Debug.Message(ct)
 	if ct<1 then ct=0.5 end
+	Debug.Message(ct)
 	return c:GetBaseAttack()/(ct*2)
 end
 function s.defval(e,c)
-	local ct=Duel.GetMatchingGroupCount(s.atkconfilter,0,LOCATION_MZONE,0,nil,c,e)
+	local ct=Duel.GetMatchingGroupCount(s.atkconfilter,0,LOCATION_MZONE,0,nil)
 	if ct<1 then ct=0.5 end
 	return c:GetBaseDefense()/(ct*2)
 end
