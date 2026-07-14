@@ -1,0 +1,89 @@
+--Ally of Justice Release Reverse
+--Scripted by WolfSif
+local s,id=GetID()
+function s.initial_effect(c)
+	--[[Activate
+	local e0=Effect.CreateEffect(c)
+	e0:SetType(EFFECT_TYPE_ACTIVATE)
+	e0:SetDescription(aux.Stringid(id,0))
+	e0:SetCode(EVENT_FREE_CHAIN)
+	c:RegisterEffect(e0)]]--
+	--Can be activated from the hand
+	local e1=Effect.CreateEffect(c)
+	e1:SetDescription(aux.Stringid(id,1))
+	e1:SetType(EFFECT_TYPE_SINGLE)
+	e1:SetCode(EFFECT_TRAP_ACT_IN_HAND)
+	e1:SetCondition(function(e)
+		return Duel.GetTurnCount()==1 and Duel.IsStandbyPhase(1-e:GetHandlerPlayer())
+	end)
+	c:RegisterEffect(e1)
+	local e2=e1:Clone()
+	e2:SetCode(EFFECT_TRAP_ACT_IN_SET_TURN)
+	e2:SetProperty(EFFECT_FLAG_SET_AVAILABLE)
+	c:RegisterEffect(e2)
+	local e3=Effect.CreateEffect(c)
+	e3:SetDescription(aux.Stringid(id,2))
+	e3:SetCategory(CATEGORY_SUMMON)
+	e3:SetType(EFFECT_TYPE_QUICK_O)
+	e3:SetProperty(EFFECT_FLAG_DAMAGE_STEP)
+	e3:SetCode(EVENT_FREE_CHAIN)
+	e3:SetRange(LOCATION_SZONE)
+	e3:SetCountLimit(1,0,EFFECT_COUNT_CODE_CHAIN)
+	e3:SetHintTiming(0,TIMINGS_CHECK_MONSTER|TIMING_MAIN_END)
+	e3:SetCondition(function(_,tp) return Duel.IsTurnPlayer(1-tp) and Duel.IsMainPhase() end)
+	e3:SetTarget(s.nstg)
+	e3:SetOperation(s.nsop)
+	c:RegisterEffect(e3)
+	--Flip face-up
+	local e4=Effect.CreateEffect(c)
+	e4:SetDescription(aux.Stringid(id,1))
+	e4:SetCategory(CATEGORY_POSITION)
+	e4:SetType(EFFECT_TYPE_QUICK_O)
+	e4:SetRange(LOCATION_MZONE)
+	e4:SetCode(EVENT_FREE_CHAIN)
+	e4:SetHintTiming(0,TIMINGS_CHECK_MONSTER|TIMING_MAIN_END)
+	e4:SetCountLimit(1)
+	e4:SetTarget(s.postg)
+	e4:SetOperation(s.posop)
+	c:RegisterEffect(e4)
+end
+s.listed_series={SET_ALLY_OF_JUSTICE,SET_WORM}
+s.ally_series={SET_ALLY_OF_JUSTICE}
+s.ally_names={40155554,59482302}
+function s.nsfilter(c)
+	return (c:IsRace(RACE_REPTILE) and c:IsSetCard(SET_WORM))
+		and c:IsMonster()
+		and c:IsSummonable(true,nil)
+end
+function s.nstg(e,tp,eg,ep,ev,re,r,rp,chk)
+	local ft=Duel.GetLocationCount(1-tp,LOCATION_MZONE,tp)
+	if chk==0 then return ft>0 end
+	Duel.SetPossibleOperationInfo(0,CATEGORY_SUMMON,nil,1,tp,LOCATION_HAND)
+end
+function s.nsop(e,tp,eg,ep,ev,re,r,rp,chk)
+	local g1=Duel.GetMatchingGroup(s.nsfilter,tp,LOCATION_HAND,0,nil,true,nil)
+	if #g1>0 then
+		Duel.BreakEffect()
+		Duel.ShuffleHand(tp)
+		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SET)
+		sg=g1:Select(tp,1,1,nil):GetFirst()
+		Duel.MSet(tp,sg,true,nil)
+	end
+end
+
+function s.posfilter(c)
+	return ((c:IsRace(RACE_REPTILE) and c:IsSetCard(SET_WORM)) 
+		and c:IsFacedown() and c:IsDefensePos()
+end
+function s.postg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return Duel.IsExistingMatchingCard(s.posfilter,tp,LOCATION_MZONE,0,1,nil) end
+	Duel.SetOperationInfo(0,CATEGORY_POSITION,nil,1,0,0)
+end
+function s.posop(e,tp,eg,ep,ev,re,r,rp,chk)
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_POSCHANGE)
+	local tc=Duel.SelectMatchingCard(tp,s.posfilter,tp,LOCATION_MZONE,0,1,1,nil):GetFirst()
+	if tc then
+		local pos=Duel.SelectPosition(tp,tc,POS_FACEUP_ATTACK+POS_FACEUP_DEFENSE)
+		Duel.ChangePosition(tc,pos)
+	end
+end

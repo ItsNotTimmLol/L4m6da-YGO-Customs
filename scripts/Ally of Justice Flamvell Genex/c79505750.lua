@@ -89,7 +89,7 @@ s.listed_series={SET_ALLY_OF_JUSTICE,SET_FLAMVELL,SET_GENEX}
 s.listed_names={42079445}
 s.ally_series={SET_ALLY_OF_JUSTICE,SET_GENEX_ALLY}
 s.ally_names={40155554,59482302}
-s.w_nebula_names={18304915,30476000,40079081,53842829,55939812,76108887}
+s.w_nebula_names={18304915,30476000,40079081,53842829,55939812,76108887,90075978}
 --Materials
 function s.mfilter1(c,fc,sumtype,tp,sub,mg,sg)
 	return c:IsMonster() 
