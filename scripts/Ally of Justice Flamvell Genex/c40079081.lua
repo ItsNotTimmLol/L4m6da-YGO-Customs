@@ -51,7 +51,7 @@ s.listed_series={SET_ALLY_OF_JUSTICE,SET_WORM}
 s.ally_series={SET_ALLY_OF_JUSTICE}
 s.ally_names={40155554,59482302}
 function s.nsfilter(c)
-	return (c:IsRace(RACE_REPTILE) and c:IsSetCard(SET_WORM))
+	return c:IsRace(RACE_REPTILE) and c:IsSetCard(SET_WORM)
 		and c:IsMonster()
 		and c:IsSummonable(true,nil)
 end
@@ -72,7 +72,7 @@ function s.nsop(e,tp,eg,ep,ev,re,r,rp,chk)
 end
 
 function s.posfilter(c)
-	return ((c:IsRace(RACE_REPTILE) and c:IsSetCard(SET_WORM)) 
+	return c:IsRace(RACE_REPTILE) and c:IsSetCard(SET_WORM) 
 		and c:IsFacedown() and c:IsDefensePos()
 end
 function s.postg(e,tp,eg,ep,ev,re,r,rp,chk)
