@@ -160,8 +160,9 @@ function s.setop(e,tp,eg,ep,ev,re,r,rp)
 	local g=Duel.GetMatchingGroup(aux.NecroValleyFilter(s.setfilter),tp,LOCATION_HAND|LOCATION_DECK|LOCATION_GRAVE|LOCATION_REMOVED,0,nil)
 	if #g==0 then return end
 	local sg=aux.SelectUnselectGroup(g,e,tp,1,ct+1,nil,1,tp,HINTMSG_SET)
-	if #sg>0 and Duel.SSet(tp,sg)>0 then
-		local c=e:GetHandler()
+	if #sg>0 then
+		Duel.SSet(tp,sg)
+		--[[local c=e:GetHandler()
 		for tc in g:Iter() do
 			--Can be activated this turn
 			local e1=Effect.CreateEffect(c)
@@ -171,7 +172,7 @@ function s.setop(e,tp,eg,ep,ev,re,r,rp)
 			e1:SetCode(EFFECT_TRAP_ACT_IN_SET_TURN)
 			e1:SetReset(RESET_EVENT|RESETS_STANDARD)
 			tc:RegisterEffect(e1)
-		end
+		end]]--
 	end
 end
 

@@ -5,18 +5,20 @@ function s.initial_effect(c)
 	--Activate
 	local e0=Effect.CreateEffect(c)
 	e0:SetType(EFFECT_TYPE_ACTIVATE)
-	e0:SetDescription(aux.Stringid(id,0))
+	e0:SetOperation(s.actop)
 	e0:SetCode(EVENT_FREE_CHAIN)
 	c:RegisterEffect(e0)
 	--Can be activated from the hand
 	local e1=Effect.CreateEffect(c)
 	e1:SetDescription(aux.Stringid(id,1))
 	e1:SetType(EFFECT_TYPE_SINGLE)
+	e1:SetCondition(s.actcon)
 	e1:SetCode(EFFECT_TRAP_ACT_IN_HAND)
 	c:RegisterEffect(e1)
 	local e2=e1:Clone()
 	e2:SetCode(EFFECT_TRAP_ACT_IN_SET_TURN)
 	e2:SetProperty(EFFECT_FLAG_SET_AVAILABLE)
+	e2:SetCondition(s.actcon)
 	c:RegisterEffect(e2)
 	--atkchange
 	local e3=Effect.CreateEffect(c)
@@ -33,7 +35,7 @@ function s.initial_effect(c)
 	c:RegisterEffect(e4)
 	--Level 6 Reptile Worm monsters can be Summoned without Tributing
 	local e5=Effect.CreateEffect(c)
-	e5:SetDescription(aux.Stringid(id,0))
+	e5:SetDescription(aux.Stringid(id,2))
 	e5:SetType(EFFECT_TYPE_FIELD)
 	e5:SetCode(EFFECT_SUMMON_PROC)
 	e5:SetRange(LOCATION_SZONE)
@@ -46,7 +48,7 @@ function s.initial_effect(c)
 	c:RegisterEffect(e6)
 	--Normal Set
 	local e7=Effect.CreateEffect(c)
-	e7:SetDescription(aux.Stringid(id,2))
+	e7:SetDescription(aux.Stringid(id,3))
 	e7:SetCategory(CATEGORY_SUMMON)
 	e7:SetType(EFFECT_TYPE_QUICK_O)
 	e7:SetProperty(EFFECT_FLAG_DAMAGE_STEP)
@@ -59,7 +61,7 @@ function s.initial_effect(c)
 	c:RegisterEffect(e7)
 	--Flip face-up
 	local e8=Effect.CreateEffect(c)
-	e8:SetDescription(aux.Stringid(id,3))
+	e8:SetDescription(aux.Stringid(id,4))
 	e8:SetCategory(CATEGORY_POSITION)
 	e8:SetType(EFFECT_TYPE_QUICK_O)
 	e8:SetRange(LOCATION_SZONE)
@@ -83,9 +85,29 @@ function s.initial_effect(c)
 	end)
 end
 s.listed_names={88438982}
-s.listed_series={SET_ALLY_OF_JUSTICE,SET_WORM}
-s.ally_series={SET_ALLY_OF_JUSTICE}
-s.ally_names={40155554,59482302}
+s.listed_series={SET_WORM}
+s.w_nebula_names={18304915,30476000,40079081,53842829,55939812,76108887,90075978}
+--Extra activation condition
+function s.actcon(e,tp,eg,ep,ev,re,r,rp)
+	local tp=e:GetHandler():GetControler()
+	return Duel.IsTurnPlayer(1-tp)
+end
+--Activate Field Spell
+function s.actfilter(c,tp)
+	return c:IsCode(s.w_nebula_names) and c:GetActivateEffect() and c:GetActivateEffect():IsActivatable(tp,true)
+		and (c:IsType(TYPE_FIELD) or Duel.GetLocationCount(tp,LOCATION_SZONE)>0)
+end
+function s.actop(e,tp,eg,ep,ev,re,r,rp)
+	if not e:GetHandler():IsRelateToEffect(e) then return end
+	local g=Duel.GetMatchingGroup(s.actfilter,tp,LOCATION_DECK,0,nil,tp)
+	if #g>0 and Duel.SelectYesNo(tp,aux.Stringid(id,0)) then
+		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOFIELD)
+		local tc=g:Select(tp,1,1,nil):GetFirst()
+		if tc:IsType(TYPE_FIELD) then
+			Duel.ActivateFieldSpell(tc,e,tp,eg,ep,ev,re,r,rp)
+		end
+	end
+end
 --Dimikles buff
 function s.checkop(e,tp,eg,ep,ev,re,r,rp)
 	eg:GetFirst():RegisterFlagEffect(id,RESET_EVENT|RESETS_STANDARD,0,1)
@@ -98,9 +120,7 @@ function s.atkdeftg(e,c)
 end
 function s.atkval(e,c)
 	local ct=Duel.GetMatchingGroupCount(s.atkconfilter,0,LOCATION_MZONE,0,nil)
-	Debug.Message(ct)
 	if ct<1 then ct=0.5 end
-	Debug.Message(ct)
 	return c:GetBaseAttack()/(ct*2)
 end
 function s.defval(e,c)
@@ -114,7 +134,7 @@ function s.ntcon(e,c,minc)
 	return minc==0 and Duel.GetLocationCount(c:GetControler(),LOCATION_MZONE)>0
 end
 function s.nttg(e,c)
-	return c:IsLevel(6)
+	return c:IsLevelBelow(6)
 end
 --Normal Set
 function s.nsfilter(c)
