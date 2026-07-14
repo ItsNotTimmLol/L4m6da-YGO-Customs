@@ -31,30 +31,44 @@ function s.initial_effect(c)
 	e4:SetCode(EFFECT_SET_BASE_DEFENSE)
 	e4:SetValue(s.defval)
 	c:RegisterEffect(e4)
+	--Level 6 Reptile Worm monsters can be Summoned without Tributing
 	local e5=Effect.CreateEffect(c)
-	e5:SetDescription(aux.Stringid(id,2))
-	e5:SetCategory(CATEGORY_SUMMON)
-	e5:SetType(EFFECT_TYPE_QUICK_O)
-	e5:SetProperty(EFFECT_FLAG_DAMAGE_STEP)
-	e5:SetCode(EVENT_FREE_CHAIN)
+	e5:SetDescription(aux.Stringid(id,0))
+	e5:SetType(EFFECT_TYPE_FIELD)
+	e5:SetCode(EFFECT_SUMMON_PROC)
 	e5:SetRange(LOCATION_SZONE)
-	e5:SetCountLimit(1,0,EFFECT_COUNT_CODE_CHAIN)
-	e5:SetHintTiming(0,TIMINGS_CHECK_MONSTER|TIMING_MAIN_END)
-	e5:SetTarget(s.nstg)
-	e5:SetOperation(s.nsop)
+	e5:SetTargetRange(LOCATION_HAND,0)
+	e5:SetCondition(s.ntcon)
+	e5:SetTarget(aux.FieldSummonProcTg(s.nttg))
 	c:RegisterEffect(e5)
-	--Flip face-up
-	local e6=Effect.CreateEffect(c)
-	e6:SetDescription(aux.Stringid(id,3))
-	e6:SetCategory(CATEGORY_POSITION)
-	e6:SetType(EFFECT_TYPE_QUICK_O)
-	e6:SetRange(LOCATION_SZONE)
-	e6:SetCode(EVENT_FREE_CHAIN)
-	e6:SetHintTiming(0,TIMINGS_CHECK_MONSTER|TIMING_MAIN_END)
-	e6:SetCountLimit(1)
-	e6:SetTarget(s.postg)
-	e6:SetOperation(s.posop)
+	local e6=e5:Clone()
+	e6:SetCode(EFFECT_SET_PROC)
 	c:RegisterEffect(e6)
+	--Normal Set
+	local e7=Effect.CreateEffect(c)
+	e7:SetDescription(aux.Stringid(id,2))
+	e7:SetCategory(CATEGORY_SUMMON)
+	e7:SetType(EFFECT_TYPE_QUICK_O)
+	e7:SetProperty(EFFECT_FLAG_DAMAGE_STEP)
+	e7:SetCode(EVENT_FREE_CHAIN)
+	e7:SetRange(LOCATION_SZONE)
+	e7:SetCountLimit(1,0,EFFECT_COUNT_CODE_CHAIN)
+	e7:SetHintTiming(0,TIMINGS_CHECK_MONSTER|TIMING_MAIN_END)
+	e7:SetTarget(s.nstg)
+	e7:SetOperation(s.nsop)
+	c:RegisterEffect(e7)
+	--Flip face-up
+	local e8=Effect.CreateEffect(c)
+	e8:SetDescription(aux.Stringid(id,3))
+	e8:SetCategory(CATEGORY_POSITION)
+	e8:SetType(EFFECT_TYPE_QUICK_O)
+	e8:SetRange(LOCATION_SZONE)
+	e8:SetCode(EVENT_FREE_CHAIN)
+	e8:SetHintTiming(0,TIMINGS_CHECK_MONSTER|TIMING_MAIN_END)
+	e8:SetCountLimit(1)
+	e8:SetTarget(s.postg)
+	e8:SetOperation(s.posop)
+	c:RegisterEffect(e8)
 	aux.GlobalCheck(s,function()
 		local ge1=Effect.CreateEffect(c)
 		ge1:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
@@ -72,6 +86,7 @@ s.listed_names={88438982}
 s.listed_series={SET_ALLY_OF_JUSTICE,SET_WORM}
 s.ally_series={SET_ALLY_OF_JUSTICE}
 s.ally_names={40155554,59482302}
+--Dimikles buff
 function s.checkop(e,tp,eg,ep,ev,re,r,rp)
 	eg:GetFirst():RegisterFlagEffect(id,RESET_EVENT|RESETS_STANDARD,0,1)
 end
@@ -93,7 +108,15 @@ function s.defval(e,c)
 	if ct<1 then ct=0.5 end
 	return c:GetBaseDefense()/(ct*2)
 end
-
+--Tribute bypass
+function s.ntcon(e,c,minc)
+	if c==nil then return true end
+	return minc==0 and Duel.GetLocationCount(c:GetControler(),LOCATION_MZONE)>0
+end
+function s.nttg(e,c)
+	return c:IsLevel(6)
+end
+--Normal Set
 function s.nsfilter(c)
 	return c:IsRace(RACE_REPTILE) and c:IsSetCard(SET_WORM)
 		and c:IsMonster()
@@ -115,7 +138,7 @@ function s.nsop(e,tp,eg,ep,ev,re,r,rp,chk)
 		Duel.MSet(tp,sg,true,nil)
 	end
 end
-
+--Flip
 function s.posfilter(c)
 	return c:IsRace(RACE_REPTILE) and c:IsSetCard(SET_WORM) 
 		and c:IsFacedown() and c:IsDefensePos()
