@@ -45,10 +45,11 @@ function s.initial_effect(c)
 	c:RegisterEffect(e5)
 	local e6=e5:Clone()
 	e6:SetCode(EFFECT_SET_PROC)
+	e5:SetDescription(aux.Stringid(id,3))
 	c:RegisterEffect(e6)
 	--Normal Set
 	local e7=Effect.CreateEffect(c)
-	e7:SetDescription(aux.Stringid(id,3))
+	e7:SetDescription(aux.Stringid(id,4))
 	e7:SetCategory(CATEGORY_SUMMON)
 	e7:SetType(EFFECT_TYPE_QUICK_O)
 	e7:SetProperty(EFFECT_FLAG_DAMAGE_STEP)
@@ -61,7 +62,7 @@ function s.initial_effect(c)
 	c:RegisterEffect(e7)
 	--Flip face-up
 	local e8=Effect.CreateEffect(c)
-	e8:SetDescription(aux.Stringid(id,4))
+	e8:SetDescription(aux.Stringid(id,5))
 	e8:SetCategory(CATEGORY_POSITION)
 	e8:SetType(EFFECT_TYPE_QUICK_O)
 	e8:SetRange(LOCATION_SZONE)
@@ -95,7 +96,7 @@ end
 --Activate Field Spell
 function s.actfilter(c,tp)
 	return c:IsCode(s.w_nebula_names) and c:GetActivateEffect() and c:GetActivateEffect():IsActivatable(tp,true)
-		and (c:IsType(TYPE_FIELD) or Duel.GetLocationCount(tp,LOCATION_SZONE)>0)
+		and c:IsType(TYPE_FIELD)
 end
 function s.actop(e,tp,eg,ep,ev,re,r,rp)
 	if not e:GetHandler():IsRelateToEffect(e) then return end
@@ -134,7 +135,7 @@ function s.ntcon(e,c,minc)
 	return minc==0 and Duel.GetLocationCount(c:GetControler(),LOCATION_MZONE)>0
 end
 function s.nttg(e,c)
-	return c:IsLevelBelow(6)
+	return c:IsLevelBetween(5,6)
 end
 --Normal Set
 function s.nsfilter(c)
