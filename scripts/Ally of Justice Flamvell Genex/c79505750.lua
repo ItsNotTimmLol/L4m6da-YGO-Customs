@@ -152,10 +152,11 @@ end
 function s.rescon2(sg,e,tp,mg)
 	return #sg==1 or sg:IsExists(Card.IsCode,1,nil,42079445)
 end
-function s.setop(c,e,tp,eg,ep,ev,re,r,rp)
-	local ct=c:GetMaterial():FilterCount(Card.IsType,nil,TYPE_NORMAL)
+function s.setop(e,tp,eg,ep,ev,re,r,rp)
+	local c=e:GetHandler()
+	local ct=c:GetMaterial():Filter(Card.IsType,nil,TYPE_NORMAL):GetClassCount(Card.GetOriginalCode)
 	local ft=Duel.GetLocationCount(tp,LOCATION_SZONE)
-	if ft<=0 or ct<ft then return end
+	if ft<=0 then return end
 	local g=Duel.GetMatchingGroup(aux.NecroValleyFilter(s.setfilter),tp,LOCATION_HAND|LOCATION_DECK|LOCATION_GRAVE|LOCATION_REMOVED,0,nil)
 	if #g==0 then return end
 	local sg=aux.SelectUnselectGroup(g,e,tp,1,ct+1,nil,1,tp,HINTMSG_SET)
