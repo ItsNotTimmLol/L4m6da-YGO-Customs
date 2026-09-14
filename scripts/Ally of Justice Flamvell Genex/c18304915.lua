@@ -32,7 +32,7 @@ function s.initial_effect(c)
 	e3:SetCode(EFFECT_MUST_ATTACK)
 	e3:SetTargetRange(0,LOCATION_MZONE)
 	c:RegisterEffect(e3)
-	--Return "Worm Call"
+	--[[Return "Worm Call"
 	local e4=Effect.CreateEffect(c)
 	e4:SetDescription(aux.Stringid(id,0))
 	e4:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_F)
@@ -41,7 +41,7 @@ function s.initial_effect(c)
 	e4:SetRange(LOCATION_FZONE)
 	e4:SetCondition(s.regcon)
 	e4:SetOperation(s.regop)
-	c:RegisterEffect(e4)
+	c:RegisterEffect(e4)]]--
 	--Set 1 "Dimensionhole" and/or "Worm Call"
 	local e5=Effect.CreateEffect(c)
 	e5:SetDescription(aux.Stringid(id,1))
@@ -52,7 +52,19 @@ function s.initial_effect(c)
 	e5:SetTarget(s.settg)
 	e5:SetOperation(s.setop)
 	c:RegisterEffect(e5)
-	--remove
+	--Give control
+	local e6=Effect.CreateEffect(c)
+	e6:SetDescription(aux.Stringid(id,0))
+	e6:SetCategory(CATEGORY_CONTROL)
+	e6:SetType(EFFECT_TYPE_QUICK_O)
+	e6:SetCode(EVENT_CHAINING)
+	e6:SetRange(LOCATION_FZONE)
+	e6:SetCondition(s.ctrlcon)
+	e6:SetTarget(s.ctrltg)
+	e6:SetOperation(s.ctrlop)
+	e6:SetHintTiming(0,TIMING_STANDBY_PHASE|TIMING_MAIN_END|TIMINGS_CHECK_MONSTER_E)
+	c:RegisterEffect(e6)
+	--[[remove
 	local e6=Effect.CreateEffect(c)
 	e6:SetCategory(CATEGORY_REMOVE)
 	e6:SetDescription(aux.Stringid(id,2))
@@ -70,7 +82,7 @@ function s.initial_effect(c)
 		ge6:SetCode(EVENT_CHAINING)
 		ge6:SetOperation(s.checkop)
 		Duel.RegisterEffect(ge6,0)
-	end)
+	end)]]--
 end
 s.listed_names={22959079,28506708}
 s.listed_series={SET_WORM}
@@ -128,6 +140,23 @@ function s.retop(e,tp,eg,ep,ev,re,r,rp)
 	Duel.ReturnToField(e:GetLabelObject())
 end
 
+function s.ctrlcon(e,tp,eg,ep,ev,re,r,rp)
+	return re:GetHandler()~=e:GetHandler()
+end
+function s.ctrlfilter(c)
+	return (c:IsRace(RACE_REPTILE) and c:IsSetCard(SET_WORM)) and c:IsControlerCanBeChanged()
+end
+function s.ctrltg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return Duel.IsExistingMatchingCard(s.ctrlfilter,tp,LOCATION_MZONE,0,1,nil) end
+	Duel.SetOperationInfo(0,CATEGORY_CONTROL,nil,1,tp,LOCATION_MZONE)
+end
+function s.ctrlop(e,tp,eg,ep,ev,re,r,rp)
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_CONTROL)
+	local tc=Duel.SelectMatchingCard(tp,s.ctrlfilter,tp,LOCATION_MZONE,0,1,1,nil):GetFirst()
+	if not (tc and Duel.GetControl(tc,1-tp,PHASE_END,1) and tc:IsControler(1-tp)) then return end
+end
+
+
 --Negate
 function s.equipf(c)
 	return c:IsSetCard(SET_WORM)
@@ -140,11 +169,10 @@ end
 function s.atkconfilter(c)
 	return c:IsRace(RACE_REPTILE) and c:IsSetCard(SET_WORM)
 end
-function s.atkcon(e)
-	local tp=e:GetHandlerPlayer()
-	return Duel.IsExistingMatchingCard(s.atkconfilter,tp,LOCATION_MZONE,0,1,nil)
+function s.atkcon(e,tp,eg,ep,ev,re,r,rp)
+	local g=Duel.GetMatchingGroup(Card.IsFaceup,tp,LOCATION_MZONE,0,nil)
+	return #g==g:FilterCount(s.atkconfilter,nil,RACE_INSECT)
 end
-
 --Bounce "Worm Call"
 function s.regcon(e,tp,eg,ep,ev,re,r,rp)
 	local loc=Duel.GetChainInfo(ev,CHAININFO_TRIGGERING_LOCATION)
@@ -163,7 +191,7 @@ end
 
 --Set
 function s.setfilter(c)
-	return c:IsCode(s.listed_names) and c:IsSpellTrap() and c:IsSSetable()
+	return (c:IsCode(s.listed_names) or (c:IsCode(s.w_nebula_names) and c:IsSpell())) and c:IsSpellTrap() and c:IsSSetable()
 end
 function s.settg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return Duel.IsExistingMatchingCard(s.setfilter,tp,LOCATION_DECK|LOCATION_GRAVE|LOCATION_REMOVED,0,1,nil) end
@@ -171,7 +199,7 @@ end
 function s.setop(e,tp,eg,ep,ev,re,r,rp)
 	local g=Duel.GetMatchingGroup(aux.NecroValleyFilter(s.setfilter),tp,LOCATION_DECK|LOCATION_GRAVE|LOCATION_REMOVED,0,nil)
 	if #g==0 then return end
-	local ft=math.min(Duel.GetLocationCount(tp,LOCATION_SZONE),2)
+	local ft=math.min(Duel.GetLocationCount(tp,LOCATION_SZONE),3)
 	local sg=aux.SelectUnselectGroup(g,e,tp,1,ft,aux.dncheck,1,tp,HINTMSG_SET)
 	if #sg>0 then
 		Duel.SSet(tp,sg)
