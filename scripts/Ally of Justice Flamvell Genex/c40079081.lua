@@ -189,7 +189,7 @@ function s.nsfilter(c)
 end
 function s.nstg(e,tp,eg,ep,ev,re,r,rp,chk)
 	local g=Duel.GetMatchingGroup(s.nsfilter,tp,LOCATION_HAND,0,nil,true,nil)
-	local ft=Duel.GetLocationCount(1-tp,LOCATION_MZONE,tp)
+	local ft=Duel.GetLocationCount(tp,LOCATION_MZONE,tp)
 	if chk==0 then return ft>0 and #g>0 end
 	Duel.SetPossibleOperationInfo(0,CATEGORY_SUMMON,nil,1,tp,LOCATION_HAND)
 end
