@@ -70,7 +70,7 @@ s.listed_series={SET_WORM}
 s.w_nebula_names={18304915,30476000,40079081,53842829,55939812,76108887,90075978}
 --Give control, draw, return
 function s.thfilter(c)
-	return c:IsFaceup() and c:IsSetCard(SET_WORM) and c:IsSpellTrap() and c:IsAbleToHand() and not c:IsCode(id)
+	return c:IsFaceup() and c:IsSetCard(SET_WORM) and c:IsAbleToHand() and not c:IsCode(id)
 end
 function s.ctrlcon(e,tp,eg,ep,ev,re,r,rp)
 	return re:GetHandler()~=e:GetHandler()
@@ -79,7 +79,7 @@ function s.ctrlfilter(c)
 	return (c:IsRace(RACE_REPTILE) and c:IsSetCard(SET_WORM)) and c:IsControlerCanBeChanged()
 end
 function s.ctrltg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.IsExistingMatchingCard(s.thfilter,tp,LOCATION_ONFIELD,0,1,nil) or Duel.IsExistingMatchingCard(s.ctrlfilter,tp,LOCATION_MZONE,0,1,nil) end
+	if chk==0 then return Duel.GetMZoneCount(1-tp,g,tp)>0 and Duel.IsExistingMatchingCard(s.ctrlfilter,tp,LOCATION_MZONE,0,1,nil) end
 	Duel.SetOperationInfo(0,CATEGORY_TOHAND,nil,1,0,0)
 	Duel.SetOperationInfo(0,CATEGORY_CONTROL,nil,1,tp,LOCATION_MZONE)
 	Duel.SetOperationInfo(0,CATEGORY_DRAW,nil,0,tp,1)
@@ -88,8 +88,8 @@ function s.ctrlop(e,tp,eg,ep,ev,re,r,rp)
 	local g=Duel.GetMatchingGroup(s.ctrlfilter,tp,LOCATION_MZONE,0,nil)
 	if #g==0 then return end
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_CONTROL)
-	local sg=g:Select(tp,1,#g,nil)
-	if sg and Duel.GetControl(sg,1-tp,PHASE_END,1) and Duel.IsPlayerCanDraw(tp) then
+	local sg=g:Select(tp,1,1,nil)
+	if sg and Duel.GetControl(sg,1-tp) and Duel.IsPlayerCanDraw(tp) then
 		Duel.BreakEffect()
 		Duel.Draw(tp,#sg,REASON_EFFECT)
 		local tc=Duel.SelectMatchingCard(tp,s.thfilter,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,1,1,nil)
@@ -113,7 +113,7 @@ function s.atkconfilter(c)
 end
 function s.atkcon(e,tp,eg,ep,ev,re,r,rp)
 	local g=Duel.GetMatchingGroup(Card.IsFaceup,tp,LOCATION_MZONE,0,nil)
-	return #g==g:FilterCount(s.atkconfilter,nil,RACE_INSECT)
+	return #g>0 and #g==g:FilterCount(s.atkconfilter,nil)
 end
 
 --Set

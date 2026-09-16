@@ -175,7 +175,9 @@ function s.thop(e,tp,eg,ep,ev,re,r,rp)
 	local dc=(d1+d2)
 	local g=Duel.GetMatchingGroup(s.thfilter,tp,LOCATION_ONFIELD|LOCATION_DECK|LOCATION_GRAVE|LOCATION_REMOVED,0,nil)
 	local sg=g:SelectWithSumEqual(tp,Card.GetLevel,dc,1,2)
-	if #sg>0 then
+	if not (#sg>0 and #sg==sg:GetClassCount(Card.GetLevel)) then
+		sg=g:SelectWithSumEqual(tp,Card.GetLevel,dc,1,2)
+	else
 		Duel.SendtoHand(sg,nil,REASON_EFFECT)
 		Duel.ConfirmCards(1-tp,sg)
 	end
@@ -222,7 +224,7 @@ function s.posop(e,tp,eg,ep,ev,re,r,rp,chk)
 end
 --Set
 function s.setcon(e,tp,eg,ep,ev,re,r,rp)
-	return Duel.GetFieldGroupCount(tp,LOCATION_ONFIELD,0)<=3 or Duel.GetFieldGroupCount(tp,0,LOCATION_ONFIELD)>=4
+	return Duel.GetFieldGroupCount(tp,LOCATION_SZONE,0)<=3
 end
 function s.setfilter(c,tp)
 	return (c:IsSetCard(SET_WORM) or c:IsCode(s.w_nebula_names)) and c:IsSpell() and c:IsSSetable() and not c:IsForbidden() and c:CheckUniqueOnField(tp)
@@ -235,18 +237,20 @@ function s.setop(e,tp,eg,ep,ev,re,r,rp)
 	local g=Duel.GetMatchingGroup(s.setfilter,tp,LOCATION_DECK|LOCATION_GRAVE|LOCATION_REMOVED,0,nil,tp)
 	if #g==0 then return Duel.GetLocationCount(tp,LOCATION_SZONE)>0 end
 	local tc=Duel.SelectMatchingCard(tp,s.setfilter,tp,LOCATION_DECK,0,1,1,nil,tp):GetFirst()
-	if tc and not ((tc:IsFieldSpell() or (tc:IsSpell() and tc:IsType(TYPE_CONTINUOUS))) and Duel.SelectEffectYesNo(tp,c,aux.Stringid(id,5))) then
-		Duel.SSet(tp,tc)
-	else
-		local fc=Duel.GetFieldCard(tp,LOCATION_FZONE,0)
-		if fc and tc:IsFieldSpell() then
-			Duel.SendtoGrave(fc,REASON_RULE)
-			Duel.BreakEffect()
-			Duel.MoveToField(tc,tp,tp,LOCATION_FZONE,POS_FACEUP,true)
-		elseif not tc:IsFieldSpell() then
-			Duel.MoveToField(tc,tp,tp,LOCATION_SZONE,POS_FACEUP,true)
+	if tc then
+		if not ((tc:IsFieldSpell() or (tc:IsSpell() and tc:IsType(TYPE_CONTINUOUS))) and Duel.SelectEffectYesNo(tp,c,aux.Stringid(id,5))) then
+			Duel.SSet(tp,tc)
 		else
-			Duel.MoveToField(tc,tp,tp,LOCATION_FZONE,POS_FACEUP,true)
+			local fc=Duel.GetFieldCard(tp,LOCATION_FZONE,0)
+			if fc and tc:IsFieldSpell() then
+				Duel.SendtoGrave(fc,REASON_RULE)
+				Duel.BreakEffect()
+				Duel.MoveToField(tc,tp,tp,LOCATION_FZONE,POS_FACEUP,true)
+			elseif tc:IsFieldSpell() then
+				Duel.MoveToField(tc,tp,tp,LOCATION_FZONE,POS_FACEUP,true)
+			else
+				Duel.MoveToField(tc,tp,tp,LOCATION_SZONE,POS_FACEUP,true)
+			end
 		end
 	end
 end
