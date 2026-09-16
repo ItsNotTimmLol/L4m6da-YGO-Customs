@@ -92,7 +92,7 @@ function s.ctrlop(e,tp,eg,ep,ev,re,r,rp)
 	if sg and Duel.GetControl(sg,1-tp,PHASE_END,1) and Duel.IsPlayerCanDraw(tp) then
 		Duel.BreakEffect()
 		Duel.Draw(tp,#sg,REASON_EFFECT)
-		local tc=Duel.SelectMatchingCard(tp,s.thfilter,tp,LOCATION_ONFIELD,0,1,1,nil)
+		local tc=Duel.SelectMatchingCard(tp,s.thfilter,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,1,1,nil)
 		if #tc>0 and Duel.SelectYesNo(tp,aux.Stringid(id,1)) then
 			Duel.SendtoHand(tc,nil,REASON_EFFECT)
 		end
