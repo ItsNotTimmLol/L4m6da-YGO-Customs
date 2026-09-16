@@ -104,6 +104,7 @@ function s.defval(e,c)
 	if ct<1 then ct=0.5 end
 	return c:GetBaseDefense()/(ct*2)
 end
+
 --Tribute bypass
 function s.ntcon(e,c,minc)
 	if c==nil then return true end
@@ -112,6 +113,7 @@ end
 function s.nttg(e,c)
 	return c:IsLevel(6)
 end
+
 --Roll to add
 function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return true end
@@ -173,9 +175,10 @@ function s.posop(e,tp,eg,ep,ev,re,r,rp,chk)
 		Duel.ChangePosition(tc,pos)
 	end
 end
---Set
+
+--Set S/T
 function s.setcon(e,tp,eg,ep,ev,re,r,rp)
-	return Duel.GetFieldGroupCount(tp,LOCATION_SZONE,0)<=3
+	return not Duel.IsExistingMatchingCard(Card.IsFacedown,e:GetHandlerPlayer(),LOCATION_SZONE,0,1,nil) --Duel.GetFieldGroupCount(tp,LOCATION_SZONE,0)<=3
 end
 function s.setfilter(c,tp)
 	return (c:IsSetCard(SET_WORM) or c:IsCode(s.w_nebula_names)) and c:IsSpell() and c:IsSSetable() and not c:IsForbidden() and c:CheckUniqueOnField(tp)

@@ -4,9 +4,8 @@ local s,id=GetID()
 function s.initial_effect(c)
 	--fusion summon
 	c:EnableReviveLimit()
-	--Fusion.AddProcMix(c,true,true,s.mfilter1,s.mfilter2)
-	Fusion.AddProcMixN(c,true,true,s.mfilter1,2)
-	Fusion.AddContactProc(c,s.contactfil,s.contactop,s.splimit)
+	Fusion.AddProcMixN(c,true,true,s.matfilter,2)
+	Fusion.AddContactProc(c,s.contactfil,s.contactop,s.splimit,nil,nil,nil,false)
 	--Only control 1
 	--c:SetUniqueOnField(1,0,id)
 	--Must be either Fusion Summoned or Special Summoned by alternate procedure
@@ -91,24 +90,18 @@ s.ally_series={SET_ALLY_OF_JUSTICE,SET_GENEX_ALLY}
 s.ally_names={40155554,59482302}
 s.w_nebula_names={18304915,30476000,40079081,53842829,55939812,76108887,90075978}
 --Materials
-function s.mfilter1(c,fc,sumtype,tp,sub,mg,sg)
-	return c:IsMonster() and not c:IsType(TYPE_FUSION)
+function s.matfilter(c,fc,sumtype,tp)
+	return (c:IsMonster() and c:IsType(TYPE_FUSION,fc,sumtype,tp))
 		and (c:IsLocation(LOCATION_HAND) or c:IsFaceup())
 		and (c:IsCode(s.ally_names) or c:IsSetCard(s.listed_series)) or (c:IsSetCard(SET_WORM) and c:IsRace(RACE_REPTILE))
-		
 end
-function s.mfilter2(c,fc,sumtype,tp,sub,mg,sg)
-	return c:IsMonster() and (c:IsLocation(LOCATION_HAND) or c:IsFaceup())
-		and (c:IsCode(s.ally_names) or c:IsSetCard(s.listed_series)) 
-end
-
 
 --Modified Summoning Conditions
 function s.splimit(e,se,sp,st)
-	return e:GetHandler():GetLocation()~=LOCATION_EXTRA
+	return (st&SUMMON_TYPE_FUSION)==SUMMON_TYPE_FUSION or not e:GetHandler():IsLocation(LOCATION_EXTRA)
 end
 function s.contactfil(tp)
-	return Duel.GetMatchingGroup(Card.IsAbleToDeckOrExtraAsCost,tp,LOCATION_HAND|LOCATION_GRAVE|LOCATION_REMOVED,0,nil)
+	return Duel.GetMatchingGroup(Card.IsAbleToDeckOrExtraAsCost,tp,LOCATION_HAND|LOCATION_ONFIELD|LOCATION_GRAVE|LOCATION_REMOVED,0,nil)
 end
 function s.contactop(g,tp)
 	local fu,fd=g:Split(Card.IsFaceup,nil)
