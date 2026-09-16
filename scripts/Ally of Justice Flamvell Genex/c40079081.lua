@@ -5,22 +5,22 @@ function s.initial_effect(c)
 	--Activate
 	local e0=Effect.CreateEffect(c)
 	e0:SetType(EFFECT_TYPE_ACTIVATE)
-	e0:SetOperation(s.actop)
+	--e0:SetOperation(s.actop)
 	e0:SetCode(EVENT_FREE_CHAIN)
 	c:RegisterEffect(e0)
 	--Can be activated from the hand
 	local e1=Effect.CreateEffect(c)
 	e1:SetDescription(aux.Stringid(id,1))
 	e1:SetType(EFFECT_TYPE_SINGLE)
-	e1:SetCondition(s.actcon)
+	--e1:SetCondition(s.actcon)
 	e1:SetCode(EFFECT_TRAP_ACT_IN_HAND)
 	c:RegisterEffect(e1)
 	local e2=e1:Clone()
 	e2:SetCode(EFFECT_TRAP_ACT_IN_SET_TURN)
 	e2:SetProperty(EFFECT_FLAG_SET_AVAILABLE)
-	e2:SetCondition(s.actcon)
+	--e2:SetCondition(s.actcon)
 	c:RegisterEffect(e2)
-	--atkchange
+	--[[atkchange
 	local e3=Effect.CreateEffect(c)
 	e3:SetType(EFFECT_TYPE_FIELD)
 	e3:SetRange(LOCATION_SZONE)
@@ -32,7 +32,7 @@ function s.initial_effect(c)
 	local e4=e3:Clone()
 	e4:SetCode(EFFECT_SET_BASE_DEFENSE)
 	e4:SetValue(s.defval)
-	c:RegisterEffect(e4)
+	c:RegisterEffect(e4)]]
 	--Level 6 Reptile Worm monsters can be Summoned without Tributing
 	local e5=Effect.CreateEffect(c)
 	e5:SetDescription(aux.Stringid(id,2))
@@ -45,22 +45,35 @@ function s.initial_effect(c)
 	c:RegisterEffect(e5)
 	local e6=e5:Clone()
 	e6:SetCode(EFFECT_SET_PROC)
-	e5:SetDescription(aux.Stringid(id,3))
+	e6:SetDescription(aux.Stringid(id,3))
 	c:RegisterEffect(e6)
-	--Normal Set
+	--Set or place face-up
 	local e7=Effect.CreateEffect(c)
-	e7:SetDescription(aux.Stringid(id,4))
-	e7:SetCategory(CATEGORY_SUMMON)
+	e7:SetDescription(aux.Stringid(id,2))
+	e7:SetCategory(CATEGORY_SET)
 	e7:SetType(EFFECT_TYPE_QUICK_O)
 	e7:SetProperty(EFFECT_FLAG_DAMAGE_STEP)
 	e7:SetCode(EVENT_FREE_CHAIN)
 	e7:SetRange(LOCATION_SZONE)
 	e7:SetCountLimit(1,0,EFFECT_COUNT_CODE_CHAIN)
-	e7:SetHintTiming(0,TIMINGS_CHECK_MONSTER|TIMING_MAIN_END)
-	e7:SetTarget(s.nstg)
-	e7:SetOperation(s.nsop)
+	e7:SetCondition(s.setcon)
+	e7:SetTarget(s.settg)
+	e7:SetOperation(s.setop)
 	c:RegisterEffect(e7)
-	--Flip face-up
+	--Normal Summon/Set
+	local e8=Effect.CreateEffect(c)
+	e8:SetDescription(aux.Stringid(id,4))
+	e8:SetCategory(CATEGORY_SUMMON)
+	e8:SetType(EFFECT_TYPE_QUICK_O)
+	e8:SetProperty(EFFECT_FLAG_DAMAGE_STEP)
+	e8:SetCode(EVENT_FREE_CHAIN)
+	e8:SetRange(LOCATION_SZONE)
+	e8:SetCountLimit(1,0,EFFECT_COUNT_CODE_CHAIN)
+	e8:SetHintTiming(0,TIMINGS_CHECK_MONSTER|TIMING_MAIN_END)
+	e8:SetTarget(s.nstg)
+	e8:SetOperation(s.nsop)
+	c:RegisterEffect(e8)
+	--[[Flip face-up
 	local e8=Effect.CreateEffect(c)
 	e8:SetDescription(aux.Stringid(id,5))
 	e8:SetCategory(CATEGORY_POSITION)
@@ -83,7 +96,7 @@ function s.initial_effect(c)
 		ge2:SetCode(EVENT_FLIP_SUMMON_SUCCESS)
 		ge2:SetOperation(s.checkop)
 		Duel.RegisterEffect(ge2,0)
-	end)
+	end)]]--
 end
 s.listed_names={88438982}
 s.listed_series={SET_WORM}
@@ -135,7 +148,7 @@ function s.ntcon(e,c,minc)
 	return minc==0 and Duel.GetLocationCount(c:GetControler(),LOCATION_MZONE)>0
 end
 function s.nttg(e,c)
-	return c:IsLevelBetween(5,6)
+	return c:IsLevel(6)
 end
 --Normal Set
 function s.nsfilter(c)
@@ -156,7 +169,7 @@ function s.nsop(e,tp,eg,ep,ev,re,r,rp,chk)
 		Duel.ShuffleHand(tp)
 		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SET)
 		sg=g1:Select(tp,1,1,nil):GetFirst()
-		Duel.MSet(tp,sg,true,nil)
+		Duel.SummonOrSet(tp,sg,true,nil)
 	end
 end
 --Flip
@@ -174,5 +187,35 @@ function s.posop(e,tp,eg,ep,ev,re,r,rp,chk)
 	if tc then
 		local pos=Duel.SelectPosition(tp,tc,POS_FACEUP_ATTACK+POS_FACEUP_DEFENSE)
 		Duel.ChangePosition(tc,pos)
+	end
+end
+--Set
+function s.setcon(e,tp,eg,ep,ev,re,r,rp)
+	return Duel.GetFieldGroupCount(tp,LOCATION_ONFIELD,0)<=4 or Duel.GetFieldGroupCount(tp,0,LOCATION_ONFIELD)>=4
+end
+function s.setfilter(c,tp)
+	return (c:IsSetCard(SET_WORM) or c:IsCode(s.w_nebula_names)) and c:IsSpell() and c:IsSSetable() and not c:IsForbidden() and c:CheckUniqueOnField(tp)
+end
+function s.settg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return Duel.IsExistingMatchingCard(s.setfilter,tp,LOCATION_DECK|LOCATION_GRAVE|LOCATION_REMOVED,0,1,nil,tp) end
+end
+function s.setop(e,tp,eg,ep,ev,re,r,rp)
+	local c=e:GetHandler()
+	local g=Duel.GetMatchingGroup(s.setfilter,tp,LOCATION_DECK|LOCATION_GRAVE|LOCATION_REMOVED,0,nil,tp)
+	if #g==0 then return Duel.GetLocationCount(tp,LOCATION_SZONE)>0 end
+	local tc=Duel.SelectMatchingCard(tp,s.setfilter,tp,LOCATION_DECK,0,1,1,nil,tp):GetFirst()
+	if tc and not ((tc:IsFieldSpell() or (tc:IsSpell() and tc:IsType(TYPE_CONTINUOUS))) and Duel.SelectEffectYesNo(tp,c,aux.Stringid(id,4))) then
+		Duel.SSet(tp,tc)
+	else
+		local fc=Duel.GetFieldCard(tp,LOCATION_FZONE,0)
+		if fc and tc:IsFieldSpell() then
+			Duel.SendtoGrave(fc,REASON_RULE)
+			Duel.BreakEffect()
+			Duel.MoveToField(tc,tp,tp,LOCATION_FZONE,POS_FACEUP,true)
+		elseif not tc:IsFieldSpell() then
+			Duel.MoveToField(tc,tp,tp,LOCATION_SZONE,POS_FACEUP,true)
+		else
+			Duel.MoveToField(tc,tp,tp,LOCATION_FZONE,POS_FACEUP,true)
+		end
 	end
 end

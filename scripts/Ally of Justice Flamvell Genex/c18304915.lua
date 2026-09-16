@@ -124,8 +124,8 @@ function s.settg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return Duel.IsExistingMatchingCard(s.setfilter,tp,LOCATION_DECK|LOCATION_GRAVE|LOCATION_REMOVED,0,1,nil) end
 end
 function s.rescon(sg,e,tp,mg)
-	return #sg==1 or (sg:FilterCount(Card.IsCode,nil,22959079)==1
-		and sg:FilterCount(Card.IsCode,nil,28506708)==1)
+	return #sg==1 or sg:FilterCount(Card.IsCode,nil,22959079)==1
+		or sg:FilterCount(Card.IsCode,nil,28506708)==1
 end
 function s.setop(e,tp,eg,ep,ev,re,r,rp)
 	local g=Duel.GetMatchingGroup(aux.NecroValleyFilter(s.setfilter),tp,LOCATION_DECK|LOCATION_GRAVE|LOCATION_REMOVED,0,nil)
