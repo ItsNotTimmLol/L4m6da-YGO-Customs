@@ -70,7 +70,7 @@ s.listed_series={SET_WORM}
 s.w_nebula_names={18304915,30476000,40079081,53842829,55939812,76108887,90075978}
 --Give control, draw, return
 function s.thfilter(c)
-	return c:IsFaceup() and c:IsSetCard(SET_WORM) and c:IsSpellTrap() and c:IsAbleToHand()
+	return c:IsFaceup() and c:IsSetCard(SET_WORM) and c:IsSpellTrap() and c:IsAbleToHand() and not c:IsCode(id)
 end
 function s.ctrlcon(e,tp,eg,ep,ev,re,r,rp)
 	return re:GetHandler()~=e:GetHandler()
@@ -124,8 +124,9 @@ function s.settg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return Duel.IsExistingMatchingCard(s.setfilter,tp,LOCATION_DECK|LOCATION_GRAVE|LOCATION_REMOVED,0,1,nil) end
 end
 function s.rescon(sg,e,tp,mg)
-	return #sg==1 or sg:FilterCount(Card.IsCode,nil,22959079)==1
-		or sg:FilterCount(Card.IsCode,nil,28506708)==1
+	return #sg==1 or (#sg==2 and (sg:FilterCount(Card.IsCode,nil,22959079)==1
+		or sg:FilterCount(Card.IsCode,nil,28506708)==1)) or (sg:FilterCount(Card.IsCode,nil,22959079)==1
+		and sg:FilterCount(Card.IsCode,nil,28506708)==1)
 end
 function s.setop(e,tp,eg,ep,ev,re,r,rp)
 	local g=Duel.GetMatchingGroup(aux.NecroValleyFilter(s.setfilter),tp,LOCATION_DECK|LOCATION_GRAVE|LOCATION_REMOVED,0,nil)

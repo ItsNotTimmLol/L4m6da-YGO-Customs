@@ -35,7 +35,7 @@ function s.initial_effect(c)
 	c:RegisterEffect(e4)]]
 	--Level 6 Reptile Worm monsters can be Summoned without Tributing
 	local e5=Effect.CreateEffect(c)
-	e5:SetDescription(aux.Stringid(id,2))
+	e5:SetDescription(aux.Stringid(id,1))
 	e5:SetType(EFFECT_TYPE_FIELD)
 	e5:SetCode(EFFECT_SUMMON_PROC)
 	e5:SetRange(LOCATION_SZONE)
@@ -45,34 +45,43 @@ function s.initial_effect(c)
 	c:RegisterEffect(e5)
 	local e6=e5:Clone()
 	e6:SetCode(EFFECT_SET_PROC)
-	e6:SetDescription(aux.Stringid(id,3))
+	e6:SetDescription(aux.Stringid(id,2))
 	c:RegisterEffect(e6)
-	--Set or place face-up
+	--Add to hand
 	local e7=Effect.CreateEffect(c)
-	e7:SetDescription(aux.Stringid(id,2))
-	e7:SetCategory(CATEGORY_SET)
+	e7:SetCategory(CATEGORY_TOHAND+CATEGORY_SEARCH+CATEGORY_DICE)
 	e7:SetType(EFFECT_TYPE_QUICK_O)
-	e7:SetProperty(EFFECT_FLAG_DAMAGE_STEP)
 	e7:SetCode(EVENT_FREE_CHAIN)
 	e7:SetRange(LOCATION_SZONE)
-	e7:SetCountLimit(1,0,EFFECT_COUNT_CODE_CHAIN)
-	e7:SetCondition(s.setcon)
-	e7:SetTarget(s.settg)
-	e7:SetOperation(s.setop)
+	e7:SetDescription(aux.Stringid(id,3))
+	e7:SetCountLimit(1)
+	e7:SetTarget(s.thtg)
+	e7:SetOperation(s.thop)
 	c:RegisterEffect(e7)
-	--Normal Summon/Set
+	--Set or place face-up
 	local e8=Effect.CreateEffect(c)
 	e8:SetDescription(aux.Stringid(id,4))
-	e8:SetCategory(CATEGORY_SUMMON)
+	e8:SetCategory(CATEGORY_SET)
 	e8:SetType(EFFECT_TYPE_QUICK_O)
-	e8:SetProperty(EFFECT_FLAG_DAMAGE_STEP)
 	e8:SetCode(EVENT_FREE_CHAIN)
 	e8:SetRange(LOCATION_SZONE)
 	e8:SetCountLimit(1,0,EFFECT_COUNT_CODE_CHAIN)
-	e8:SetHintTiming(0,TIMINGS_CHECK_MONSTER|TIMING_MAIN_END)
-	e8:SetTarget(s.nstg)
-	e8:SetOperation(s.nsop)
+	e8:SetCondition(s.setcon)
+	e8:SetTarget(s.settg)
+	e8:SetOperation(s.setop)
 	c:RegisterEffect(e8)
+	--Normal Summon/Set
+	local e9=Effect.CreateEffect(c)
+	e9:SetDescription(aux.Stringid(id,6))
+	e9:SetCategory(CATEGORY_SUMMON)
+	e9:SetType(EFFECT_TYPE_QUICK_O)
+	e9:SetCode(EVENT_FREE_CHAIN)
+	e9:SetRange(LOCATION_SZONE)
+	e9:SetCountLimit(1,0,EFFECT_COUNT_CODE_CHAIN)
+	e9:SetHintTiming(0,TIMINGS_CHECK_MONSTER|TIMING_MAIN_END)
+	e9:SetTarget(s.nstg)
+	e9:SetOperation(s.nsop)
+	c:RegisterEffect(e9)
 	--[[Flip face-up
 	local e8=Effect.CreateEffect(c)
 	e8:SetDescription(aux.Stringid(id,5))
@@ -98,6 +107,7 @@ function s.initial_effect(c)
 		Duel.RegisterEffect(ge2,0)
 	end)]]--
 end
+s.roll_dice=true
 s.listed_names={88438982}
 s.listed_series={SET_WORM}
 s.w_nebula_names={18304915,30476000,40079081,53842829,55939812,76108887,90075978}
@@ -150,7 +160,28 @@ end
 function s.nttg(e,c)
 	return c:IsLevel(6)
 end
---Normal Set
+--Roll to add
+function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then return true end
+	Duel.SetOperationInfo(0,CATEGORY_DICE,nil,0,tp,2)
+	Duel.SetOperationInfo(0,CATEGORY_TOHAND,nil,2,tp,LOCATION_DECK)
+end
+function s.thfilter(c)
+	return c:IsRace(RACE_REPTILE) and c:IsSetCard(SET_WORM)
+		and c:IsMonster() and c:HasLevel() and c:IsAbleToHand()
+end
+function s.thop(e,tp,eg,ep,ev,re,r,rp)
+	local d1,d2=Duel.TossDice(tp,2)
+	local dc=(d1+d2)
+	local g=Duel.GetMatchingGroup(s.thfilter,tp,LOCATION_ONFIELD|LOCATION_DECK|LOCATION_GRAVE|LOCATION_REMOVED,0,nil)
+	local sg=g:SelectWithSumEqual(tp,Card.GetLevel,dc,1,2)
+	if #sg>0 then
+		Duel.SendtoHand(sg,nil,REASON_EFFECT)
+		Duel.ConfirmCards(1-tp,sg)
+	end
+end
+
+--Normal Summon/Set
 function s.nsfilter(c)
 	return c:IsRace(RACE_REPTILE) and c:IsSetCard(SET_WORM)
 		and c:IsMonster()
@@ -191,7 +222,7 @@ function s.posop(e,tp,eg,ep,ev,re,r,rp,chk)
 end
 --Set
 function s.setcon(e,tp,eg,ep,ev,re,r,rp)
-	return Duel.GetFieldGroupCount(tp,LOCATION_ONFIELD,0)<=4 or Duel.GetFieldGroupCount(tp,0,LOCATION_ONFIELD)>=4
+	return Duel.GetFieldGroupCount(tp,LOCATION_ONFIELD,0)<=3 or Duel.GetFieldGroupCount(tp,0,LOCATION_ONFIELD)>=4
 end
 function s.setfilter(c,tp)
 	return (c:IsSetCard(SET_WORM) or c:IsCode(s.w_nebula_names)) and c:IsSpell() and c:IsSSetable() and not c:IsForbidden() and c:CheckUniqueOnField(tp)
@@ -204,7 +235,7 @@ function s.setop(e,tp,eg,ep,ev,re,r,rp)
 	local g=Duel.GetMatchingGroup(s.setfilter,tp,LOCATION_DECK|LOCATION_GRAVE|LOCATION_REMOVED,0,nil,tp)
 	if #g==0 then return Duel.GetLocationCount(tp,LOCATION_SZONE)>0 end
 	local tc=Duel.SelectMatchingCard(tp,s.setfilter,tp,LOCATION_DECK,0,1,1,nil,tp):GetFirst()
-	if tc and not ((tc:IsFieldSpell() or (tc:IsSpell() and tc:IsType(TYPE_CONTINUOUS))) and Duel.SelectEffectYesNo(tp,c,aux.Stringid(id,4))) then
+	if tc and not ((tc:IsFieldSpell() or (tc:IsSpell() and tc:IsType(TYPE_CONTINUOUS))) and Duel.SelectEffectYesNo(tp,c,aux.Stringid(id,5))) then
 		Duel.SSet(tp,tc)
 	else
 		local fc=Duel.GetFieldCard(tp,LOCATION_FZONE,0)
