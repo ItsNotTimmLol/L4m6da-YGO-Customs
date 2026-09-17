@@ -62,7 +62,6 @@ function s.initial_effect(c)
 	e8:SetType(EFFECT_TYPE_QUICK_O)
 	e8:SetCode(EVENT_FREE_CHAIN)
 	e8:SetRange(LOCATION_SZONE)
-	e8:SetCountLimit(1,0,EFFECT_COUNT_CODE_CHAIN)
 	e8:SetCondition(s.setcon)
 	e8:SetTarget(s.settg)
 	e8:SetOperation(s.setop)
@@ -74,7 +73,6 @@ function s.initial_effect(c)
 	e9:SetType(EFFECT_TYPE_QUICK_O)
 	e9:SetCode(EVENT_FREE_CHAIN)
 	e9:SetRange(LOCATION_SZONE)
-	e9:SetCountLimit(1,0,EFFECT_COUNT_CODE_CHAIN)
 	e9:SetHintTiming(0,TIMINGS_CHECK_MONSTER|TIMING_MAIN_END)
 	e9:SetTarget(s.nstg)
 	e9:SetOperation(s.nsop)
@@ -116,7 +114,8 @@ end
 
 --Roll to add
 function s.thtg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return true end
+	if chk==0 then return Duel.GetFlagEffect(tp,id)==0 end
+	Duel.RegisterFlagEffect(tp,id,RESET_CHAIN,0,1)
 	Duel.SetOperationInfo(0,CATEGORY_DICE,nil,0,tp,2)
 	Duel.SetOperationInfo(0,CATEGORY_TOHAND,nil,2,tp,LOCATION_DECK)
 end
@@ -145,7 +144,8 @@ end
 function s.nstg(e,tp,eg,ep,ev,re,r,rp,chk)
 	local g=Duel.GetMatchingGroup(s.nsfilter,tp,LOCATION_HAND,0,nil,true,nil)
 	local ft=Duel.GetLocationCount(tp,LOCATION_MZONE,tp)
-	if chk==0 then return ft>0 and #g>0 end
+	if chk==0 then return ft>0 and #g>0 and  Duel.GetFlagEffect(tp,id)==0 end
+	Duel.RegisterFlagEffect(tp,id,RESET_CHAIN,0,1)
 	Duel.SetPossibleOperationInfo(0,CATEGORY_SUMMON,nil,1,tp,LOCATION_HAND)
 end
 function s.nsop(e,tp,eg,ep,ev,re,r,rp,chk)
@@ -185,7 +185,8 @@ function s.setfilter(c,tp)
 		and (c:IsSSetable() or c:GetActivateEffect():IsActivatable(tp,true,true))
 end
 function s.settg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.IsExistingMatchingCard(s.setfilter,tp,LOCATION_DECK|LOCATION_GRAVE|LOCATION_REMOVED,0,1,nil,tp) end
+	if chk==0 then return Duel.IsExistingMatchingCard(s.setfilter,tp,LOCATION_DECK|LOCATION_GRAVE|LOCATION_REMOVED,0,1,nil,tp) and Duel.GetFlagEffect(tp,id)==0 end
+	Duel.RegisterFlagEffect(tp,id,RESET_CHAIN,0,1)
 end
 function s.setop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()

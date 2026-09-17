@@ -36,6 +36,8 @@ function s.initial_effect(c)
 	e5:SetType(EFFECT_TYPE_QUICK_O)
 	e5:SetCode(EVENT_CHAINING)
 	e5:SetRange(LOCATION_FZONE)
+	e5:SetProperty(EFFECT_FLAG_DAMAGE_STEP+EFFECT_FLAG_DAMAGE_CAL)
+	e5:SetCountLimit(1,0,EFFECT_COUNT_CODE_CHAIN)
 	e5:SetCondition(s.chaincon)
 	e5:SetTarget(s.chaintg)
 	e5:SetOperation(s.chainop)
@@ -94,7 +96,7 @@ function s.setop(e,tp,eg,ep,ev,re,r,rp)
 	end
 end
 
---Give control, draw, return
+--Give control
 function s.chaincon(e,tp,eg,ep,ev,re,r,rp)
 	return re:GetHandler()~=e:GetHandler()
 end
@@ -126,18 +128,18 @@ function s.chainop(e,tp,eg,ep,ev,re,r,rp)
 		--Return to hand
 		Duel.SendtoHand(tc,nil,REASON_EFFECT)
 	elseif b3 and not b1 and not b2 then
-		--Banish until next Standby Phase
+		--Banish until next End Phase
 		if tc:IsMonster() then
 			local reset_count=1
 			local return_condition=nil
-			if Duel.IsStandbyPhase() then
+			if Duel.IsEndPhase() then
 				local turn_count=Duel.GetTurnCount()
 				reset_count=2
 				return_condition=function() return Duel.GetTurnCount()~=turn_count end
 			end
-			aux.RemoveUntil(tc,nil,REASON_EFFECT,PHASE_STANDBY,id,e,tp,aux.DefaultFieldReturnOp,return_condition,nil,reset_count)
+			aux.RemoveUntil(tc,nil,REASON_EFFECT,PHASE_END,id,e,tp,aux.DefaultFieldReturnOp,return_condition,nil,reset_count)
 		else
-			aux.RemoveUntil(tc,nil,REASON_EFFECT,PHASE_STANDBY,id,e,tp,s.returnop)
+			aux.RemoveUntil(tc,nil,REASON_EFFECT,PHASE_END,id,e,tp,s.returnop)
 		end
 	else
 		local op=Duel.SelectEffect(tp,
@@ -151,15 +153,19 @@ function s.chainop(e,tp,eg,ep,ev,re,r,rp)
 			--Return to hand
 			Duel.SendtoHand(tc,nil,REASON_EFFECT)
 		elseif op==3 then
-			--Banish until next Standby Phase
-			local reset_count=1
-			local return_condition=nil
-			if Duel.IsStandbyPhase() then
-				local turn_count=Duel.GetTurnCount()
-				reset_count=2
-				return_condition=function() return Duel.GetTurnCount()~=turn_count end
+			--Banish until next End Phase
+			if tc:IsMonster() then
+				local reset_count=1
+				local return_condition=nil
+				if Duel.IsEndPhase() then
+					local turn_count=Duel.GetTurnCount()
+					reset_count=2
+					return_condition=function() return Duel.GetTurnCount()~=turn_count end
+				end
+				aux.RemoveUntil(tc,nil,REASON_EFFECT,PHASE_END,id,e,tp,aux.DefaultFieldReturnOp,return_condition,nil,reset_count)
+			else
+				aux.RemoveUntil(tc,nil,REASON_EFFECT,PHASE_END,id,e,tp,s.returnop)
 			end
-			aux.RemoveUntil(tc,nil,REASON_EFFECT,PHASE_STANDBY,id,e,tp,aux.DefaultFieldReturnOp,return_condition,nil,reset_count)
 		end
 	end
 end
