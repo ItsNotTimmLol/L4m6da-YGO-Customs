@@ -127,7 +127,7 @@ function s.thop(e,tp,eg,ep,ev,re,r,rp)
 	local dn=2
 	local d1,d2=Duel.TossDice(tp,dn)
 	local dc=(d1+d2)
-	local g=Duel.GetMatchingGroup(aux.NecroValleyFilter(s.thfilter),tp,LOCATION_ONFIELD|LOCATION_DECK|LOCATION_GRAVE|LOCATION_REMOVED,0,nil,dc)
+	local g=Duel.GetMatchingGroup(aux.NecroValleyFilter(s.thfilter),tp,LOCATION_ONFIELD|LOCATION_DECK,0,nil,dc)
 	local sg=g:SelectWithSumEqual(tp,Card.GetLevel,dc,1,2)
 	if #sg>0 then
 		Duel.SendtoHand(sg,nil,REASON_EFFECT)

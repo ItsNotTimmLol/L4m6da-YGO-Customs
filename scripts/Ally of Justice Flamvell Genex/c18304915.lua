@@ -103,7 +103,7 @@ end
 function s.chainfilter(c,tp)
 	return c:IsSetCard(SET_WORM)
 		and ((c:IsRace(RACE_REPTILE) and c:IsControler(tp) and (c:IsControlerCanBeChanged() or c:IsAbleToRemove())
-		or (c:IsFaceup() and c:IsSetCard(SET_WORM) and (c:IsAbleToHand() or c:IsAbleToRemove()) and not c:IsCode(id))))
+		or (c:IsFaceup() and c:IsCode(28506708) and (c:IsAbleToHand() or c:IsAbleToRemove()) and not c:IsCode(id))))
 end
 function s.chaintg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	if chkc then return chkc:IsLocation(LOCATION_ONFIELD) and s.chainfilter(chkc) and chkc:IsOnField() end
