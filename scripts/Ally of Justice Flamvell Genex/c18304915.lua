@@ -37,6 +37,7 @@ function s.initial_effect(c)
 	e5:SetCode(EVENT_CHAINING)
 	e5:SetRange(LOCATION_FZONE)
 	e5:SetCondition(s.chaincon)
+	e5:SetTarget(s.chaintg)
 	e5:SetOperation(s.chainop)
 	e5:SetHintTiming(0,TIMING_STANDBY_PHASE|TIMING_MAIN_END|TIMINGS_CHECK_MONSTER_E)
 	c:RegisterEffect(e5)
@@ -54,44 +55,6 @@ end
 s.listed_names={22959079,28506708}
 s.listed_series={SET_WORM}
 s.w_nebula_names={18304915,30476000,40079081,53842829,55939812,76108887,90075978}
---Give control, draw, return
-function s.thfilter(c)
-	return c:IsFaceup() and c:IsSetCard(SET_WORM) and c:IsAbleToHand() and not c:IsCode(id)
-end
-function s.chaincon(e,tp,eg,ep,ev,re,r,rp)
-	local b1=Duel.GetMZoneCount(1-tp,g,tp)>0 and Duel.IsExistingMatchingCard(s.chainfilter,tp,LOCATION_MZONE,0,1,nil)
-	local b2=Duel.IsExistingMatchingCard(s.thfilter,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,1,nil)
-	return re:GetHandler()~=e:GetHandler() and (b1 or b2)
-end
-function s.chainfilter(c)
-	return (c:IsRace(RACE_REPTILE) and c:IsSetCard(SET_WORM)) and c:IsControlerCanBeChanged()
-end
-function s.chainop(e,tp,eg,ep,ev,re,r,rp)
-	local b1=Duel.GetMZoneCount(1-tp,g,tp)>0 and Duel.IsExistingMatchingCard(s.chainfilter,tp,LOCATION_MZONE,0,1,nil)
-	local b2=Duel.IsExistingMatchingCard(s.thfilter,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,1,nil)
-	if not (b1 or b2) then return end
-	local op=Duel.SelectEffect(tp,
-		{b1,aux.Stringid(id,2)},
-		{b2,aux.Stringid(id,3)})
-	if op==1 then
-		--Give control to draw 
-		local g=Duel.GetMatchingGroup(s.chainfilter,tp,LOCATION_MZONE,0,nil)
-		if #g==0 then return end
-		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_CONTROL)
-		local sg=g:Select(tp,1,1,nil)
-		if sg and Duel.GetControl(sg,1-tp) and Duel.IsPlayerCanDraw(tp) then
-			Duel.BreakEffect()
-			Duel.Draw(tp,#sg,REASON_EFFECT)
-		end
-	elseif op==2 then
-		--Return to hand
-		local tc=Duel.SelectMatchingCard(tp,s.thfilter,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,1,1,nil)
-		if #tc>0 then
-			Duel.SendtoHand(tc,nil,REASON_EFFECT)
-		end
-	end
-end
-
 --Negate
 function s.equipf(c)
 	return c:IsSetCard(SET_WORM)
@@ -128,5 +91,44 @@ function s.setop(e,tp,eg,ep,ev,re,r,rp)
 	local sg=aux.SelectUnselectGroup(g,e,tp,1,ft,s.rescon,1,tp,HINTMSG_SET)
 	if #sg>0 then
 		Duel.SSet(tp,sg)
+	end
+end
+
+--Give control, draw, return
+function s.chaincon(e,tp,eg,ep,ev,re,r,rp)
+	return re:GetHandler()~=e:GetHandler()
+end
+function s.chainfilter(c,tp)
+	return c:IsSetCard(SET_WORM)
+		and ((c:IsRace(RACE_REPTILE) and c:IsControlerCanBeChanged() and c:IsControler(tp))
+		or (c:IsFaceup() and c:IsSetCard(SET_WORM) and c:IsAbleToHand() and not c:IsCode(id)))
+end
+function s.chaintg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
+	if chkc then return chkc:IsLocation(LOCATION_ONFIELD) and s.chainfilter(chkc) end
+	if chk==0 then return Duel.IsExistingTarget(s.chainfilter,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,1,nil,tp) end
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_FACEUP)
+	Duel.SelectTarget(tp,s.chainfilter,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,1,1,nil,tp)
+end
+function s.chainop(e,tp,eg,ep,ev,re,r,rp)
+	local tc=Duel.GetFirstTarget()
+	local b1=Duel.GetMZoneCount(1-tp,g,tp)>0 and tc:IsRace(RACE_REPTILE) and tc:IsControler(tp)
+	local b2=tc:IsAbleToHand()
+	if not (b1 or b2) or not tc:IsRelateToEffect(e) then
+		return
+	elseif b1 and not b2 then
+		Duel.GetControl(tc,1-tp)
+	elseif b2 and not b1 then
+		Duel.SendtoHand(tc,nil,REASON_EFFECT)
+	elseif b1 and b2 then
+		local op=Duel.SelectEffect(tp,
+			{b1,aux.Stringid(id,2)},
+			{b2,aux.Stringid(id,3)})
+		if op==1 then
+			--Give control
+			Duel.GetControl(tc,1-tp)
+		elseif op==2 then
+			--Return to hand
+			Duel.SendtoHand(tc,nil,REASON_EFFECT)
+		end
 	end
 end
