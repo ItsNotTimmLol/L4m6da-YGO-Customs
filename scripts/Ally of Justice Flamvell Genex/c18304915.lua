@@ -100,35 +100,79 @@ function s.chaincon(e,tp,eg,ep,ev,re,r,rp)
 end
 function s.chainfilter(c,tp)
 	return c:IsSetCard(SET_WORM)
-		and ((c:IsRace(RACE_REPTILE) and c:IsControlerCanBeChanged() and c:IsControler(tp))
-		or (c:IsFaceup() and c:IsSetCard(SET_WORM) and c:IsAbleToHand() and not c:IsCode(id)))
+		and ((c:IsRace(RACE_REPTILE) and c:IsControler(tp) and (c:IsControlerCanBeChanged() or c:IsAbleToRemove())
+		or (c:IsFaceup() and c:IsSetCard(SET_WORM) and (c:IsAbleToHand() or c:IsAbleToRemove()) and not c:IsCode(id))))
 end
 function s.chaintg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
-	if chkc then return chkc:IsLocation(LOCATION_ONFIELD) and s.chainfilter(chkc) end
+	if chkc then return chkc:IsLocation(LOCATION_ONFIELD) and s.chainfilter(chkc) and chkc:IsOnField() end
 	if chk==0 then return Duel.IsExistingTarget(s.chainfilter,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,1,nil,tp) end
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_FACEUP)
 	Duel.SelectTarget(tp,s.chainfilter,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,1,1,nil,tp)
+	Duel.SetPossibleOperationInfo(0,CATEGORY_CONTROL,tc,1,tp,0)
+	Duel.SetPossibleOperationInfo(0,CATEGORY_TOHAND,tc,1,tp,LOCATION_ONFIELD)
+	Duel.SetPossibleOperationInfo(0,CATEGORY_REMOVE,tc,1,tp,0)
 end
 function s.chainop(e,tp,eg,ep,ev,re,r,rp)
 	local tc=Duel.GetFirstTarget()
 	local b1=Duel.GetMZoneCount(1-tp,g,tp)>0 and tc:IsRace(RACE_REPTILE) and tc:IsControler(tp)
 	local b2=tc:IsAbleToHand()
-	if not (b1 or b2) or not tc:IsRelateToEffect(e) then
+	local b3=tc:IsAbleToRemove()
+	if not (b1 or b2 or b3) or not tc:IsRelateToEffect(e) then
 		return
-	elseif b1 and not b2 then
+	elseif b1 and not b2 and not b3 then
+		--Give control
 		Duel.GetControl(tc,1-tp)
-	elseif b2 and not b1 then
+	elseif b2 and not b1 and not b3 then
+		--Return to hand
 		Duel.SendtoHand(tc,nil,REASON_EFFECT)
-	elseif b1 and b2 then
+	elseif b3 and not b1 and not b2 then
+		--Banish until next Standby Phase
+		if tc:IsMonster() then
+			local reset_count=1
+			local return_condition=nil
+			if Duel.IsStandbyPhase() then
+				local turn_count=Duel.GetTurnCount()
+				reset_count=2
+				return_condition=function() return Duel.GetTurnCount()~=turn_count end
+			end
+			aux.RemoveUntil(tc,nil,REASON_EFFECT,PHASE_STANDBY,id,e,tp,aux.DefaultFieldReturnOp,return_condition,nil,reset_count)
+		else
+			aux.RemoveUntil(tc,nil,REASON_EFFECT,PHASE_STANDBY,id,e,tp,s.returnop)
+		end
+	else
 		local op=Duel.SelectEffect(tp,
 			{b1,aux.Stringid(id,2)},
-			{b2,aux.Stringid(id,3)})
+			{b2,aux.Stringid(id,3)},
+			{b3,aux.Stringid(id,4)})
 		if op==1 then
 			--Give control
 			Duel.GetControl(tc,1-tp)
 		elseif op==2 then
 			--Return to hand
 			Duel.SendtoHand(tc,nil,REASON_EFFECT)
+		elseif op==3 then
+			--Banish until next Standby Phase
+			local reset_count=1
+			local return_condition=nil
+			if Duel.IsStandbyPhase() then
+				local turn_count=Duel.GetTurnCount()
+				reset_count=2
+				return_condition=function() return Duel.GetTurnCount()~=turn_count end
+			end
+			aux.RemoveUntil(tc,nil,REASON_EFFECT,PHASE_STANDBY,id,e,tp,aux.DefaultFieldReturnOp,return_condition,nil,reset_count)
 		end
+	end
+end
+function s.returnop(rg,e,tp,eg,ep,ev,re,r,rp)
+	local tc=rg:GetFirst()
+	if tc:IsFieldSpell() then
+		local fc=Duel.GetFieldCard(tp,LOCATION_FZONE,0)
+		if fc then
+			Duel.SendtoGrave(fc,REASON_RULE)
+			Duel.BreakEffect()
+		end
+		Duel.MoveToField(tc,tp,tp,LOCATION_FZONE,POS_FACEUP,true)
+	else
+		Duel.MoveToField(tc,tp,tp,LOCATION_SZONE,POS_FACEUP,true)
 	end
 end
