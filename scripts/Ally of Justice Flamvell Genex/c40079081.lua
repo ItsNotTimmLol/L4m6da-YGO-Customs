@@ -1,4 +1,4 @@
---W Nebula Call
+--W Nebula Invasion
 --Scripted by WolfSif
 local s,id=GetID()
 function s.initial_effect(c)
@@ -67,9 +67,9 @@ function s.initial_effect(c)
 	e8:SetTarget(s.settg)
 	e8:SetOperation(s.setop)
 	c:RegisterEffect(e8)
-	--Normal Summon/Set
+	--Normal Summon
 	local e9=Effect.CreateEffect(c)
-	e9:SetDescription(aux.Stringid(id,6))
+	e9:SetDescription(aux.Stringid(id,7))
 	e9:SetCategory(CATEGORY_SUMMON)
 	e9:SetType(EFFECT_TYPE_QUICK_O)
 	e9:SetCode(EVENT_FREE_CHAIN)
@@ -155,7 +155,7 @@ function s.nsop(e,tp,eg,ep,ev,re,r,rp,chk)
 		Duel.ShuffleHand(tp)
 		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SET)
 		sg=g1:Select(tp,1,1,nil):GetFirst()
-		Duel.SummonOrSet(tp,sg,true,nil)
+		Duel.Summon(tp,sg,true,nil)
 	end
 end
 --Flip
@@ -176,12 +176,13 @@ function s.posop(e,tp,eg,ep,ev,re,r,rp,chk)
 	end
 end
 
---Set S/T
+--Set or activate S/T
 function s.setcon(e,tp,eg,ep,ev,re,r,rp)
 	return not Duel.IsExistingMatchingCard(Card.IsFacedown,e:GetHandlerPlayer(),LOCATION_SZONE,0,1,nil) --Duel.GetFieldGroupCount(tp,LOCATION_SZONE,0)<=3
 end
 function s.setfilter(c,tp)
-	return (c:IsSetCard(SET_WORM) or c:IsCode(s.w_nebula_names)) and c:IsSpell() and c:IsSSetable() and not c:IsForbidden() and c:CheckUniqueOnField(tp)
+	return (c:IsSetCard(SET_WORM) or c:IsCode(s.w_nebula_names)) and c:IsSpellTrap() and not c:IsCode(id)
+		and (c:IsSSetable() or c:GetActivateEffect():IsActivatable(tp,true,true))
 end
 function s.settg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return Duel.IsExistingMatchingCard(s.setfilter,tp,LOCATION_DECK|LOCATION_GRAVE|LOCATION_REMOVED,0,1,nil,tp) end
@@ -191,6 +192,30 @@ function s.setop(e,tp,eg,ep,ev,re,r,rp)
 	local g=Duel.GetMatchingGroup(s.setfilter,tp,LOCATION_DECK|LOCATION_GRAVE|LOCATION_REMOVED,0,nil,tp)
 	if #g==0 then return Duel.GetLocationCount(tp,LOCATION_SZONE)>0 end
 	local tc=Duel.SelectMatchingCard(tp,s.setfilter,tp,LOCATION_DECK,0,1,1,nil,tp):GetFirst()
+	local b1=(tc:IsFieldSpell() or (tc:IsSpell() and tc:IsType(TYPE_CONTINUOUS)))
+	local b2=tc
+	if not b1 then 
+		Duel.SSet(tp,tc)
+	else
+		local op=Duel.SelectEffect(tp,
+			{b1,aux.Stringid(id,5)},
+			{b2,aux.Stringid(id,6)})
+		if op==1 then
+			if tc:IsFieldSpell() then
+				Duel.ActivateFieldSpell(tc,e,tp,eg,ep,ev,re,r,rp)
+			else
+				Duel.MoveToField(tc,tp,tp,LOCATION_SZONE,POS_FACEUP,true)
+				local te=tc:GetActivateEffect()
+				local tep=tc:GetControler()
+				local cost=te:GetCost()
+				if cost then cost(te,tep,eg,ep,ev,re,r,rp,1) end
+				Duel.RaiseEvent(tc,id,te,0,tp,tp,Duel.GetCurrentChain())
+			end
+		else
+			Duel.SSet(tp,tc)
+		end
+	end
+	--[[Place
 	if tc then
 		if not ((tc:IsFieldSpell() or (tc:IsSpell() and tc:IsType(TYPE_CONTINUOUS))) and Duel.SelectEffectYesNo(tp,c,aux.Stringid(id,5))) then
 			Duel.SSet(tp,tc)
@@ -206,5 +231,5 @@ function s.setop(e,tp,eg,ep,ev,re,r,rp)
 				Duel.MoveToField(tc,tp,tp,LOCATION_SZONE,POS_FACEUP,true)
 			end
 		end
-	end
+	end]]--
 end

@@ -71,8 +71,8 @@ function s.chainop(e,tp,eg,ep,ev,re,r,rp)
 	local b2=Duel.IsExistingMatchingCard(s.thfilter,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,1,nil)
 	if not (b1 or b2) then return end
 	local op=Duel.SelectEffect(tp,
-		{b1,aux.Stringid(id,3)},
-		{b2,aux.Stringid(id,4)})
+		{b1,aux.Stringid(id,2)},
+		{b2,aux.Stringid(id,3)})
 	if op==1 then
 		--Give control to draw 
 		local g=Duel.GetMatchingGroup(s.chainfilter,tp,LOCATION_MZONE,0,nil)
