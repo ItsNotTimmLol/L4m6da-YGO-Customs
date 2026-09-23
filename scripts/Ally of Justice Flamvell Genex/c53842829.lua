@@ -1,4 +1,5 @@
 --W Nebula Helminth
+local s,id=GetID()
 function s.initial_effect(c)
 	-- Equip Spell
 	c:EnableReviveLimit()
@@ -10,14 +11,6 @@ function s.initial_effect(c)
 	e1:SetTarget(s.sptg)
 	e1:SetOperation(s.spop)
 	c:RegisterEffect(e1)
-	--Set "Dimensionhole", "Worm Call", and "W Nebula" card
-	local e2=Effect.CreateEffect(c)
-	e2:SetCategory(CATEGORY_LEAVE_GRAVE+CATEGORY_TOFIELD)
-	e2:SetType(EFFECT_TYPE_IGNITION)
-	e2:SetRange(LOCATION_SZONE)
-	e2:SetTarget(s.settg)
-	e2:SetOperation(s.setop)
-	c:RegisterEffect(e2)
 	--Equip to a monster
 	local e3=Effect.CreateEffect(c)
 	e3:SetCategory(CATEGORY_EQUIP)
@@ -30,7 +23,7 @@ function s.initial_effect(c)
 	--Give control of 1 face-up or Set Reptile "Worm" monster
 	local e4=Effect.CreateEffect(c)
 	e4:SetCategory(CATEGORY_CONTROL)
-	e4:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_TRIGGER_O)
+	e4:SetType(EFFECT_TYPE_QUICK_O)
 	e4:SetCode(EVENT_CHAINING)
 	e4:SetRange(LOCATION_SZONE)
 	e4:SetCountLimit(1,id,EFFECT_COUNT_CODE_CHAIN)
@@ -87,7 +80,16 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 			c:RegisterEffect(e1)
 		end
 		-- Then Set the three cards
-		s.setop(e,tp,eg,ep,ev,re,r,rp)
+		if Duel.SelectEffectYesNo(tp,c,aux.Stringid(id,5)) 
+			and Duel.IsExistingMatchingCard(s.setfilter,tp,LOCATION_DECK|LOCATION_GRAVE|LOCATION_REMOVED,0,1,nil) then
+			local g=Duel.GetMatchingGroup(aux.NecroValleyFilter(s.setfilter),tp,LOCATION_DECK|LOCATION_GRAVE|LOCATION_REMOVED,0,nil)
+			if #g==0 then return end
+			local ft=math.min(Duel.GetLocationCount(tp,LOCATION_SZONE),3)
+			local sg=aux.SelectUnselectGroup(g,e,tp,1,ft,s.rescon,1,tp,HINTMSG_SET)
+			if #sg>0 then
+				Duel.SSet(tp,sg)
+			end
+		end
 	end
 end
 --Set
@@ -158,6 +160,6 @@ function s.ctop(e,tp,eg,ep,ev,re,r,rp)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_CONTROL)
 	local tc=g:Select(tp,1,1,nil):GetFirst()
 	if tc then
-		Duel.GetControl(tc,1-tp,PHASE_END,1)
+		Duel.GetControl(tc,1-tp)
 	end
 end
