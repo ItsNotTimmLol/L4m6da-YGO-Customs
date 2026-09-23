@@ -39,9 +39,12 @@ function s.initial_effect(c)
 	e4:SetOperation(s.ctop)
 	c:RegisterEffect(e4)
 end
+s.roll_dice=true
+s.listed_names={22959079,28506708}
+s.listed_series={SET_WORM}
+s.w_nebula_names={18304915,30476000,40079081,53842829,55939812,76108887,90075978}
 function s.spfilter(c,e,tp,lv)
-	return c:IsSetCard(SET_WORM)
-		and c:IsRace(RACE_REPTILE)
+	return c:IsSetCard(SET_WORM) and c:IsRace(RACE_REPTILE)
 		and c:IsLevel(lv)
 		and c:IsCanBeSpecialSummoned(e,0,tp,true,false)
 end
@@ -63,11 +66,7 @@ end
 function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 	local roll=Duel.TossDice(tp,1)
-	local g=Duel.GetMatchingGroup(
-		s.spfilter,tp,
-		LOCATION_HAND+LOCATION_DECK,0,
-		nil,e,tp,roll
-	)
+	local g=Duel.GetMatchingGroup(s.spfilter,tp,LOCATION_HAND+LOCATION_DECK,0,nil,e,tp,roll)
 	if #g==0 then return end
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
 	local tc=g:Select(tp,1,1,nil):GetFirst()
@@ -93,184 +92,71 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 end
 --Set
 function s.setfilter(c)
-	return (c:IsCode(22959079)
-		or c:IsCode(28506708)
-		or c:IsSetCard(SET_WORM)) -- placeholder for W Nebula
+	return (c:IsCode(s.listed_names) or c:IsCode(s.w_nebula_names)) and c:IsSpellTrap() and not c:IsCode(id) and c:IsSSetable()
 end
 function s.settg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.IsExistingMatchingCard(s.setfilter,tp,LOCATION_DECK+LOCATION_GRAVE+LOCATION_REMOVED,0,1,nil)	end
+	if chk==0 then return Duel.IsExistingMatchingCard(s.setfilter,tp,LOCATION_DECK|LOCATION_GRAVE|LOCATION_REMOVED,0,1,nil) end
 end
-
+function s.rescon(sg,e,tp,mg)
+	return #sg==1 or (#sg==2 and (sg:FilterCount(Card.IsCode,nil,22959079)==1
+		or sg:FilterCount(Card.IsCode,nil,28506708)==1)) or (sg:FilterCount(Card.IsCode,nil,22959079)==1
+		and sg:FilterCount(Card.IsCode,nil,28506708)==1)
+end
 function s.setop(e,tp,eg,ep,ev,re,r,rp)
-	local c=e:GetHandler()
-	-- "W Nebula" itself is excluded
-	local g=Duel.GetMatchingGroup(
-		function(tc)
-			return (tc:IsCode(22959079)
-				or tc:IsCode(28506708)
-				or tc:IsCode(53842829))
-				and tc:IsLocation(LOCATION_DECK+LOCATION_GRAVE+LOCATION_REMOVED)
-		end,
-		tp,
-		LOCATION_DECK+LOCATION_GRAVE+LOCATION_REMOVED,
-		0,nil
-	)
-	-- Select at most one of each card.
-	local selected=Group.CreateGroup()
-	for _,code in ipairs({
-		22959079,
-		28506708
-	}) do
-		local sg=g:Filter(
-			function(tc)
-				return tc:IsCode(code)
-			end,nil
-		)
-
-		if #sg>0 then
-			Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOFIELD)
-			local tc=sg:Select(tp,1,1,nil):GetFirst()
-
-			if tc then
-				selected:AddCard(tc)
-			end
-		end
-	end
-
-	-- "W Nebula" should be identified by its actual card code.
-	-- Replace 0x???? with the set/code of your "W Nebula" card.
-	local nebula=Duel.GetMatchingGroup(
-		function(tc)
-			return tc:IsCode(0x0) and tc:IsLocation(
-				LOCATION_DECK+LOCATION_GRAVE+LOCATION_REMOVED
-			)
-		end,
-		tp,
-		LOCATION_DECK+LOCATION_GRAVE+LOCATION_REMOVED,
-		0,nil
-	)
-
-	if #nebula>0 then
-		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_TOFIELD)
-		local tc=nebula:Select(tp,1,1,nil):GetFirst()
-
-		if tc then
-			selected:AddCard(tc)
-		end
-	end
-
-	-- Set all selected cards
-	for tc in aux.Next(selected) do
-		if tc:IsRelateToEffect(e) or tc:IsLocation(
-			LOCATION_DECK+LOCATION_GRAVE+LOCATION_REMOVED
-		) then
-			Duel.SSet(tp,tc)
-		end
+	local g=Duel.GetMatchingGroup(aux.NecroValleyFilter(s.setfilter),tp,LOCATION_DECK|LOCATION_GRAVE|LOCATION_REMOVED,0,nil)
+	if #g==0 then return end
+	local ft=math.min(Duel.GetLocationCount(tp,LOCATION_SZONE),3)
+	local sg=aux.SelectUnselectGroup(g,e,tp,1,ft,s.rescon,1,tp,HINTMSG_SET)
+	if #sg>0 then
+		Duel.SSet(tp,sg)
 	end
 end
-
-----------------------------------------------------------
--- If this card is banished:
--- Target 1 monster on the field and equip this card to it.
-----------------------------------------------------------
-
+--Equip
 function s.eqtg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	if chkc then
 		return chkc:IsLocation(LOCATION_MZONE)
 	end
-
 	if chk==0 then
-		return Duel.IsExistingTarget(
-			aux.TRUE,tp,
-			LOCATION_MZONE,LOCATION_MZONE,
-			1,nil
-		)
+		return Duel.IsExistingTarget(aux.TRUE,tp,LOCATION_MZONE,LOCATION_MZONE,1,nil)
 	end
-
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_EQUIP)
-	Duel.SelectTarget(
-		tp,
-		aux.TRUE,tp,
-		LOCATION_MZONE,LOCATION_MZONE,
-		1,1,nil
-	)
+	Duel.SelectTarget(tp,aux.TRUE,tp,LOCATION_MZONE,LOCATION_MZONE,1,1,nil)
 end
-
 function s.eqop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 	local tc=Duel.GetFirstTarget()
-
 	if not tc or not tc:IsRelateToEffect(e) then return end
-
 	if not c:IsRelateToEffect(e) then
 		-- The card was banished and is now in the banished zone.
 		if not c:IsLocation(LOCATION_REMOVED) then return end
 	end
-
 	Duel.Equip(tp,c,tc)
-
 	local e1=Effect.CreateEffect(c)
 	e1:SetType(EFFECT_TYPE_SINGLE)
 	e1:SetCode(EFFECT_EQUIP_LIMIT)
 	e1:SetProperty(EFFECT_FLAG_COPY_INHERIT+EFFECT_FLAG_OWNER_RELATE)
 	e1:SetReset(RESET_EVENT+RESETS_STANDARD)
-	e1:SetValue(function(e,tc)
-		return tc==e:GetLabelObject()
-	end)
+	e1:SetValue(function(e,tc) return tc==e:GetLabelObject() end)
 	e1:SetLabelObject(tc)
 	c:RegisterEffect(e1)
 end
-
-----------------------------------------------------------
--- Once per Chain, when another card/effect is activated:
--- Give control of 1 face-up or Set Reptile "Worm"
--- monster you own and control to your opponent.
-----------------------------------------------------------
-
+--Give Control
 function s.ctcon(e,tp,eg,ep,ev,re,r,rp)
-	-- "another card or effect" means this card itself
-	-- cannot be the activated card.
 	return re:GetHandler()~=e:GetHandler()
 end
-
 function s.ctfilter(c,tp)
-	return c:IsSetCard(SET_WORM)
-		and c:IsRace(RACE_REPTILE)
-		and c:IsFaceup() -- remove this restriction for Set monsters
-		and c:IsControler(tp)
-		and c:IsAbleToChangeControler()
+	return c:IsSetCard(SET_WORM) and c:IsRace(RACE_REPTILE)
+		and c:IsControler(tp) and c:IsAbleToChangeControler()
 end
-
 function s.cttg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then
-		return Duel.IsExistingMatchingCard(
-			s.ctfilter,tp,
-			LOCATION_MZONE,0,
-			1,nil,tp
-		)
-	end
-
-	Duel.SetOperationInfo(
-		0,
-		CATEGORY_CONTROL,
-		nil,
-		1,
-		1-tp,
-		LOCATION_MZONE
-	)
+	if chk==0 then return Duel.IsExistingMatchingCard(s.ctfilter,tp,LOCATION_MZONE,0,1,nil,tp) end
+	Duel.SetOperationInfo(0,CATEGORY_CONTROL,nil,1,1-tp,LOCATION_MZONE)
 end
-
 function s.ctop(e,tp,eg,ep,ev,re,r,rp)
-	local g=Duel.GetMatchingGroup(
-		s.ctfilter,tp,
-		LOCATION_MZONE,0,nil,tp
-	)
-
+	local g=Duel.GetMatchingGroup(s.ctfilter,tp,LOCATION_MZONE,0,nil,tp)
 	if #g==0 then return end
-
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_CONTROL)
 	local tc=g:Select(tp,1,1,nil):GetFirst()
-
 	if tc then
 		Duel.GetControl(tc,1-tp,PHASE_END,1)
 	end
