@@ -7,13 +7,12 @@ function s.initial_effect(c)
 	e1:SetCategory(CATEGORY_SPECIAL_SUMMON+CATEGORY_DICE)
 	e1:SetType(EFFECT_TYPE_ACTIVATE)
 	e1:SetCode(EVENT_FREE_CHAIN)
-	e1:SetRange(LOCATION_SZONE)
 	e1:SetTarget(s.invtg)
 	e1:SetOperation(s.invop)
 	c:RegisterEffect(e1)
 	--If this face-up card leaves the field: Set 1 "W Nebula" Quick-Play Spell or Trap
 	local e2=Effect.CreateEffect(c)
-	e2:SetDescription(aux.Stringid(id,1))
+	e2:SetDescription(aux.Stringid(id,4))
 	e2:SetCategory(CATEGORY_SET)
 	e2:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
 	e2:SetProperty(EFFECT_FLAG_DELAY)
@@ -40,24 +39,18 @@ function s.invtg(e,tp,eg,ep,ev,re,r,rp,chk)
 	end
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,1-tp,LOCATION_DECK)
 end
---============================================================
--- Second part: die roll + same-name face-down summons
---============================================================
 function s.invfilter(c,e,tp,maxatk)
-	return c:IsMonster()
-		and c:IsRace(RACE_REPTILE)
-		and c:IsSetCard(SET_WORM)
-		and c:GetAttack()>0
-		and c:GetAttack()<=maxatk
-		and c:IsCanBeSpecialSummoned(e,0,tp,false,false,POS_FACEDOWN_DEFENSE)
+	return c:IsRace(RACE_REPTILE) and c:IsSetCard(SET_WORM)
+		and c:GetAttack()>0 and c:GetAttack()<=maxatk
+		and c:IsMonster() and c:IsCanBeSpecialSummoned(e,0,tp,false,false,POS_FACEDOWN_DEFENSE)
 end
-function s.thcheck(sg,e,tp,mg)
+function s.rescon(sg,e,tp,mg)
 	return sg:GetClassCount(Card.GetCode)==1
 end
 function s.invop(e,tp,eg,ep,ev,re,r,rp)
 	--Reveal 3 Worms
-	local rg=Duel.GetMatchingGroup(s.reveal_filter,tp,LOCATION_DECK,0,nil,e,1-tp)
-	if #rg<3 or Duel.GetLocationCount(1-tp,LOCATION_MZONE)<=0 then return end
+	local rg=Duel.SelectMatchingCard(tp,s.reveal_filter,tp,LOCATION_DECK,0,3,3,nil,e,1-tp)
+	if #rg~=3 or Duel.GetLocationCount(1-tp,LOCATION_MZONE)<=0 then return end
 	Duel.ConfirmCards(1-tp,rg)
 	--Opponent chooses the monster they Special Summon
 	Duel.Hint(HINT_SELECTMSG,1-tp,HINTMSG_SPSUMMON)
@@ -71,7 +64,7 @@ function s.invop(e,tp,eg,ep,ev,re,r,rp)
 	--Shuffle the other 2 revealed cards into the Deck.
 	rg:Sub(sg)
 	if #rg>0 then
-		Duel.SendtoDeck(rg,nil,SEQ_DECKSHUFFLE)
+		Duel.SendtoDeck(rg,nil,SEQ_DECKSHUFFLE,tp)
 	end
 	--Roll a six-sided die.
 	local roll=Duel.TossDice(tp,1)
@@ -81,10 +74,9 @@ function s.invop(e,tp,eg,ep,ev,re,r,rp)
 	local self_ct=Duel.GetLocationCount(tp,LOCATION_MZONE)
 	local opp_ct=Duel.GetLocationCount(1-tp,LOCATION_MZONE)
 	local maxct=math.min(#g,self_ct+opp_ct)
-	if maxct<=0 then return end
-	--"Any number" means 0 through the available number can be selected.
+	if maxct<=0 and not Duel.SelectEffectYesNo(tp,c,aux.Stringid(id,1)) then return end
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
-	local ss=aux.SelectUnselectGroup(g,e,tp,1,maxct,s.thcheck,0)
+	local ss=aux.SelectUnselectGroup(g,e,tp,1,maxct,s.rescon,1,tp,HINTMSG_SPSUMMON)
 	--Summon each selected monster to either field.
 	for tc in aux.Next(ss) do
 		local self_ok=Duel.GetLocationCount(tp,LOCATION_MZONE)>0
