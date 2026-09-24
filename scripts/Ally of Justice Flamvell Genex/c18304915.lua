@@ -29,7 +29,15 @@ function s.initial_effect(c)
 	e3:SetCode(EFFECT_MUST_ATTACK)
 	e3:SetTargetRange(0,LOCATION_MZONE)
 	c:RegisterEffect(e3)
-	--Chain
+	--Destruction replace
+	local e4=Effect.CreateEffect(c)
+	e4:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
+	e4:SetCode(EFFECT_DESTROY_REPLACE)
+	e4:SetRange(LOCATION_FZONE)
+	e4:SetTarget(s.reptg)
+	e4:SetOperation(s.repop)
+	c:RegisterEffect(e4)
+	--[[Chain
 	local e5=Effect.CreateEffect(c)
 	e5:SetDescription(aux.Stringid(id,0))
 	e5:SetCategory(CATEGORY_CONTROL+CATEGORY_DRAW+CATEGORY_TOHAND)
@@ -42,7 +50,7 @@ function s.initial_effect(c)
 	e5:SetTarget(s.chaintg)
 	e5:SetOperation(s.chainop)
 	e5:SetHintTiming(0,TIMING_STANDBY_PHASE|TIMING_MAIN_END|TIMINGS_CHECK_MONSTER_E)
-	c:RegisterEffect(e5)
+	c:RegisterEffect(e5)]]--
 	--Set 1 "Dimensionhole" and/or "Worm Call"
 	local e6=Effect.CreateEffect(c)
 	e6:SetDescription(aux.Stringid(id,1))
@@ -54,7 +62,6 @@ function s.initial_effect(c)
 	e6:SetOperation(s.setop)
 	c:RegisterEffect(e6)
 end
-s.listed_names={22959079,28506708}
 s.listed_series={SET_WORM}
 s.w_nebula_names={18304915,30476000,40079081,53842829,55939812,76108887,90075978}
 --Negate
@@ -73,6 +80,41 @@ function s.atkcon(e,tp,eg,ep,ev,re,r,rp)
 	local g=Duel.GetMatchingGroup(Card.IsFaceup,tp,LOCATION_MZONE,0,nil)
 	return #g>0 and #g==g:FilterCount(s.atkconfilter,nil)
 end
+
+--Destruction replacement
+function s.repfilter(c,e,tp,eg)
+	return c:IsOnField()
+		and c:IsOwner(tp)
+		and c:IsSetCard(SET_WORM)
+		and c:IsDestructable(e)
+		and not eg:IsContains(c)
+		and not c:IsStatus(STATUS_DESTROY_CONFIRMED)
+end
+function s.reptg(e,tp,eg,ep,ev,re,r,rp,chk)
+	if chk==0 then
+		return eg:IsExists(Card.IsControler,1,nil,tp)
+			and Duel.IsExistingMatchingCard(s.repfilter,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,1,nil,e,tp,eg)
+	end
+	if Duel.SelectEffectYesNo(tp,e:GetHandler(),aux.Stringid(id,1)) then
+		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_DESREPLACE)
+		local g=Duel.SelectMatchingCard(tp,s.repfilter,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,1,1,nil,e,tp,eg)
+		local tc=g:GetFirst()
+		if tc then
+			tc:SetStatus(STATUS_DESTROY_CONFIRMED,true)
+			e:SetLabelObject(tc)
+			return true
+		end
+	end
+	return false
+end
+function s.repop(e,tp,eg,ep,ev,re,r,rp)
+	local tc=e:GetLabelObject()
+	if tc then
+		tc:SetStatus(STATUS_DESTROY_CONFIRMED,false)
+		Duel.Destroy(tc,REASON_EFFECT+REASON_REPLACE)
+	end
+end
+
 
 --Set
 function s.setfilter(c)

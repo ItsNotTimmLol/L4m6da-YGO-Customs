@@ -78,7 +78,6 @@ function s.initial_effect(c)
 	e9:SetOperation(s.nsop)
 	c:RegisterEffect(e9)
 end
-s.roll_dice=true
 s.listed_names={88438982}
 s.listed_series={SET_WORM}
 s.w_nebula_names={18304915,30476000,40079081,53842829,55939812,76108887,90075978}

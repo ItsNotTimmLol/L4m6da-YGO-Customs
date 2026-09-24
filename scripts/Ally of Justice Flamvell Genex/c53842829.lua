@@ -36,12 +36,12 @@ s.roll_dice=true
 s.listed_names={22959079,28506708}
 s.listed_series={SET_WORM}
 s.w_nebula_names={18304915,30476000,40079081,53842829,55939812,76108887,90075978}
+--Activate
 function s.spfilter(c,e,tp,lv)
 	return c:IsSetCard(SET_WORM) and c:IsRace(RACE_REPTILE)
 		and c:IsLevel(lv)
 		and c:IsCanBeSpecialSummoned(e,0,tp,true,false)
 end
-
 function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then
 		-- Check ANY Level 1-6 Worm
@@ -55,7 +55,6 @@ function s.sptg(e,tp,eg,ep,ev,re,r,rp,chk)
 	end
 	Duel.SetOperationInfo(0,CATEGORY_DICE,nil,1,tp,0)
 end
-
 function s.spop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 	local roll=Duel.TossDice(tp,1)
@@ -92,6 +91,7 @@ function s.spop(e,tp,eg,ep,ev,re,r,rp)
 		end
 	end
 end
+
 --Set
 function s.setfilter(c)
 	return (c:IsCode(s.listed_names) or c:IsCode(s.w_nebula_names)) and c:IsSpellTrap() and not c:IsCode(id) and c:IsSSetable()
@@ -113,6 +113,7 @@ function s.setop(e,tp,eg,ep,ev,re,r,rp)
 		Duel.SSet(tp,sg)
 	end
 end
+
 --Equip
 function s.eqtg(e,tp,eg,ep,ev,re,r,rp,chk,chkc)
 	if chkc then
@@ -142,6 +143,7 @@ function s.eqop(e,tp,eg,ep,ev,re,r,rp)
 	e1:SetLabelObject(tc)
 	c:RegisterEffect(e1)
 end
+
 --Give Control
 function s.ctcon(e,tp,eg,ep,ev,re,r,rp)
 	return re:GetHandler()~=e:GetHandler()
