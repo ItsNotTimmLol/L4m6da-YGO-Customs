@@ -30,43 +30,30 @@ function s.initial_effect(c)
 	e4:SetCode(EFFECT_SET_BASE_DEFENSE)
 	e4:SetValue(s.defval)
 	c:RegisterEffect(e4)]]
-	--Level 6 Reptile Worm monsters can be Summoned without Tributing
-	local e5=Effect.CreateEffect(c)
-	e5:SetDescription(aux.Stringid(id,1))
-	e5:SetType(EFFECT_TYPE_FIELD)
-	e5:SetCode(EFFECT_SUMMON_PROC)
-	e5:SetRange(LOCATION_SZONE)
-	e5:SetTargetRange(LOCATION_HAND,0)
-	e5:SetCondition(s.ntcon)
-	e5:SetTarget(aux.FieldSummonProcTg(s.nttg))
-	c:RegisterEffect(e5)
-	local e6=e5:Clone()
-	e6:SetCode(EFFECT_SET_PROC)
-	e6:SetDescription(aux.Stringid(id,2))
-	c:RegisterEffect(e6)
-	--Add to hand
-	local e7=Effect.CreateEffect(c)
-	e7:SetCategory(CATEGORY_TOHAND+CATEGORY_SEARCH+CATEGORY_DICE)
-	e7:SetType(EFFECT_TYPE_QUICK_O)
-	e7:SetCode(EVENT_FREE_CHAIN)
-	e7:SetRange(LOCATION_SZONE)
-	e7:SetDescription(aux.Stringid(id,3))
-	e7:SetCountLimit(1)
-	e7:SetTarget(s.thtg)
-	e7:SetOperation(s.thop)
-	c:RegisterEffect(e7)
-	--Set or place face-up
+	--Set or activate on banish
 	local e8=Effect.CreateEffect(c)
 	e8:SetDescription(aux.Stringid(id,4))
-	e8:SetCategory(CATEGORY_SET)
-	e8:SetType(EFFECT_TYPE_QUICK_O)
-	e8:SetCode(EVENT_FREE_CHAIN)
-	e8:SetRange(LOCATION_SZONE)
-	e8:SetCondition(s.setcon)
+	e8:SetCategory(CATEGORY_SET+CATEGORY_TOFIELD)
+	e8:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
+	e8:SetCode(EVENT_REMOVE)
+	e8:SetProperty(EFFECT_FLAG_DELAY)
+	e8:SetCountLimit(1,{id,0},EFFECT_COUNT_CODE_CHAIN)
 	e8:SetTarget(s.settg)
 	e8:SetOperation(s.setop)
 	c:RegisterEffect(e8)
-	--Normal Summon
+	--Choose
+	local e4=Effect.CreateEffect(c)
+	e4:SetDescription(aux.Stringid(id,1))
+	e4:SetCategory(CATEGORY_REMOVE+CATEGORY_SUMMON)
+	e4:SetType(EFFECT_TYPE_QUICK_O)
+	e4:SetCode(EVENT_FREE_CHAIN)
+	e4:SetRange(LOCATION_SZONE)
+	e4:SetCountLimit(1,{id,1},EFFECT_COUNT_CODE_CHAIN)
+	e4:SetTarget(s.eftg)
+	e4:SetOperation(s.efop)
+	c:RegisterEffect(e4)
+	
+	--[[Normal Summon
 	local e9=Effect.CreateEffect(c)
 	e9:SetDescription(aux.Stringid(id,7))
 	e9:SetCategory(CATEGORY_SUMMON)
@@ -76,9 +63,9 @@ function s.initial_effect(c)
 	e9:SetHintTiming(0,TIMINGS_CHECK_MONSTER|TIMING_MAIN_END)
 	e9:SetTarget(s.nstg)
 	e9:SetOperation(s.nsop)
-	c:RegisterEffect(e9)
+	c:RegisterEffect(e9)]]--
 end
-s.listed_names={88438982}
+s.listed_names={22959079,28506708}
 s.listed_series={SET_WORM}
 s.w_nebula_names={18304915,30476000,40079081,53842829,55939812,76108887,90075978}
 --Dimikles buff
@@ -232,4 +219,64 @@ function s.setop(e,tp,eg,ep,ev,re,r,rp)
 			end
 		end
 	end]]--
+end
+
+--Can Normal Summon/Set a "Worm" monster
+function s.nsfilter(c)
+	return c:IsSetCard(SET_WORM) and c:IsMonster()
+		and c:IsRace(RACE_REPTILE) and c:IsSummonable(true,nil)
+end
+
+function s.eftg(e,tp,eg,ep,ev,re,r,rp,chk)
+	local c=e:GetHandler()
+	local can_remove=Duel.IsExistingMatchingCard(s.remfilter,tp,LOCATION_HAND+LOCATION_ONFIELD,0,1,nil)
+	local can_ns=Duel.IsExistingMatchingCard(s.nsfilter,tp,LOCATION_HAND,0,1,nil)
+		or Duel.IsExistingMatchingCard(s.nsfilter,tp,LOCATION_MZONE,0,1,nil)
+	if chk==0 then
+		return can_remove or can_ns
+	end
+	local opt
+	if can_remove and can_ns then
+		opt=Duel.SelectOption(tp,aux.Stringid(id,4),aux.Stringid(id,5))
+	elseif can_remove then
+		opt=0
+	else
+		opt=1
+	end
+	e:SetLabel(opt)
+	if opt==0 then
+		Duel.SetOperationInfo(0,CATEGORY_REMOVE,nil,1,tp,LOCATION_HAND+LOCATION_ONFIELD)
+	else
+		Duel.SetOperationInfo(0,CATEGORY_SUMMON,nil,1,tp,LOCATION_HAND+LOCATION_MZONE)
+	end
+end
+
+function s.efop(e,tp,eg,ep,ev,re,r,rp)
+	local opt=e:GetLabel()
+	--Banish 1 "Worm" or "W Nebula" card until the next End Phase
+	if opt==0 then
+		local g=Duel.SelectMatchingCard(tp,s.remfilter,tp,
+			LOCATION_HAND+LOCATION_ONFIELD,0,1,1,nil)
+		local tc=g:GetFirst()
+		if not tc then return end
+		if Duel.Remove(tc,POS_FACEUP,REASON_EFFECT+REASON_TEMPORARY)~=0 then
+			--If you banished a "Worm Call" you controlled, return it immediately
+			if tc:IsCode(28506708) and tc:IsControler(tp) and tc:IsLocation(LOCATION_REMOVED) then
+				Duel.ReturnToField(tc)
+			end
+		end
+	--Immediately Normal Summon 1 Reptile "Worm"
+	else
+		local g=Duel.GetMatchingGroup(s.nsfilter,tp,LOCATION_HAND+LOCATION_MZONE,0,nil)
+		if #g==0 then return end
+		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SUMMON)
+		local tc=g:Select(tp,1,1,nil):GetFirst()
+		if not tc then return end
+		--Or Set during opponent's turn
+		if Duel.GetTurnPlayer()==tp then
+			Duel.Summon(tp,tc,true,nil)
+		else
+			Duel.SummonOrSet(tp,tc,true,nil)
+		end
+	end
 end
