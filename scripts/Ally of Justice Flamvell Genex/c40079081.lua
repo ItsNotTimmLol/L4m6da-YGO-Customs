@@ -33,7 +33,7 @@ function s.initial_effect(c)
 	--Set or activate on banish
 	local e8=Effect.CreateEffect(c)
 	e8:SetDescription(aux.Stringid(id,4))
-	e8:SetCategory(CATEGORY_SET+CATEGORY_TOFIELD)
+	e8:SetCategory(CATEGORY_SET)
 	e8:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
 	e8:SetCode(EVENT_REMOVE)
 	e8:SetProperty(EFFECT_FLAG_DELAY)
@@ -87,15 +87,6 @@ function s.defval(e,c)
 	local ct=Duel.GetMatchingGroupCount(s.atkconfilter,0,LOCATION_MZONE,0,nil)
 	if ct<1 then ct=0.5 end
 	return c:GetBaseDefense()/(ct*2)
-end
-
---Tribute bypass
-function s.ntcon(e,c,minc)
-	if c==nil then return true end
-	return minc==0 and Duel.GetLocationCount(c:GetControler(),LOCATION_MZONE)>0
-end
-function s.nttg(e,c)
-	return c:IsLevel(6)
 end
 
 --Roll to add
@@ -237,7 +228,7 @@ function s.eftg(e,tp,eg,ep,ev,re,r,rp,chk)
 	end
 	local opt
 	if can_remove and can_ns then
-		opt=Duel.SelectOption(tp,aux.Stringid(id,4),aux.Stringid(id,5))
+		opt=Duel.SelectOption(tp,aux.Stringid(id,3),aux.Stringid(id,4))
 	elseif can_remove then
 		opt=0
 	else

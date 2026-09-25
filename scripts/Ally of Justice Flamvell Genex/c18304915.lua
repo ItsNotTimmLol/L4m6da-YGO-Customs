@@ -72,6 +72,15 @@ function s.negtg(e,c)
 	return c:GetEquipGroup():IsExists(s.equipf,1,nil)
 end
 
+--Tribute bypass
+function s.ntcon(e,c,minc)
+	if c==nil then return true end
+	return minc==0 and Duel.GetLocationCount(c:GetControler(),LOCATION_MZONE)>0
+end
+function s.nttg(e,c)
+	return c:IsLevel(6)
+end
+
 --Choose attack targets
 function s.atkconfilter(c)
 	return c:IsRace(RACE_REPTILE) and c:IsSetCard(SET_WORM)
