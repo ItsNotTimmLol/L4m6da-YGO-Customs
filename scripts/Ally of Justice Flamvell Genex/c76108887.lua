@@ -5,7 +5,6 @@ function s.initial_effect(c)
 	local e1=Effect.CreateEffect(c)
 	e1:SetType(EFFECT_TYPE_SINGLE)
 	e1:SetCode(EFFECT_TRAP_ACT_IN_HAND)
-	e1:SetCondition(s.handcon)
 	c:RegisterEffect(e1)
 	--Negate activation
 	local e2=Effect.CreateEffect(c)
@@ -32,9 +31,7 @@ s.listed_series={SET_WORM}
 s.w_nebula_names={18304915,30476000,40079081,53842829,55939812,76108887,90075978}
 --"Worm Dimikles" that was Flip Summoned and is currently on the field
 function s.dimiklesfilter(c)
-	return c:IsFaceup()
-		and c:IsCode(88438982)
-		and c:IsSummonType(SUMMON_TYPE_FLIP)
+	return c:IsCode(88438982)
 end
 --Can activate this card from the hand
 function s.handcon(e)
@@ -136,7 +133,7 @@ function s.negop(e,tp,eg,ep,ev,re,r,rp)
 		--If the player somehow selected a group without Dimikles,
 		--force Dimikles into the group.
 		if not sg:IsExists(function(tc)
-			return tc:IsCode(88438982)
+			return tc:IsOriginalCode(88438982)
 		end,1,nil) then
 			local dc=dim:GetFirst()
 			if dc then
