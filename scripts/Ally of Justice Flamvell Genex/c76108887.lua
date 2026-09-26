@@ -55,9 +55,9 @@ function s.negcost(e,tp,eg,ep,ev,re,r,rp,chk)
 	else
 		opt=1
 	end
-	if opt=0 then
+	if opt==0 then
 		Duel.RemoveCounter(tp,1,0,0xf,3,REASON_COST)
-	elseif opt=0 then
+	elseif opt==1 then
 		return true
 	else
 		return false
