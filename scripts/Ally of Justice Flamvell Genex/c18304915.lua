@@ -27,7 +27,6 @@ function s.initial_effect(c)
 	c:RegisterEffect(e5)
 	local e3=e5:Clone()
 	e3:SetCode(EFFECT_SET_PROC)
-	e3:SetDescription(aux.Stringid(id,2))
 	c:RegisterEffect(e3)
 	--Choose attack targets
 	local e4=Effect.CreateEffect(c)
@@ -87,7 +86,7 @@ function s.atkconfilter(c)
 end
 function s.atkcon(e,tp,eg,ep,ev,re,r,rp)
 	local g=Duel.GetMatchingGroup(Card.IsFaceup,tp,LOCATION_MZONE,0,nil)
-	return #g>0 and #g==g:FilterCount(s.atkconfilter,nil)
+	return #g>0 and #g==g:FilterCount(s.atkconfilter)
 end
 
 --Destruction replacement
@@ -144,6 +143,15 @@ function s.setop(e,tp,eg,ep,ev,re,r,rp)
 	local sg=aux.SelectUnselectGroup(g,e,tp,1,ft,s.rescon,1,tp,HINTMSG_SET)
 	if #sg>0 then
 		Duel.SSet(tp,sg)
+		--Can be activated this turn
+		if sg:GetFirst():IsType(TYPE_TRAP) or sg:GetFirst():IsType(TYPE_QUICKPLAY) then
+			local e1=Effect.CreateEffect(e:GetHandler())
+			e1:SetType(EFFECT_TYPE_SINGLE)
+			e1:SetCode(EFFECT_TRAP_ACT_IN_SET_TURN)
+			e1:SetProperty(EFFECT_FLAG_SET_AVAILABLE)
+			e1:SetReset(RESET_EVENT|RESETS_STANDARD)
+			sg:GetFirst():RegisterEffect(e1)
+		end
 	end
 end
 

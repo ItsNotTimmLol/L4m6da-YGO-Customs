@@ -11,6 +11,7 @@ function s.initial_effect(c)
 	e2:SetCategory(CATEGORY_NEGATE+CATEGORY_REMOVE)
 	e2:SetType(EFFECT_TYPE_ACTIVATE)
 	e2:SetCode(EVENT_CHAINING)
+	e2:SetCost(s.negcost)
 	e2:SetCondition(s.negcon)
 	e2:SetTarget(s.negtg)
 	e2:SetOperation(s.negop)
@@ -33,98 +34,62 @@ s.w_nebula_names={18304915,30476000,40079081,53842829,55939812,76108887,90075978
 function s.dimiklesfilter(c)
 	return c:IsCode(88438982)
 end
---Can activate this card from the hand
-function s.handcon(e)
-	local tp=e:GetHandlerPlayer()
-	return Duel.IsExistingMatchingCard(s.dimiklesfilter,tp,LOCATION_MZONE,0,1,nil)
-end
 --Negate
 function s.negcon(e,tp,eg,ep,ev,re,r,rp)
 	return ep~=tp
 		and re:IsActiveType(TYPE_MONSTER+TYPE_SPELL+TYPE_TRAP)
 end
-function s.countercostfilter(c)
-	return c:IsFaceup() and c:GetCounter(COUNTER_WORM)>0
+function s.negcostfilter(c,tp)
+	return c:IsOriginalCode(88438982) and c:IsControler(tp)
+		and c:IsCanChangePosition() 
+end
+function s.negcost(e,tp,eg,ep,ev,re,r,rp,chk)
+	local b1=Duel.IsCanRemoveCounter(tp,1,0,0xf,3,REASON_COST)
+	local b2=Duel.IsExistingMatchingCard(s.negcostfilter,tp,LOCATION_MZONE,0,1,nil,tp)
+	if chk==0 then return b1 or b2 end
+	local opt
+	if b1 and b2 then
+		opt=Duel.SelectOption(tp,2,3)
+	elseif b1 then
+		opt=0
+	else
+		opt=1
+	end
+	if opt=0 then
+		Duel.RemoveCounter(tp,1,0,0xf,3,REASON_COST)
+	elseif opt=0 then
+		return true
+	else
+		return false
+	end
+	e:SetLabel(opt)
 end
 function s.remfilter(c)
 	return c:IsFaceup() and c:IsControler(tp)
 end
 function s.negtg(e,tp,eg,ep,ev,re,r,rp,chk)
-	local c=e:GetHandler()
-	local can_counter=false
-	local can_position=false
-	--Effect 1: Remove 3 Worm Counters
-	local total=0
-	local g=Duel.GetMatchingGroup(s.countercostfilter,tp,LOCATION_ONFIELD,0,nil)
-	for tc in aux.Next(g) do
-		total=total+tc:GetCounter(COUNTER_WORM)
-	end
-	can_counter=(total>=3)
-	--Effect 2: Change monsters you own, including Worm Dimikles
-	local dim=Duel.IsExistingMatchingCard(function(tc)
-			return tc:IsCode(88438982)
-				and tc:IsControler(tp)
-				and tc:IsLocation(LOCATION_MZONE)
-				and (tc:IsFaceup() or tc:IsFacedown())
-		end,tp,LOCATION_MZONE,0,1,nil)
-	can_position=dim
-	if chk==0 then
-		return can_counter or can_position
-	end
-	local opt
-	if can_counter and can_position then
-		opt=Duel.SelectOption(tp,
-			aux.Stringid(id,2),
-			aux.Stringid(id,3))
-	elseif can_counter then
-		opt=0
-	else
-		opt=1
-	end
-	e:SetLabel(opt)
+	local b1=Duel.IsCanRemoveCounter(tp,1,0,0xf,3,REASON_COST)
+	local b2=Duel.IsExistingMatchingCard(s.negcostfilter,tp,LOCATION_MZONE,LOCATION_MZONE,1,nil,tp)
+	if chk==0 then return b1 or b2 end
 	Duel.SetOperationInfo(0,CATEGORY_NEGATE,eg,1,0,0)
 	Duel.SetOperationInfo(0,CATEGORY_REMOVE,eg,1,0,0)
 end
-
 function s.negotargetfilter(c,tp)
 	return c:IsControler(tp)
 		and c:IsLocation(LOCATION_MZONE)
 		and (c:IsFaceup() or c:IsFacedown())
 end
-
 function s.negop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 	local opt=e:GetLabel()
 	--Remove 3 Worm Counters
 	if opt==0 then
-		local ct=3
-		local g=Duel.GetMatchingGroup(s.countercostfilter,tp,LOCATION_ONFIELD,0,nil)
-		while ct>0 and #g>0 do
-			local tc
-			if ct==1 then
-				Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_COUNTER)
-				tc=g:Select(tp,1,1,nil):GetFirst()
-			else
-				Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_COUNTER)
-				tc=g:Select(tp,1,1,nil):GetFirst()
-			end
-			if not tc then return end
-			local remove=math.min(tc:GetCounter(COUNTER_WORM),ct)
-			tc:RemoveCounter(tp,COUNTER_WORM,remove,REASON_EFFECT)
-			ct=ct-remove
-			g=Duel.GetMatchingGroup(s.countercostfilter,tp,LOCATION_ONFIELD,0,nil)
-		end
-		if ct>0 then return end
 		if Duel.NegateActivation(ev) then
 			Duel.Remove(eg,POS_FACEUP,REASON_EFFECT)
 		end
 	--Change monsters you own to Defense Position
 	else
-		local dim=Duel.GetMatchingGroup(function(tc)
-				return tc:IsCode(88438982)
-					and tc:IsControler(tp)
-					and tc:IsLocation(LOCATION_MZONE)
-			end,tp,LOCATION_MZONE,0,nil)
+		local dim=Duel.GetMatchingGroup(s.negcostfilter,tp,LOCATION_MZONE,0,nil)
 		if #dim==0 then return end
 		local g=Duel.GetMatchingGroup(s.negotargetfilter,tp,LOCATION_MZONE,0,nil,tp)
 		--The selected group must include Worm Dimikles.

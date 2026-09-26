@@ -217,7 +217,10 @@ function s.nsfilter(c)
 	return c:IsSetCard(SET_WORM) and c:IsMonster()
 		and c:IsRace(RACE_REPTILE) and c:IsSummonable(true,nil)
 end
-
+function s.remfilter(c)
+	return (c:IsSetCard(SET_WORM) or c:IsCode(s.w_nebula_names))
+		and c:IsAbleToRemove()
+end
 function s.eftg(e,tp,eg,ep,ev,re,r,rp,chk)
 	local c=e:GetHandler()
 	local can_remove=Duel.IsExistingMatchingCard(s.remfilter,tp,LOCATION_HAND+LOCATION_ONFIELD,0,1,nil)
@@ -246,16 +249,33 @@ function s.efop(e,tp,eg,ep,ev,re,r,rp)
 	local opt=e:GetLabel()
 	--Banish 1 "Worm" or "W Nebula" card until the next End Phase
 	if opt==0 then
+		--Banish until next End Phase
 		local g=Duel.SelectMatchingCard(tp,s.remfilter,tp,
 			LOCATION_HAND+LOCATION_ONFIELD,0,1,1,nil)
 		local tc=g:GetFirst()
 		if not tc then return end
-		if Duel.Remove(tc,POS_FACEUP,REASON_EFFECT+REASON_TEMPORARY)~=0 then
-			--If you banished a "Worm Call" you controlled, return it immediately
-			if tc:IsCode(28506708) and tc:IsControler(tp) and tc:IsLocation(LOCATION_REMOVED) then
-				Duel.ReturnToField(tc)
+		--If you banished a "Worm Call" you controlled, return it immediately
+		if tc:IsCode(28506708) and tc:IsControler(tp) and tc:IsLocation(LOCATION_REMOVED) then
+			Duel.ReturnToField(tc)
+		elseif tc:IsMonster() then
+			local reset_count=1
+			local return_condition=nil
+			if Duel.IsEndPhase() then
+				local turn_count=Duel.GetTurnCount()
+				reset_count=2
+				return_condition=function() return Duel.GetTurnCount()~=turn_count end
 			end
+			aux.RemoveUntil(tc,nil,REASON_EFFECT,PHASE_END,id,e,tp,aux.DefaultFieldReturnOp,return_condition,nil,reset_count)
+		else
+			local count=Duel.GetTurnCount()
+			if Duel.IsEndPhase() then
+				local turn_count=Duel.GetTurnCount()
+				count=count+1
+				return_condition=function() return Duel.GetTurnCount()~=turn_count end
+			end
+			aux.RemoveUntil(tc,nil,REASON_EFFECT,PHASE_END,id,e,tp,s.returnop,return_condition,count)
 		end
+		
 	--Immediately Normal Summon 1 Reptile "Worm"
 	else
 		local g=Duel.GetMatchingGroup(s.nsfilter,tp,LOCATION_HAND+LOCATION_MZONE,0,nil)
@@ -269,5 +289,19 @@ function s.efop(e,tp,eg,ep,ev,re,r,rp)
 		else
 			Duel.SummonOrSet(tp,tc,true,nil)
 		end
+	end
+end
+function s.returnop(rg,e,tp,eg,ep,ev,re,r,rp,return_condition,count)
+	local tc=rg:GetFirst()
+	if Duel.GetTurnCount()~=count then return end
+	if tc:IsFieldSpell() then
+		local fc=Duel.GetFieldCard(tp,LOCATION_FZONE,0)
+		if fc then
+			Duel.SendtoGrave(fc,REASON_RULE)
+			Duel.BreakEffect()
+		end
+		Duel.MoveToField(tc,tp,tp,LOCATION_FZONE,POS_FACEUP,true)
+	else
+		Duel.MoveToField(tc,tp,tp,LOCATION_SZONE,POS_FACEUP,true)
 	end
 end
