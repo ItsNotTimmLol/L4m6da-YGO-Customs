@@ -82,7 +82,7 @@ end
 
 --Choose attack targets
 function s.atkcon(e,tp,eg,ep,ev,re,r,rp)
-	local g=Duel.GetMatchingGroup(Card.IsFaceup,tp,LOCATION_MZONE,0,nil)
+	local g=Duel.GetMatchingGroup(Card.IsFaceup,e:GetHandler():GetControler(),LOCATION_MZONE,0,nil)
 	local count=#g
 	return count>0 and g:FilterCount(Card.IsSetCard,nil,SET_WORM)==count and g:FilterCount(Card.IsRace,nil,RACE_REPTILE)==count
 end
