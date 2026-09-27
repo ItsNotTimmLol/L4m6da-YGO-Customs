@@ -81,17 +81,9 @@ function s.negotargetfilter(c,tp)
 end
 function s.negop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
-	local opt=e:GetLabel()
 	--Remove 3 Worm Counters
-	if opt==0 then
-		if Duel.NegateActivation(ev) then
-			Duel.Remove(eg,POS_FACEUP,REASON_EFFECT)
-		end
-	--Change monsters you own to Defense Position
-	else
-		local dim=Duel.GetMatchingGroup(s.negcostfilter,tp,LOCATION_MZONE,0,nil)
-		if #dim==0 then return end
-		local g=Duel.GetMatchingGroup(s.negotargetfilter,tp,LOCATION_MZONE,0,nil,tp)
+	if Duel.IsExistingMatchingCard(s.negcostfilter,tp,LOCATION_MZONE,LOCATION_MZONE,1,nil,tp) then
+		local g=Duel.GetMatchingGroup(Card.IsCanChangePosition,tp,LOCATION_MZONE,0,nil,tp)
 		--The selected group must include Worm Dimikles.
 		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_POSCHANGE)
 		local sg=g:Select(tp,1,#g,nil)
@@ -131,6 +123,10 @@ function s.negop(e,tp,eg,ep,ev,re,r,rp)
 			if Duel.NegateActivation(ev) then
 				Duel.Remove(eg,POS_FACEUP,REASON_EFFECT)
 			end
+		end
+	else
+		if Duel.NegateActivation(ev) then
+			Duel.Remove(eg,POS_FACEUP,REASON_EFFECT)
 		end
 	end
 end
