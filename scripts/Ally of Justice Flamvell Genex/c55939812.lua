@@ -71,7 +71,7 @@ function s.invop(e,tp,eg,ep,ev,re,r,rp)
 	local roll=Duel.TossDice(tp,1)
 	--The "same name" is the name of the monster the opponent Special Summoned.
 	--If that monster did not remain on the field, use its original code.
-	local g=Duel.GetMatchingGroup(s.invfilter,tp,LOCATION_DECK,0,nil,e,tp,roll*100)
+	local g=Duel.GetMatchingGroup(s.invfilter,tp,LOCATION_HAND|LOCATION_DECK,0,nil,e,tp,roll*100)
 	local self_ct=Duel.GetLocationCount(tp,LOCATION_MZONE)
 	local opp_ct=Duel.GetLocationCount(1-tp,LOCATION_MZONE)
 	local maxct=math.min(#g,self_ct+opp_ct)

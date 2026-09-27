@@ -86,17 +86,9 @@ function s.negop(e,tp,eg,ep,ev,re,r,rp)
 		local g=Duel.GetMatchingGroup(Card.IsCanChangePosition,tp,LOCATION_MZONE,0,nil,tp)
 		--The selected group must include Worm Dimikles.
 		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_POSCHANGE)
-		local sg=g:Select(tp,1,#g,nil)
+		local sg=aux.SelectUnselectGroup(g,e,tp,1,ft,sg:IsExists(Card.IsOriginalCode,88438982),1,tp,HINTMSG_SPECIAL_SUMMON)
 		--If the player somehow selected a group without Dimikles,
 		--force Dimikles into the group.
-		if not sg:IsExists(function(tc)
-			return tc:IsOriginalCode(88438982)
-		end,1,nil) then
-			local dc=dim:GetFirst()
-			if dc then
-				sg:AddCard(dc)
-			end
-		end
 		if #sg==0 then return end
 		local changed=0
 		for tc in aux.Next(sg) do

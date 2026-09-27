@@ -146,7 +146,6 @@ function s.setfilter(c,e,tp,mft,sft)
 	and c:IsSpellTrap() and c:IsSSetable()
 end
 function s.settg(e,tp,eg,ep,ev,re,r,rp,chk)
-	local ft=Duel.GetLocationCount(tp,LOCATION_SZONE)
 	if chk==0 then return Duel.IsExistingMatchingCard(s.setfilter,tp,LOCATION_HAND|LOCATION_DECK|LOCATION_GRAVE|LOCATION_REMOVED,0,1,nil) end
 end
 function s.rescon2(sg,e,tp,mg)
@@ -155,8 +154,6 @@ end
 function s.setop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 	local ct=c:GetMaterial():Filter(Card.IsType,nil,TYPE_NORMAL):GetClassCount(Card.GetOriginalCode)
-	local ft=Duel.GetLocationCount(tp,LOCATION_SZONE)
-	if ft<=0 then return end
 	local g=Duel.GetMatchingGroup(aux.NecroValleyFilter(s.setfilter),tp,LOCATION_HAND|LOCATION_DECK|LOCATION_GRAVE|LOCATION_REMOVED,0,nil)
 	if #g==0 then return end
 	local sg=aux.SelectUnselectGroup(g,e,tp,1,ct+1,nil,1,tp,HINTMSG_SET)
