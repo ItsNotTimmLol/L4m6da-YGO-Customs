@@ -266,7 +266,7 @@ function s.efop(e,tp,eg,ep,ev,re,r,rp)
 			aux.RemoveUntil(tc,POS_FACEUP,REASON_EFFECT|REASON_TEMPORARY,PHASE_END,id,e,tp,function(rg,e,tp) Duel.SendtoHand(tc,nil,REASON_EFFECT) end,return_condition,nil,reset_count)
 		else
 			--If you banished a "Worm Call" you controlled, return it immediately
-			if tc:IsCode(28506708) then
+			if tc:IsCode(28506708) and tc:IsRelateToEffect(e) and Duel.Remove(tc,nil,REASON_EFFECT|REASON_TEMPORARY)>0 and tc:IsLocation(LOCATION_REMOVED) and not tc:IsReason(REASON_REDIRECT) then
 				Duel.BreakEffect()
 				Duel.ReturnToField(tc)
 			elseif tc:IsMonster() then
