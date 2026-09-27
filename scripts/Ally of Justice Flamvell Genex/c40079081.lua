@@ -6,6 +6,7 @@ function s.initial_effect(c)
 	local e0=Effect.CreateEffect(c)
 	e0:SetType(EFFECT_TYPE_ACTIVATE)
 	e0:SetCode(EVENT_FREE_CHAIN)
+	e0:SetHintTiming(TIMING_STANDBY_PHASE,0)
 	c:RegisterEffect(e0)
 	--Can be activated from the hand
 	local e1=Effect.CreateEffect(c)
@@ -262,13 +263,14 @@ function s.efop(e,tp,eg,ep,ev,re,r,rp)
 			return_condition=function() return Duel.GetTurnCount()~=turn_count end
 		end
 		if tc:IsLocation(LOCATION_HAND) then
-			aux.RemoveUntil(tc,POS_FACEUP,REASON_EFFECT|REASON_TEMPORARY,PHASE_END,id,e,tp,function(rg,e,tp) Duel.SendtoHand(tc,nil,REASON_EFFECT) end,return_condition,nil,reset_count,aux.Stringid(id,6),aux.Stringid(id,7))
+			aux.RemoveUntil(tc,POS_FACEUP,REASON_EFFECT|REASON_TEMPORARY,PHASE_END,id,e,tp,function(rg,e,tp) Duel.SendtoHand(tc,nil,REASON_EFFECT) end,return_condition,nil,reset_count)
 		else
 			--If you banished a "Worm Call" you controlled, return it immediately
-			if tc:IsCode(28506708) and tc:IsControler(tp) and tc:IsLocation(LOCATION_REMOVED) then
+			if tc:IsCode(28506708) then
+				Duel.BreakEffect()
 				Duel.ReturnToField(tc)
 			elseif tc:IsMonster() then
-				aux.RemoveUntil(tc,POS_FACEUP,REASON_EFFECT|REASON_TEMPORARY,PHASE_END,id,e,tp,aux.DefaultFieldReturnOp,return_condition,nil,reset_count,aux.Stringid(id,6),aux.Stringid(id,7))
+				aux.RemoveUntil(tc,POS_FACEUP,REASON_EFFECT|REASON_TEMPORARY,PHASE_END,id,e,tp,aux.DefaultFieldReturnOp,return_condition,nil,reset_count)
 			else
 				local count=Duel.GetTurnCount()
 				if Duel.IsEndPhase() then

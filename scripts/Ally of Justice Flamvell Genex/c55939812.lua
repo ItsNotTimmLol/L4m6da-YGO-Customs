@@ -7,7 +7,7 @@ function s.initial_effect(c)
 	e1:SetCategory(CATEGORY_SPECIAL_SUMMON+CATEGORY_DICE)
 	e1:SetType(EFFECT_TYPE_ACTIVATE)
 	e1:SetCode(EVENT_FREE_CHAIN)
-	e1:SetHintTiming(0,TIMING_STANDBY_PHASE)
+	e1:SetHintTiming(TIMING_STANDBY_PHASE,0)
 	e1:SetTarget(s.invtg)
 	e1:SetOperation(s.invop)
 	c:RegisterEffect(e1)
@@ -46,7 +46,9 @@ function s.invfilter(c,e,tp,maxatk)
 		and c:IsMonster() and c:IsCanBeSpecialSummoned(e,0,tp,false,false,POS_FACEDOWN_DEFENSE)
 end
 function s.rescon(sg,e,tp,mg)
-	return sg:GetClassCount(Card.GetCode)==1
+	local tc=sg:GetFirst()
+	if not tc then return true end
+	return sg:GetClassCount(Card.GetCode)==1,sg:GetClassCount(Card.GetCode)~=1
 end
 function s.invop(e,tp,eg,ep,ev,re,r,rp)
 	--Reveal 3 Worms
