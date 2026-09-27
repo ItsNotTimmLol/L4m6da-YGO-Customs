@@ -127,29 +127,32 @@ function s.setfilter(c)
 	return (c:IsCode(s.listed_names) or c:IsCode(s.w_nebula_names)) and c:IsSpellTrap() and not c:IsFieldSpell() and c:IsSSetable()
 end
 function s.settg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then return Duel.IsExistingMatchingCard(s.setfilter,tp,LOCATION_DECK|LOCATION_GRAVE|LOCATION_REMOVED,0,1,nil) end
-end
-function s.rescon(sg,e,tp,mg)
-	return #sg==1 or (#sg==2 and (sg:FilterCount(Card.IsCode,nil,22959079)==1
-		or sg:FilterCount(Card.IsCode,nil,28506708)==1)) or (sg:FilterCount(Card.IsCode,nil,22959079)==1
-		and sg:FilterCount(Card.IsCode,nil,28506708)==1)
+	if chk==0 then return Duel.GetLocationCount(tp,LOCATION_SZONE)>0 and Duel.IsExistingMatchingCard(s.setfilter,tp,LOCATION_DECK,0,1,nil) end
+	Duel.SetOperationInfo(0,CATEGORY_SET,nil,1,tp,LOCATION_DECK)
 end
 function s.setop(e,tp,eg,ep,ev,re,r,rp)
-	local g=Duel.GetMatchingGroup(aux.NecroValleyFilter(s.setfilter),tp,LOCATION_DECK|LOCATION_GRAVE|LOCATION_REMOVED,0,nil)
+	if Duel.GetLocationCount(tp,LOCATION_SZONE)<=0 then return end
+	local g=Duel.GetMatchingGroup(s.setfilter,tp,LOCATION_DECK,0,nil)
 	if #g==0 then return end
-	local ft=math.min(Duel.GetLocationCount(tp,LOCATION_SZONE),3)
-	local sg=aux.SelectUnselectGroup(g,e,tp,1,ft,s.rescon,1,tp,HINTMSG_SET)
-	if #sg>0 then
-		Duel.SSet(tp,sg)
-		--Can be activated this turn
-		if sg:GetFirst():IsType(TYPE_TRAP) or sg:GetFirst():IsType(TYPE_QUICKPLAY) then
-			local e1=Effect.CreateEffect(e:GetHandler())
-			e1:SetType(EFFECT_TYPE_SINGLE)
-			e1:SetCode(EFFECT_TRAP_ACT_IN_SET_TURN)
-			e1:SetProperty(EFFECT_FLAG_SET_AVAILABLE)
-			e1:SetReset(RESET_EVENT|RESETS_STANDARD)
-			sg:GetFirst():RegisterEffect(e1)
-		end
+	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SET)
+	local tc=g:Select(tp,1,1,nil):GetFirst()
+	if not tc then return end
+	Duel.SSet(tp,tc)
+	--Can be activated this turn
+	if tc:IsType(TYPE_TRAP) then
+		local e1=Effect.CreateEffect(e:GetHandler())
+		e1:SetType(EFFECT_TYPE_SINGLE)
+		e1:SetCode(EFFECT_TRAP_ACT_IN_SET_TURN)
+		e1:SetProperty(EFFECT_FLAG_SET_AVAILABLE)
+		e1:SetReset(RESET_EVENT|RESETS_STANDARD)
+		tc:RegisterEffect(e1)
+	elseif tc:IsType(TYPE_QUICKPLAY) then
+		local e1=Effect.CreateEffect(e:GetHandler())
+		e1:SetType(EFFECT_TYPE_SINGLE)
+		e1:SetCode(EFFECT_QP_ACT_IN_SET_TURN)
+		e1:SetProperty(EFFECT_FLAG_SET_AVAILABLE)
+		e1:SetReset(RESET_EVENT|RESETS_STANDARD)
+		tc:RegisterEffect(e1)
 	end
 end
 
