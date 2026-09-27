@@ -100,8 +100,14 @@ end
 function s.splimit(e,se,sp,st)
 	return (st&SUMMON_TYPE_FUSION)==SUMMON_TYPE_FUSION or not e:GetHandler():IsLocation(LOCATION_EXTRA)
 end
+function s.contactfilter(c,fc,sumtype,tp)
+	return c:IsMonster() and not c:IsType(TYPE_FUSION,fc,sumtype,tp)
+		and c:IsAbleToDeckOrExtraAsCost()
+		and (c:IsLocation(LOCATION_HAND) or c:IsFaceup())
+		and (c:IsCode(s.ally_names) or c:IsSetCard(s.listed_series)) or (c:IsSetCard(SET_WORM) and c:IsRace(RACE_REPTILE))
+end
 function s.contactfil(tp)
-	return Duel.GetMatchingGroup(Card.IsAbleToDeckOrExtraAsCost,tp,LOCATION_HAND|LOCATION_ONFIELD|LOCATION_GRAVE|LOCATION_REMOVED,0,nil)
+	return Duel.GetMatchingGroup(s.contactfilter,tp,LOCATION_HAND|LOCATION_ONFIELD|LOCATION_GRAVE|LOCATION_REMOVED,0,nil)
 end
 function s.contactop(g,tp)
 	local fu,fd=g:Split(Card.IsFaceup,nil)
