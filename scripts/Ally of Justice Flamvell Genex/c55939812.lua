@@ -75,7 +75,7 @@ function s.invop(e,tp,eg,ep,ev,re,r,rp)
 	local self_ct=Duel.GetLocationCount(tp,LOCATION_MZONE)
 	local opp_ct=Duel.GetLocationCount(1-tp,LOCATION_MZONE)
 	local maxct=math.min(#g,self_ct+opp_ct)
-	if maxct<=0 and not Duel.SelectEffectYesNo(tp,c,aux.Stringid(id,1)) then return end
+	if maxct<=0 and not Duel.SelectEffectYesNo(tp,e:GetHandler(),aux.Stringid(id,1)) then return end
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
 	local ss=aux.SelectUnselectGroup(g,e,tp,1,maxct,s.rescon,1,tp,HINTMSG_SPSUMMON)
 	--Summon each selected monster to either field.
