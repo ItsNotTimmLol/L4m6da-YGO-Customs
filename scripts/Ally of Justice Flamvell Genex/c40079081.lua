@@ -254,28 +254,31 @@ function s.efop(e,tp,eg,ep,ev,re,r,rp)
 			LOCATION_HAND+LOCATION_ONFIELD,0,1,1,nil)
 		local tc=g:GetFirst()
 		if not tc then return end
-		--If you banished a "Worm Call" you controlled, return it immediately
-		if tc:IsCode(28506708) and tc:IsControler(tp) and tc:IsLocation(LOCATION_REMOVED) then
-			Duel.ReturnToField(tc)
-		elseif tc:IsMonster() then
-			local reset_count=1
-			local return_condition=nil
-			if Duel.IsEndPhase() then
-				local turn_count=Duel.GetTurnCount()
-				reset_count=2
-				return_condition=function() return Duel.GetTurnCount()~=turn_count end
-			end
-			aux.RemoveUntil(tc,nil,REASON_EFFECT,PHASE_END,id,e,tp,aux.DefaultFieldReturnOp,return_condition,nil,reset_count)
-		else
-			local count=Duel.GetTurnCount()
-			if Duel.IsEndPhase() then
-				local turn_count=Duel.GetTurnCount()
-				count=count+1
-				return_condition=function() return Duel.GetTurnCount()~=turn_count end
-			end
-			aux.RemoveUntil(tc,nil,REASON_EFFECT,PHASE_END,id,e,tp,s.returnop,return_condition,count)
+		local reset_count=1
+		local return_condition=nil
+		if Duel.IsEndPhase() then
+			local turn_count=Duel.GetTurnCount()
+			reset_count=2
+			return_condition=function() return Duel.GetTurnCount()~=turn_count end
 		end
-		
+		if tc:IsLocation(LOCATION_HAND) then
+			aux.RemoveUntil(tc,POS_FACEUP,REASON_EFFECT|REASON_TEMPORARY,PHASE_END,id,e,tp,function(rg,e,tp) Duel.SendtoHand(tc,nil,REASON_EFFECT) end,return_condition,nil,reset_count,aux.Stringid(id,6),aux.Stringid(id,7))
+		else
+			--If you banished a "Worm Call" you controlled, return it immediately
+			if tc:IsCode(28506708) and tc:IsControler(tp) and tc:IsLocation(LOCATION_REMOVED) then
+				Duel.ReturnToField(tc)
+			elseif tc:IsMonster() then
+				aux.RemoveUntil(tc,POS_FACEUP,REASON_EFFECT|REASON_TEMPORARY,PHASE_END,id,e,tp,aux.DefaultFieldReturnOp,return_condition,nil,reset_count,aux.Stringid(id,6),aux.Stringid(id,7))
+			else
+				local count=Duel.GetTurnCount()
+				if Duel.IsEndPhase() then
+					local turn_count=Duel.GetTurnCount()
+					count=count+1
+					return_condition=function() return Duel.GetTurnCount()~=turn_count end
+				end
+				aux.RemoveUntil(tc,POS_FACEUP,REASON_EFFECT|REASON_TEMPORARY,PHASE_END,id,e,tp,s.returnop,return_condition,nil,reset_count,aux.Stringid(id,6),aux.Stringid(id,7))
+			end
+		end
 	--Immediately Normal Summon 1 Reptile "Worm"
 	else
 		local g=Duel.GetMatchingGroup(s.nsfilter,tp,LOCATION_HAND+LOCATION_MZONE,0,nil)
@@ -291,9 +294,8 @@ function s.efop(e,tp,eg,ep,ev,re,r,rp)
 		end
 	end
 end
-function s.returnop(rg,e,tp,eg,ep,ev,re,r,rp,return_condition,count)
+function s.returnop(rg,e,tp,eg,ep,ev,re,r,rp)
 	local tc=rg:GetFirst()
-	if Duel.GetTurnCount()~=count then return end
 	if tc:IsFieldSpell() then
 		local fc=Duel.GetFieldCard(tp,LOCATION_FZONE,0)
 		if fc then
