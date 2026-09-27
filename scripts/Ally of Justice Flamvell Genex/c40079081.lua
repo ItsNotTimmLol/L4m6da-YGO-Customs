@@ -159,7 +159,7 @@ function s.setcon(e,tp,eg,ep,ev,re,r,rp)
 	return not Duel.IsExistingMatchingCard(Card.IsFacedown,e:GetHandlerPlayer(),LOCATION_SZONE,0,1,nil) --Duel.GetFieldGroupCount(tp,LOCATION_SZONE,0)<=3
 end
 function s.setfilter(c,tp)
-	return (c:IsSetCard(SET_WORM) or c:IsCode(s.w_nebula_names)) and c:IsSpellTrap() and not c:IsCode(id)
+	return c:IsCode(s.w_nebula_names) and c:IsSpellTrap() and not c:IsCode(id)
 		and (c:IsSSetable() or c:GetActivateEffect():IsActivatable(tp,true,true))
 end
 function s.settg(e,tp,eg,ep,ev,re,r,rp,chk)
@@ -179,7 +179,7 @@ function s.setop(e,tp,eg,ep,ev,re,r,rp)
 		local op=Duel.SelectEffect(tp,
 			{b1,aux.Stringid(id,1)},
 			{b2,aux.Stringid(id,2)})
-		if op==1 then
+		if op==2 then
 			if tc:IsFieldSpell() then
 				Duel.ActivateFieldSpell(tc,e,tp,eg,ep,ev,re,r,rp)
 			else
@@ -265,8 +265,8 @@ function s.efop(e,tp,eg,ep,ev,re,r,rp)
 		if tc:IsLocation(LOCATION_HAND) then
 			aux.RemoveUntil(tc,POS_FACEUP,REASON_EFFECT|REASON_TEMPORARY,PHASE_END,id,e,tp,function(rg,e,tp) Duel.SendtoHand(tc,nil,REASON_EFFECT) end,return_condition,nil,reset_count)
 		else
-			--If you banished a "Worm Call" you controlled, return it immediately
-			if tc:IsCode(28506708) and tc:IsRelateToEffect(e) and Duel.Remove(tc,nil,REASON_EFFECT|REASON_TEMPORARY)>0 and tc:IsLocation(LOCATION_REMOVED) and not tc:IsReason(REASON_REDIRECT) then
+			--If you banished a "Worm Call", return it to the field
+			if tc:IsCode(28506708) and Duel.Remove(tc,nil,REASON_EFFECT|REASON_TEMPORARY)>0 and tc:IsLocation(LOCATION_REMOVED) and not tc:IsReason(REASON_REDIRECT) then
 				Duel.BreakEffect()
 				Duel.ReturnToField(tc)
 			elseif tc:IsMonster() then
