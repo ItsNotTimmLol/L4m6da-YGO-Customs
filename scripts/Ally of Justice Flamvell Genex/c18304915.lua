@@ -65,7 +65,7 @@ s.listed_series={SET_WORM}
 s.w_nebula_names={18304915,30476000,40079081,53842829,55939812,76108887,90075978}
 --Negate
 function s.equipf(c)
-	return c:IsSetCard(SET_WORM)
+	return c:IsSetCard(SET_WORM) or c:IsCode(s.w_nebula_names)
 end
 function s.negtg(e,c)
 	return c:GetEquipGroup():IsExists(s.equipf,1,nil)

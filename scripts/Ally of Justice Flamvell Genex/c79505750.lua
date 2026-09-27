@@ -91,7 +91,7 @@ s.ally_names={40155554,59482302}
 s.w_nebula_names={18304915,30476000,40079081,53842829,55939812,76108887,90075978}
 --Materials
 function s.matfilter(c,fc,sumtype,tp)
-	return (c:IsMonster() and c:IsType(TYPE_FUSION,fc,sumtype,tp))
+	return c:IsMonster() and not c:IsType(TYPE_FUSION,fc,sumtype,tp)
 		and (c:IsLocation(LOCATION_HAND) or c:IsFaceup())
 		and (c:IsCode(s.ally_names) or c:IsSetCard(s.listed_series)) or (c:IsSetCard(SET_WORM) and c:IsRace(RACE_REPTILE))
 end
