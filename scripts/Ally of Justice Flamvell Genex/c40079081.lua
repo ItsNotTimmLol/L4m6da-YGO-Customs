@@ -32,7 +32,7 @@ function s.initial_effect(c)
 	c:RegisterEffect(e4)]]
 	--Set or activate on banish
 	local e8=Effect.CreateEffect(c)
-	e8:SetDescription(aux.Stringid(id,4))
+	e8:SetDescription(aux.Stringid(id,1))
 	e8:SetCategory(CATEGORY_SET)
 	e8:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
 	e8:SetCode(EVENT_REMOVE)
@@ -43,7 +43,7 @@ function s.initial_effect(c)
 	c:RegisterEffect(e8)
 	--Choose
 	local e4=Effect.CreateEffect(c)
-	e4:SetDescription(aux.Stringid(id,1))
+	e4:SetDescription(aux.Stringid(id,2))
 	e4:SetCategory(CATEGORY_REMOVE+CATEGORY_SUMMON)
 	e4:SetType(EFFECT_TYPE_QUICK_O)
 	e4:SetCode(EVENT_FREE_CHAIN)
@@ -176,8 +176,8 @@ function s.setop(e,tp,eg,ep,ev,re,r,rp)
 		Duel.SSet(tp,tc)
 	else
 		local op=Duel.SelectEffect(tp,
-			{b1,aux.Stringid(id,5)},
-			{b2,aux.Stringid(id,6)})
+			{b1,aux.Stringid(id,1)},
+			{b2,aux.Stringid(id,2)})
 		if op==1 then
 			if tc:IsFieldSpell() then
 				Duel.ActivateFieldSpell(tc,e,tp,eg,ep,ev,re,r,rp)
