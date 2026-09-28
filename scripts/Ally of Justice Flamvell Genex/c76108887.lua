@@ -79,6 +79,9 @@ function s.negotargetfilter(c,tp)
 		and c:IsLocation(LOCATION_MZONE)
 		and (c:IsFaceup() or c:IsFacedown())
 end
+function s.rescon(sg,e,tp,mg)
+	return sg:IsExists(Card.IsCode,1,nil,88438982)
+end
 function s.negop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 	--Remove 3 Worm Counters
@@ -86,7 +89,7 @@ function s.negop(e,tp,eg,ep,ev,re,r,rp)
 		local g=Duel.GetMatchingGroup(Card.IsCanChangePosition,tp,LOCATION_MZONE,0,nil,tp)
 		--The selected group must include Worm Dimikles.
 		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_POSCHANGE)
-		local sg=aux.SelectUnselectGroup(g,e,tp,1,ft,sg:IsExists(Card.IsOriginalCode,88438982),1,tp,HINTMSG_SPECIAL_SUMMON)
+		local sg=aux.SelectUnselectGroup(g,e,tp,1,ft,s.rescon,1,tp,HINTMSG_POSCHANGE,s.rescon)
 		--If the player somehow selected a group without Dimikles,
 		--force Dimikles into the group.
 		if #sg==0 then return end
