@@ -127,19 +127,19 @@ function s.negop(e,tp,eg,ep,ev,re,r,rp)
 end
 
 --Place counter
-function s.ctfilter(c)
+function s.ctfilter(c,e,tp)
 	return c:IsFaceup()
 		and c:IsOwner(tp)
 end
 function s.cttg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then
-		return Duel.IsExistingMatchingCard(s.ctfilter,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,1,nil)
+		return Duel.IsExistingMatchingCard(s.ctfilter,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,1,nil,e,tp)
 	end
 	Duel.SetOperationInfo(0,CATEGORY_COUNTER,nil,1,tp,LOCATION_ONFIELD)
 end
 function s.ctop(e,tp,eg,ep,ev,re,r,rp)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_COUNTER)
-	local g=Duel.SelectMatchingCard(tp,s.ctfilter,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,1,1,nil)
+	local g=Duel.SelectMatchingCard(tp,s.ctfilter,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,1,1,nil,e,tp)
 	local tc=g:GetFirst()
 	if tc then
 		tc:AddCounter(COUNTER_WORM,1)
