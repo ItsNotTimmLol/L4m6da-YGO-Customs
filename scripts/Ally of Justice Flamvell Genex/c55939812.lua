@@ -42,8 +42,8 @@ function s.sstg(e,tp,eg,ep,ev,re,r,rp,chk)
 	local c=e:GetHandler()
 	local controler=c:GetControler()
 	local owner=c:GetOwner()
-	if c:IsPreviousLocation(LOCATION_SZONE) and c:IsPreviousPosition(POS_FACEUP) then controler=1-owner end
-	if chk==0 then return Duel.GetLocationCount(tp,LOCATION_MZONE)>0
+	if (c:IsPreviousLocation(LOCATION_SZONE) and c:IsPreviousPosition(POS_FACEUP)) then controler=1-owner end
+	if chk==0 then return Duel.GetLocationCount(controler,LOCATION_MZONE)>0
 		and Duel.IsExistingMatchingCard(s.sscheckfilter,owner,LOCATION_HAND|LOCATION_DECK,0,1,nil,e,tp,controler)
 	end
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,c:GetOwner(),LOCATION_HAND|LOCATION_DECK)
