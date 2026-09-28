@@ -48,6 +48,7 @@ function s.initial_effect(c)
 	e6:SetCode(EFFECT_DESTROY_REPLACE)
 	e6:SetRange(LOCATION_FZONE)
 	e6:SetTarget(s.reptg)
+	e6:SetValue(s.repval)
 	e6:SetOperation(s.repop)
 	c:RegisterEffect(e6)
 	--Set 1 "Dimensionhole" and/or "Worm Call"
@@ -88,7 +89,11 @@ function s.atkcon(e,tp,eg,ep,ev,re,r,rp)
 end
 
 --Destruction replacement
-function s.repfilter(c,e,tp,eg)
+function s.repfilter(c,tp)
+	return c:IsControler(tp) and c:IsLocation(LOCATION_ONFIELD)
+		and c:IsReason(REASON_BATTLE|REASON_EFFECT) and not c:IsReason(REASON_REPLACE)
+end
+function s.desfilter(c,e,tp,eg)
 	return c:IsOnField()
 		and c:IsOwner(tp)
 		and c:IsSetCard(SET_WORM)
@@ -96,14 +101,15 @@ function s.repfilter(c,e,tp,eg)
 		and not eg:IsContains(c)
 		and not c:IsStatus(STATUS_DESTROY_CONFIRMED)
 end
+function s.repval(e,c)
+	return s.repfilter(c,e:GetHandlerPlayer())
+end
 function s.reptg(e,tp,eg,ep,ev,re,r,rp,chk)
-	if chk==0 then
-		return eg:IsExists(Card.IsControler,1,nil,tp)
-			and Duel.IsExistingMatchingCard(s.repfilter,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,1,nil,e,tp,eg)
-	end
-	if Duel.SelectEffectYesNo(tp,e:GetHandler(),aux.Stringid(id,1)) then
+	if chk==0 then return eg:IsExists(Card.IsControler,1,nil,tp)
+		and Duel.IsExistingMatchingCard(s.desfilter,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,1,nil,e,tp,eg) end
+	if Duel.SelectEffectYesNo(tp,e:GetHandler(),aux.Stringid(id,2)) then
 		Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_DESREPLACE)
-		local g=Duel.SelectMatchingCard(tp,s.repfilter,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,1,1,nil,e,tp,eg)
+		local g=Duel.SelectMatchingCard(tp,s.desfilter,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,1,1,nil,e,tp,eg)
 		local tc=g:GetFirst()
 		if tc then
 			tc:SetStatus(STATUS_DESTROY_CONFIRMED,true)
