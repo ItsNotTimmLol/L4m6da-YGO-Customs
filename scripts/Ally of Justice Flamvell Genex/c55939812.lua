@@ -48,10 +48,10 @@ function s.sstg(e,tp,eg,ep,ev,re,r,rp,chk)
 	end
 	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,c:GetOwner(),LOCATION_HAND|LOCATION_DECK)
 end
-function s.ssfilter(c,e,controler,maxatk)
+function s.ssfilter(c,e,tp,controler,maxatk)
 	return c:IsRace(RACE_REPTILE) and c:IsSetCard(SET_WORM)
 		and c:GetAttack()>0 and c:GetAttack()<=maxatk
-		and c:IsMonster() and c:IsCanBeSpecialSummoned(e,0,controler,false,false,POS_FACEUP_DEFENSE|POS_FACEDOWN_DEFENSE)
+		and c:IsMonster() and c:IsCanBeSpecialSummoned(e,0,tp,false,false,POS_FACEUP_DEFENSE|POS_FACEDOWN_DEFENSE,controler)
 end
 function s.rescon(sg,e,tp,mg)
 	local tc=sg:GetFirst()
@@ -71,7 +71,7 @@ function s.ssop(e,tp,eg,ep,ev,re,r,rp)
 	local roll=Duel.TossDice(tp,1)
 	--The "same name" is the name of the monster the opponent Special Summoned.
 	--If that monster did not remain on the field, use its original code.
-	local g=Duel.GetMatchingGroup(s.ssfilter,owner,LOCATION_HAND|LOCATION_DECK,0,nil,e,controler,roll*100)
+	local g=Duel.GetMatchingGroup(s.ssfilter,owner,LOCATION_HAND|LOCATION_DECK,0,nil,e,tp,controler,roll*100)
 	local ft=Duel.GetLocationCount(tp,LOCATION_MZONE)
 	local maxct=math.min(#g,ft)
 	if maxct<=0 then return end
