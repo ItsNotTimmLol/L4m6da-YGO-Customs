@@ -28,9 +28,10 @@ function s.initial_effect(c)
 	e3:SetOperation(s.ctop)
 	c:RegisterEffect(e3)
 	local e4=e3:Clone()
-	e4:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
+	e4:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_F)
 	e4:SetProperty(EFFECT_FLAG_DELAY)
 	e4:SetCode(EVENT_REMOVE)
+	e4:SetCost(aux.TRUE)
 	c:RegisterEffect(e4)
 end
 s.listed_names={88438982}
@@ -145,5 +146,7 @@ end
 function s.ctop(e,tp,eg,ep,ev,re,r,rp)
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_COUNTER)
 	local g=Duel.SelectMatchingCard(tp,s.ctfilter,tp,LOCATION_ONFIELD,LOCATION_ONFIELD,1,1,nil,e,tp)
-	g:AddCounter(COUNTER_WORM,1)
+	local tc=g:GetFirst()
+	tc:EnableCounterPermit(0xf,LOCATION_ONFIELD)
+	tc:AddCounter(0xf,1)
 end

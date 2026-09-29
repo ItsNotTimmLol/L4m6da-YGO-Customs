@@ -32,16 +32,16 @@ function s.initial_effect(c)
 	e4:SetValue(s.defval)
 	c:RegisterEffect(e4)]]
 	--Set or activate on banish
-	local e8=Effect.CreateEffect(c)
-	e8:SetDescription(aux.Stringid(id,1))
-	e8:SetCategory(CATEGORY_SET)
-	e8:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
-	e8:SetCode(EVENT_REMOVE)
-	e8:SetProperty(EFFECT_FLAG_DELAY)
-	e8:SetCountLimit(1,{id,0},EFFECT_COUNT_CODE_CHAIN)
-	e8:SetTarget(s.settg)
-	e8:SetOperation(s.setop)
-	c:RegisterEffect(e8)
+	local e3=Effect.CreateEffect(c)
+	e3:SetDescription(aux.Stringid(id,1))
+	e3:SetCategory(CATEGORY_SET)
+	e3:SetType(EFFECT_TYPE_SINGLE+EFFECT_TYPE_TRIGGER_O)
+	e3:SetCode(EVENT_REMOVE)
+	e3:SetProperty(EFFECT_FLAG_DELAY)
+	e3:SetCountLimit(1,{id,0},EFFECT_COUNT_CODE_CHAIN)
+	e3:SetTarget(s.settg)
+	e3:SetOperation(s.setop)
+	c:RegisterEffect(e3)
 	--Choose
 	local e4=Effect.CreateEffect(c)
 	e4:SetDescription(aux.Stringid(id,2))
@@ -266,9 +266,9 @@ function s.efop(e,tp,eg,ep,ev,re,r,rp)
 			aux.RemoveUntil(tc,POS_FACEUP,REASON_EFFECT|REASON_TEMPORARY,PHASE_END,id,e,tp,function(rg,e,tp) Duel.SendtoHand(tc,nil,REASON_EFFECT) end,return_condition,nil,reset_count)
 		else
 			--If you banished a "Worm Call", return it to the field
-			if tc:IsCode(28506708) and Duel.Remove(tc,nil,REASON_EFFECT|REASON_TEMPORARY)>0 and tc:IsLocation(LOCATION_REMOVED) and not tc:IsReason(REASON_REDIRECT) then
+			if tc:IsSetCard(SET_WORM) and Duel.Remove(tc,nil,REASON_EFFECT|REASON_TEMPORARY)>0 and tc:IsLocation(LOCATION_REMOVED) and not tc:IsReason(REASON_REDIRECT) then
 				Duel.BreakEffect()
-				Duel.ReturnToField(tc)
+				Duel.SendtoHand(tc)
 			elseif tc:IsMonster() then
 				aux.RemoveUntil(tc,POS_FACEUP,REASON_EFFECT|REASON_TEMPORARY,PHASE_END,id,e,tp,aux.DefaultFieldReturnOp,return_condition,nil,reset_count)
 			else
