@@ -268,7 +268,8 @@ function s.efop(e,tp,eg,ep,ev,re,r,rp)
 			--If you banished a "Worm Call", return it to the field
 			if tc:IsSetCard(SET_WORM) and Duel.Remove(tc,nil,REASON_EFFECT|REASON_TEMPORARY)>0 and tc:IsLocation(LOCATION_REMOVED) and not tc:IsReason(REASON_REDIRECT) then
 				Duel.BreakEffect()
-				Duel.SendtoHand(tc)
+				Duel.SendtoHand(tc,nil,REASON_EFFECT)
+				Duel.ConfirmCards(1-tp,tc)
 			elseif tc:IsMonster() then
 				aux.RemoveUntil(tc,POS_FACEUP,REASON_EFFECT|REASON_TEMPORARY,PHASE_END,id,e,tp,aux.DefaultFieldReturnOp,return_condition,nil,reset_count)
 			else
