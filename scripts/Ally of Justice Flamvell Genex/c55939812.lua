@@ -12,7 +12,7 @@ function s.initial_effect(c)
 	e1:SetTarget(s.sstg)
 	e1:SetOperation(s.ssop)
 	c:RegisterEffect(e1)
-	--If this face-up card leaves the field: Set 1 "W Nebula" Quick-Play Spell or Trap
+	--Apply
 	local e2=Effect.CreateEffect(c)
 	e2:SetDescription(aux.Stringid(id,3))
 	e2:SetCategory(CATEGORY_SET)
@@ -28,58 +28,92 @@ function s.initial_effect(c)
 	e3:SetCondition(function(e) return (e:GetHandler():IsPreviousLocation(LOCATION_SZONE) and e:GetHandler():IsPreviousPosition(POS_FACEUP)) end)
 	c:RegisterEffect(e3)
 end
-s.roll_dice=true
 s.listed_names={22959079,28506708}
-s.listed_series={SET_WORM}
+s.listed_series={SET_WORM,SET_FLAMVELL}
+s.ally_series={SET_ALLY_OF_JUSTICE,SET_GENEX_ALLY}
+s.ally_names={40155554,59482302}
 s.w_nebula_names={18304915,30476000,40079081,53842829,55939812,76108887,90075978}
 --Special Summon
-function s.sscheckfilter(c,e,tp,controler)
-	return c:IsRace(RACE_REPTILE) and c:IsSetCard(SET_WORM)
-		and c:GetAttack()>0
-		and c:IsMonster() and c:IsCanBeSpecialSummoned(e,0,tp,false,false,POS_FACEUP_DEFENSE|POS_FACEDOWN_DEFENSE,controler)
-end
 function s.sstg(e,tp,eg,ep,ev,re,r,rp,chk)
 	local c=e:GetHandler()
 	local controler=c:GetControler()
 	local owner=c:GetOwner()
 	if (c:IsPreviousLocation(LOCATION_SZONE) and c:IsPreviousPosition(POS_FACEUP)) then controler=1-owner end
 	if chk==0 then return Duel.GetLocationCount(controler,LOCATION_MZONE)>0
-		and Duel.IsExistingMatchingCard(s.sscheckfilter,owner,LOCATION_HAND|LOCATION_DECK,0,1,nil,e,tp,controler)
+		and Duel.IsExistingMatchingCard(s.ssfilter,owner,LOCATION_HAND|LOCATION_DECK|LOCATION_GRAVE|LOCATION_REMOVED,0,1,nil,e,tp,controler)
 	end
-	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,c:GetOwner(),LOCATION_HAND|LOCATION_DECK)
+	Duel.SetOperationInfo(0,CATEGORY_SPECIAL_SUMMON,nil,1,c:GetOwner(),LOCATION_HAND|LOCATION_DECK|LOCATION_GRAVE|LOCATION_REMOVED)
 end
-function s.ssfilter(c,e,tp,controler,maxatk)
-	return c:IsRace(RACE_REPTILE) and c:IsSetCard(SET_WORM)
-		and c:GetAttack()>0 and c:GetAttack()<=maxatk
+function s.ssfilter(c,e,tp,controler)
+	return ((c:IsRace(RACE_REPTILE) and c:IsSetCard(SET_WORM))
+		or ((c:IsCode(s.ally_names) or c:IsSetCard(s.listed_series)) and c:IsRace(RACE_MACHINE))
+		or c:IsSetCard(SET_FLAMVELL))
 		and c:IsMonster() and c:IsCanBeSpecialSummoned(e,0,tp,false,false,POS_FACEUP_DEFENSE|POS_FACEDOWN_DEFENSE,controler)
 end
-function s.rescon(sg,e,tp,mg)
-	local tc=sg:GetFirst()
-	if not tc then return true end
-	return sg:GetClassCount(Card.GetCode)==1,sg:GetClassCount(Card.GetCode)~=1
-end
---[[Buff during opponent's turn?
-function s.rollfilter(c,tp)
-	return c:IsOwner(1-tp)
-end]]--
 function s.ssop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 	local controler=c:GetControler()
 	local owner=c:GetOwner()
-	--local die=Duel.GetMatchingGroupCount(s.rollfilter,controler,0,LOCATION_ONFIELD,nil,tp)
-	--Roll a six-sided die.
-	local roll=Duel.TossDice(tp,1)
-	--The "same name" is the name of the monster the opponent Special Summoned.
-	--If that monster did not remain on the field, use its original code.
-	local g=Duel.GetMatchingGroup(s.ssfilter,owner,LOCATION_HAND|LOCATION_DECK,0,nil,e,tp,controler,roll*100)
+	local g=Duel.GetMatchingGroup(aux.NecroValleyFilter(s.ssfilter),owner,LOCATION_HAND|LOCATION_DECK|LOCATION_GRAVE|LOCATION_REMOVED,0,nil,e,tp,controler)
 	local ft=Duel.GetLocationCount(tp,LOCATION_MZONE)
+	if ft>1 and Duel.IsPlayerAffectedByEffect(tp,CARD_BLUEEYES_SPIRIT) then ft=1 end
 	local maxct=math.min(#g,ft)
 	if maxct<=0 then return end
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
-	local ss=aux.SelectUnselectGroup(g,e,owner,1,maxct,s.rescon,1,tp,HINTMSG_SPSUMMON)
-	--Summon each selected monster to field.
-	Duel.SpecialSummon(ss,0,owner,tp,false,false,POS_FACEUP_DEFENSE|POS_FACEDOWN_DEFENSE)
-	if not Duel.SelectYesNo(owner,aux.Stringid(id,3)) and Duel.GetLocationCount(owner,LOCATION_SZONE)<=0 and not Duel.IsExistingMatchingCard(s.setfilter,owner,LOCATION_DECK,0,1,nil) then return end
+	local ss=aux.SelectUnselectGroup(g,e,owner,1,maxct,nil,1,tp,HINTMSG_SPSUMMON)
+	if #ss==0 then return end
+	local fid=e:GetHandler():GetFieldID()
+	local tc=ss:GetFirst()
+	local pos=Duel.SelectOption(owner,
+		aux.Stringid(id,1),
+		aux.Stringid(id,2))
+	if pos==0 then
+		pos=POS_FACEUP_DEFENSE
+	else
+		pos=POS_FACEDOWN_DEFENSE
+	end
+	for tc in aux.Next(ss) do
+		Duel.SpecialSummonStep(tc,0,owner,tp,false,false,pos)
+		tc:RegisterFlagEffect(id,RESET_EVENT|RESETS_STANDARD,0,1,fid)
+	end
+	Duel.SpecialSummonComplete()
+	ss:KeepAlive()
+	local e1=Effect.CreateEffect(e:GetHandler())
+	e1:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
+	e1:SetCode(EVENT_PHASE)
+	e1:SetProperty(EFFECT_FLAG_IGNORE_IMMUNE)
+	e1:SetCountLimit(1)
+	e1:SetLabel(fid)
+	e1:SetLabelObject(ss)
+	e1:SetCondition(s.tdcon)
+	e1:SetOperation(s.tdop)
+	Duel.RegisterEffect(e1,tp)
+end
+function s.tdfilter(c,fid)
+	return c:GetFlagEffectLabel(id)==fid
+end
+function s.tdcon(e,tp,eg,ep,ev,re,r,rp)
+	local c=e:GetHandler()
+	local g=e:GetLabelObject()
+	if not g:IsExists(s.retfilter,1,nil,e:GetLabel()) and c:IsControler(tp) and Duel.IsMainPhase() then
+		g:DeleteGroup()
+		e:Reset()
+		return false
+	else return true end
+end
+function s.tdop(e,tp,eg,ep,ev,re,r,rp)
+	local g=e:GetLabelObject()
+	local tg=g:Filter(s.tdfilter,nil,e:GetLabel())
+	Duel.SendtoDeck(tg,nil,SEQ_DECKSHUFFLE,REASON_EFFECT)
+end
+
+--Opponent's apply
+function s.applyop(e,tp,eg,ep,ev,re,r,rp)
+	s.ssop(e,1-tp,eg,ep,ev,re,r,rp)
+	local c=e:GetHandler()
+	local controler=c:GetControler()
+	local owner=c:GetOwner()
+	if not Duel.SelectYesNo(owner,aux.Stringid(id,4)) and Duel.GetLocationCount(owner,LOCATION_SZONE)<=0 and not Duel.IsExistingMatchingCard(s.setfilter,owner,LOCATION_DECK,0,1,nil) then return end
 	local g=Duel.GetMatchingGroup(s.setfilter,owner,LOCATION_DECK,0,nil)
 	if #g==0 then return end
 	Duel.Hint(HINT_SELECTMSG,owner,HINTMSG_SET)
@@ -103,18 +137,12 @@ function s.ssop(e,tp,eg,ep,ev,re,r,rp)
 		tc:RegisterEffect(e1)
 	end
 end
+
 function s.setfilter(c)
 	return c:IsCode(s.w_nebula_names)
 		and (c:IsType(TYPE_QUICKPLAY) or c:IsType(TYPE_TRAP))
 		and c:IsSSetable()
 end
-
---Opponent's apply
-function s.applyop(e,tp,eg,ep,ev,re,r,rp)
-	s.ssop(e,1-tp,eg,ep,ev,re,r,rp)
-end
-
-
 --Set
 function s.settg(e,tp,eg,ep,ev,re,r,rp,chk)
 	if chk==0 then return Duel.GetLocationCount(tp,LOCATION_SZONE)>0 and Duel.IsExistingMatchingCard(s.setfilter,tp,LOCATION_DECK,0,1,nil) end
