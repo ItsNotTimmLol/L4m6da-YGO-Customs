@@ -48,19 +48,26 @@ function s.ssfilter(c,e,tp,controler)
 	return ((c:IsRace(RACE_REPTILE) and c:IsSetCard(SET_WORM))
 		or ((c:IsCode(s.ally_names) or c:IsSetCard(s.listed_series)) and c:IsRace(RACE_MACHINE))
 		or c:IsSetCard(SET_FLAMVELL))
-		and c:IsMonster() and c:IsCanBeSpecialSummoned(e,0,tp,false,false,POS_FACEUP_DEFENSE|POS_FACEDOWN_DEFENSE,controler)
+		and c:IsMonster() and c:IsCanBeSpecialSummoned(e,0,tp,true,false,POS_FACEUP_DEFENSE|POS_FACEDOWN_DEFENSE,controler)
+		and (c:IsLocation(LOCATION_HAND|LOCATION_DECK) or c:IsFaceup())
 end
 function s.ssop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 	local controler=c:GetControler()
 	local owner=c:GetOwner()
+	
+	if (c:IsPreviousLocation(LOCATION_SZONE)
+		and c:IsPreviousPosition(POS_FACEUP)) or c:IsLocation(LOCATION_REMOVED) then
+		controler=1-owner
+	end
+	
 	local g=Duel.GetMatchingGroup(aux.NecroValleyFilter(s.ssfilter),owner,LOCATION_HAND|LOCATION_DECK|LOCATION_GRAVE|LOCATION_REMOVED,0,nil,e,tp,controler)
-	local ft=Duel.GetLocationCount(tp,LOCATION_MZONE)
-	if ft>1 and Duel.IsPlayerAffectedByEffect(tp,CARD_BLUEEYES_SPIRIT) then ft=1 end
+	local ft=Duel.GetLocationCount(controler,LOCATION_MZONE)
+	if ft>1 and Duel.IsPlayerAffectedByEffect(controler,CARD_BLUEEYES_SPIRIT) then ft=1 end
 	local maxct=math.min(#g,ft)
 	if maxct<=0 then return end
 	Duel.Hint(HINT_SELECTMSG,tp,HINTMSG_SPSUMMON)
-	local ss=aux.SelectUnselectGroup(g,e,owner,1,maxct,nil,1,tp,HINTMSG_SPSUMMON)
+	local ss=aux.SelectUnselectGroup(g,e,owner,maxct,maxct,nil,1,tp,HINTMSG_SPSUMMON)
 	if #ss==0 then return end
 	local fid=e:GetHandler():GetFieldID()
 	local tc=ss:GetFirst()
@@ -73,33 +80,27 @@ function s.ssop(e,tp,eg,ep,ev,re,r,rp)
 		pos=POS_FACEDOWN_DEFENSE
 	end
 	for tc in aux.Next(ss) do
-		Duel.SpecialSummonStep(tc,0,owner,tp,false,false,pos)
+		Duel.SpecialSummonStep(tc,0,owner,tp,true,false,pos)
 		tc:RegisterFlagEffect(id,RESET_EVENT|RESETS_STANDARD,0,1,fid)
 	end
 	Duel.SpecialSummonComplete()
-	ss:KeepAlive()
 	local e1=Effect.CreateEffect(e:GetHandler())
 	e1:SetType(EFFECT_TYPE_FIELD+EFFECT_TYPE_CONTINUOUS)
-	e1:SetCode(EVENT_PHASE)
+	e1:SetCode(EVENT_ADJUST)
 	e1:SetProperty(EFFECT_FLAG_IGNORE_IMMUNE)
-	e1:SetCountLimit(1)
 	e1:SetLabel(fid)
 	e1:SetLabelObject(ss)
 	e1:SetCondition(s.tdcon)
 	e1:SetOperation(s.tdop)
-	Duel.RegisterEffect(e1,tp)
+	e1:SetReset(RESET_EVENT)
+	Duel.RegisterEffect(e1,controler)
 end
 function s.tdfilter(c,fid)
-	return c:GetFlagEffectLabel(id)==fid
+	return c:IsLocation(LOCATION_MZONE) and c:GetFlagEffectLabel(id)==fid
 end
 function s.tdcon(e,tp,eg,ep,ev,re,r,rp)
-	local c=e:GetHandler()
 	local g=e:GetLabelObject()
-	if not g:IsExists(s.retfilter,1,nil,e:GetLabel()) and c:IsControler(tp) and Duel.IsMainPhase() then
-		g:DeleteGroup()
-		e:Reset()
-		return false
-	else return true end
+	return g and Duel.GetTurnPlayer()==tp and Duel.IsMainPhase() and g:IsExists(s.tdfilter,1,nil,e:GetLabel())
 end
 function s.tdop(e,tp,eg,ep,ev,re,r,rp)
 	local g=e:GetLabelObject()
@@ -113,9 +114,8 @@ function s.applyop(e,tp,eg,ep,ev,re,r,rp)
 	local c=e:GetHandler()
 	local controler=c:GetControler()
 	local owner=c:GetOwner()
-	if not Duel.SelectYesNo(owner,aux.Stringid(id,4)) and Duel.GetLocationCount(owner,LOCATION_SZONE)<=0 and not Duel.IsExistingMatchingCard(s.setfilter,owner,LOCATION_DECK,0,1,nil) then return end
 	local g=Duel.GetMatchingGroup(s.setfilter,owner,LOCATION_DECK,0,nil)
-	if #g==0 then return end
+	if not Duel.SelectYesNo(owner,aux.Stringid(id,4)) or Duel.GetLocationCount(owner,LOCATION_SZONE)<=0 or not Duel.IsExistingMatchingCard(s.setfilter,owner,LOCATION_DECK,0,1,nil) or #g==0 then return end
 	Duel.Hint(HINT_SELECTMSG,owner,HINTMSG_SET)
 	local tc=g:Select(owner,1,1,nil):GetFirst()
 	if not tc then return end
